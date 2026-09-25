@@ -64,6 +64,7 @@ function saveCart(c) {
   if (SERVER.on) {
     SERVER.cart = c;
     if (currentUser()) api('PUT', '/api/me/cart', { body: c }).catch(() => {});
+    else localStorage.setItem('luxe_cart', JSON.stringify(c));
     updateCartCount();
     return;
   }
@@ -103,6 +104,7 @@ function saveWishlist(w) {
   if (SERVER.on) {
     SERVER.wishlist = w;
     if (currentUser()) api('PUT', '/api/me/wishlist', { body: w }).catch(() => {});
+    else localStorage.setItem('luxe_wishlist', JSON.stringify(w));
     updateWishCount();
     return;
   }
