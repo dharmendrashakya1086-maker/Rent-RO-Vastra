@@ -490,8 +490,7 @@ function deleteReview(id) {
 
 // Page loader
 window.addEventListener('load', () => {
-  const loader = document.getElementById('pageLoader');
-  if (loader) setTimeout(() => loader.classList.add('hide'), 300);
+  document.querySelectorAll('.page-loader').forEach(loader => setTimeout(() => loader.classList.add('hide'), 300));
 });
 
 // Update cart count on all pages
