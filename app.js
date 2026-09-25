@@ -17,6 +17,26 @@ if (location.search.toLowerCase().includes('author')) {
   wrap.style.display = 'none';        // glass navbar gone on mobile
 })();
 
+// Mobile hamburger: X morph + dimmed overlay + tap/ESC-to-close (drawer is #navLinks)
+(function () {
+  if (!document.querySelector('.hamburger')) return;
+  const ov = document.createElement('div');
+  ov.className = 'nav-overlay';
+  document.body.appendChild(ov);
+  const setMenu = (open) => {
+    const links = document.getElementById('navLinks');
+    const hb = document.querySelector('.hamburger');
+    links.classList.toggle('open', open);
+    ov.classList.toggle('active', open);
+    if (hb) { hb.classList.toggle('active', open); hb.setAttribute('aria-expanded', open); }
+  };
+  document.addEventListener('click', e => {
+    if (e.target.closest('.hamburger')) { setMenu(!document.getElementById('navLinks').classList.contains('open')); return; }
+    if (e.target.closest('.nav-overlay') || e.target.closest('.nav-links a')) setMenu(false);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
+})();
+
 // Nav pill — transfers between links, settles on the active link, hidden on pages outside the menu
 (function () {
   const host = document.querySelector('nav:not(.account-nav) .nav-links');

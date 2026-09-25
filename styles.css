@@ -155,10 +155,12 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
 
 /* NAV OVERLAY */
 .nav-overlay {
-  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-  z-index: 999; opacity: 0; transition: var(--transition);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+  z-index: 1002; opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
 }
-.nav-overlay.active { opacity: 1; }
+.nav-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
 
 /* CART / WISHLIST / ORDER ANIMATIONS */
 .toast {
@@ -218,6 +220,19 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
     overflow-y: auto; z-index: 1003;
   }
   .nav-links.open { transform: translateX(0); }
+  .nav-links a {
+    display: block; padding: 16px 0; font-size: 0.9rem;
+    border-bottom: 1px solid rgba(201,169,110,0.08); width: 100%;
+    opacity: 0; transform: translateX(28px);
+    transition: opacity 0.3s ease, transform 0.3s ease,
+      border-bottom 0.3s ease, color 0.3s ease, background 0.3s ease;
+  }
+  .nav-links a:hover { background: rgba(201,169,110,0.08); color: var(--gold); }
+  .nav-links.open a { opacity: 1; transform: none; }
+  .nav-links.open a:nth-child(1) { transition-delay: .03s; } .nav-links.open a:nth-child(2) { transition-delay: .07s; }
+  .nav-links.open a:nth-child(3) { transition-delay: .11s; } .nav-links.open a:nth-child(4) { transition-delay: .15s; }
+  .nav-links.open a:nth-child(5) { transition-delay: .19s; } .nav-links.open a:nth-child(6) { transition-delay: .23s; }
+  .nav-links.open a:nth-child(7) { transition-delay: .27s; } .nav-links.open a:nth-child(8) { transition-delay: .31s; }
   .header-search { display: none; }
   .header-icons a[href="wishlist.html"],
   .header-icons a[href="cart.html"],
