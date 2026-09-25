@@ -220,6 +220,9 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
   }
   .nav-links.open { transform: translateX(0); }
   .header-search { display: none; }
+  .header-icons a[href="wishlist.html"],
+  .header-icons a[href="cart.html"],
+  .header-icons a.header-account { display: none; }
   .nav-pill { display: none; }
   .nav-links a {
     display: block; padding: 16px 0; font-size: 0.9rem;
