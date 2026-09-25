@@ -229,6 +229,28 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
   .nav-cta { margin-top: 16px; text-align: center; display: block; }
 }
 
+/* MOBILE BOTTOM NAV — app-style icon bar, like the header but at the bottom */
+.bottom-nav { display: none; }
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+    justify-content: space-around; align-items: stretch;
+    background: rgba(8,8,8,0.92); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(201,169,110,0.15);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+  .bottom-nav a {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; min-width: 52px; padding: 4px 2px; color: var(--text-muted);
+    font-size: 0.56rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 500;
+  }
+  .bottom-nav a svg { width: 22px; height: 22px; fill: currentColor; }
+  .bottom-nav a.active { color: var(--gold); }
+  .bottom-nav .h-badge { position: absolute; top: 2px; right: 4px; }
+  body { padding-bottom: 70px; }
+  .chat-bubble { bottom: 88px; }
+}
+
 /* HERO — Flipkart/Amazon style category bar + banner slider */
 .cat-strip {
   display: flex; align-items: center; gap: clamp(6px, 1.5vw, 16px); overflow-x: auto; white-space: nowrap;
@@ -743,7 +765,7 @@ footer {
   .stat-num { font-size: 1.4rem; }
   .footer-grid { grid-template-columns: 1fr; }
   .chat-panel { right: 0; bottom: 0; width: 100%; height: 100%; max-height: 100%; border: none; border-radius: 0; }
-  .chat-bubble { bottom: 16px; right: 16px; width: 52px; height: 52px; }
+  .chat-bubble { bottom: 88px; right: 16px; width: 52px; height: 52px; }
   .chat-bubble svg { width: 24px; height: 24px; }
   .filter-bar { gap: 6px; }
   .filter-btn { padding: 8px 12px; font-size: 0.6rem; letter-spacing: 1px; }
