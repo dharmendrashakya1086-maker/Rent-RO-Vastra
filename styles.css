@@ -365,9 +365,9 @@ section { padding: clamp(60px, 10vw, 100px) 0; }
 .card:hover .card-img { transform: scale(1.03); }
 .card-img-wrap { overflow: hidden; }
 .card-badge {
-  position: absolute; top: 5px; left: 5px; padding: 1px 6px;
-  background: var(--gold); color: var(--black); font-size: 0.4rem;
-  letter-spacing: 1px; text-transform: uppercase; font-weight: 600;
+  position: absolute; top: 8px; left: 8px; padding: 2px 8px;
+  background: var(--gold); color: var(--black); font-size: 0.48rem;
+  letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
 }
 .card-body { padding: clamp(14px, 2.5vw, 20px); }
 .card-category {
@@ -795,7 +795,11 @@ footer {
   .card-actions { padding: 0 12px 12px; gap: 6px; }
   .card-btn { font-size: 0.52rem; letter-spacing: 1px; padding: 11px 4px; }
   .wish-btn { flex-basis: 40px; }
-  .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
+  .card-badge {
+  top: 5px; left: 5px; padding: 1px 6px;
+  font-size: 0.4rem; letter-spacing: 1px;
+}
+.footer-grid { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
   .footer-brand { grid-column: 1 / -1; }
   .footer-col h4 { margin-bottom: 14px; font-size: 0.85rem; }
   .footer-col a { display: block; padding: 7px 0; font-size: 0.85rem; }
