@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — Rent-RO-Vastra</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-loader" id="pageLoader"><div class="loader-spinner"></div></div>
+
+    <header class="main-header">
+    <a href="index.html" class="header-logo">Rent-RO-Vastra</a>
+    <div class="header-search">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+      <input type="text" id="headerSearch" placeholder="Search designer pieces...">
+    </div>
+    <div class="header-icons">
+      <a href="wishlist.html" class="header-icon" title="Wishlist">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <span class="h-badge" id="wishBadge" style="display:none">0</span>
+      </a>
+      <a href="cart.html" class="header-icon" title="Cart">
+        <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        <span class="h-badge" id="cartCount">0</span>
+      </a>
+      <a href="messages.html" class="header-icon header-msg" title="Messages"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg><span class="h-badge" id="msgBadge" style="display:none">0</span></a>
+      <a href="auth.html" class="header-icon header-account" title="Account">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </a>
+    </div>
+  </header><nav>
+    <div class="nav-inner">
+      <div class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="catalog.html">Collection</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <section style="padding-top: 120px; padding-bottom: 60px;">
+    <div class="container">
+      <h1 class="section-title" style="text-align:left;">Checkout</h1>
+      <div id="checkoutContent"></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand"><div class="logo">Rent-RO-Vastra</div><p>Premium fashion rental for the modern individual.</p></div>
+        <div class="footer-col"><h4>Quick Links</h4><a href="catalog.html">Collection</a><a href="how-it-works.html">How It Works</a><a href="about.html">About Us</a><a href="contact.html">Contact</a></div>
+        <div class="footer-col"><h4>Categories</h4><a href="catalog.html">Evening Wear</a><a href="catalog.html">Formal</a><a href="catalog.html">Cocktail</a><a href="catalog.html">Accessories</a></div>
+        <div class="footer-col"><h4>Support</h4><a href="faq.html">FAQ</a><a href="faq.html#sizing">Sizing Guide</a><a href="faq.html#delivery">Delivery Info</a><a href="faq.html#returns">Returns</a></div>
+<div class="footer-col"><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms &amp; Conditions</a><a href="cookies.html">Cookie &amp; Storage Policy</a><a href="refunds.html">Refund Policy</a></div>
+
+      </div>
+      <div class="footer-bottom"><span>&copy; 2026 Rent-RO-Vastra. All rights reserved. Made with love by Rovin Yadav</span><span>Premium Fashion Rental</span></div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script src="store.js"></script>
+<script>
+    storeReady(function () {
+const singleItem = (new URLSearchParams(location.search).get('item') || '').toString();
+    function renderCheckout() {
+      // If ?item=ID given, checkout just that product
+      let cart = getCart();
+      const orderingOne = singleItem ? cart.filter(c => String(c.id) === singleItem) : null;
+      if (singleItem && orderingOne.length) cart = orderingOne;
+      const user = currentUser();
+      const el = document.getElementById('checkoutContent');
+      document.getElementById('cartCount').textContent = cart.length;
+
+      if (cart.length === 0) {
+        el.innerHTML = '<div style="text-align:center;padding:60px 0;"><h2 style="font-family:var(--serif);color:var(--white);margin-bottom:12px;">Your cart is empty</h2><p style="color:var(--text-muted);margin-bottom:24px;">Add items before checking out</p><a href="catalog.html" class="btn-primary">Browse Collection</a></div>';
+        return;
+      }
+
+let subtotal = 0;
+      let savings = 0;
+      const SIZE_OPTS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+      const OCC_OPTS = ['Wedding', 'Sangeet', 'Mehendi', 'Engagement', 'Reception', 'Gala', 'Party', 'Cocktail', 'Birthday', 'Anniversary', 'Festival', 'Date Night', 'Formal', 'Interview', 'Travel'];
+      const itemsHtml = cart.map((item, i) => {
+        const days = item.days || 1;
+        const qty = item.qty || 1;
+        const total = rentalTotal(item.price, days, qty);
+        const save = item.price * days * qty - total;
+        subtotal += total;
+        savings += save;
+        const sizeSel = '<div class="checkout-item-opts"><select data-opt="size" data-o="' + i + '"><option value="">Size — optional</option>' + SIZE_OPTS.map(s => '<option>' + s + '</option>').join('') + '</select><select data-opt="occasion" data-o="' + i + '"><option value="">Occasion — optional</option>' + OCC_OPTS.map(s => '<option>' + s + '</option>').join('') + '</select></div>';
+        return '<div class="order-item"><img src="' + item.img + '" alt=""><div style="flex:1;"><div class="order-item-name">' + item.name + '</div><div class="order-item-price">₹' + item.price + '/day x ' + days + ' days x ' + qty + ' pc = <strong>₹' + total.toFixed(2) + '</strong>' + (save > 0 ? ' <span style="color:#4CAF50;font-size:0.75rem;">(' + (days >= 7 ? '25' : '15') + '% off)</span>' : '') + '</div>' + sizeSel + '</div><button class="order-item-remove" data-idx="' + i + '">Remove</button></div>';
+      }).join('');
+
+      const total = subtotal;
+
+el.innerHTML = '<div class="checkout-grid"><div>' +
+        '<form id="checkoutForm">' +
+        '<div class="checkout-section"><h3>Contact Information</h3>' +
+        '<div class="form-group"><label for="coEmail">Email</label><input type="email" id="coEmail" value="' + (user ? user.email : '') + '" required aria-label="Email"></div>' +
+        '<div class="form-group"><label for="coPhone">Phone</label><input type="tel" id="coPhone" value="' + (user ? user.phone || '' : '') + '" required aria-label="Phone"></div></div>' +
+        '<div class="checkout-section"><h3>Delivery Address</h3>' +
+        '<div class="form-group"><label for="coName">Full Name</label><input type="text" id="coName" value="' + (user ? user.first + ' ' + (user.last || '') : '') + '" required aria-label="Full Name"></div>' +
+        '<div class="form-group"><label for="coAddr">Address</label><input type="text" id="coAddr" placeholder="House no, street, locality" required aria-label="Address"></div>' +
+        '<div class="checkout-row"><div class="form-group"><label for="coCity">District</label><select id="coCity" required style="width:100%;padding:14px 18px;background:var(--dark2);border:1px solid rgba(201,169,110,0.2);color:var(--text);font-family:var(--sans);font-size:0.88rem;" aria-label="District"><option value="">Select district</option><option value="Mainpuri">Mainpuri</option><option value="Etawah">Etawah</option></select></div><div class="form-group"><label for="coZip">Pincode</label><input type="text" id="coZip" placeholder="205001" required aria-label="Pincode" maxlength="6" pattern="[0-9]{6}"></div></div></div>' +
+'<div class="checkout-section"><h3>Payment</h3>' +
+        '<div style="padding:16px;border:1px solid rgba(201,169,110,0.25);border-radius:8px;font-size:0.85rem;color:var(--text-muted);line-height:1.7;">No online payment yet — you pay when the outfit arrives (Cash or UPI at your doorstep, after trying it on). Our team confirms every booking on the Messages page.</div></div>' +
+        '<label style="display:flex;align-items:flex-start;gap:8px;font-size:0.75rem;color:var(--text-muted);margin:4px 0 18px;cursor:pointer;line-height:1.6;"><input type="checkbox" id="coConsent" style="accent-color:var(--gold);margin-top:3px;" required> I agree to the <a href="terms.html" style="color:var(--gold);text-decoration:underline;" target="_blank">Terms &amp; Conditions</a>, and consent to my name, contact details and address being stored and used to deliver this rental. See the <a href="privacy.html" style="color:var(--gold);text-decoration:underline;" target="_blank">Privacy Policy</a>.</label>' +
+        '<button type="submit" class="btn-primary" style="width:100%;text-align:center;">Place Order — ₹' + total.toFixed(2) + '</button>' +
+        '</form></div>' +
+'<div class="order-summary"><h3>Order Summary</h3>' + itemsHtml +
+        '<div style="margin-top:16px;"><div class="cart-summary-row"><span>Subtotal</span><span>₹' + subtotal.toFixed(2) + '</span></div>' +
+        (savings > 0 ? '<div class="cart-summary-row"><span>You save (multi-day)</span><span style="color:#4CAF50">₹' + savings.toFixed(2) + '</span></div>' : '') +
+        '<div class="cart-summary-row"><span>Delivery</span><span style="color:#4CAF50">Free</span></div>' +
+        '<div class="cart-summary-row total"><span>Total</span><span>₹' + total.toFixed(2) + '</span></div></div>' +
+        '<div class="secure-badge"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg><span>Secure Checkout</span></div></div></div>';
+
+      document.querySelectorAll('.order-item-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+          removeFromCart(parseInt(btn.dataset.idx));
+          renderCheckout();
+        });
+      });
+
+document.getElementById('checkoutForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const u = currentUser();
+
+        if (!document.getElementById('coConsent').checked) {
+          alert('Please agree to the Terms & Conditions and confirm your consent before placing the order.');
+          document.getElementById('coConsent').focus();
+          return;
+        }
+
+        if (SERVER_MODE && !u) {
+          alert('Please login to place an order — your bookings are saved to your account.');
+          window.location.href = 'auth.html';
+          return;
+        }
+
+// Stock check before ordering
+        const conflicts = cart.filter(item =>
+          item.id && (item.startDate && item.endDate) &&
+          (!stockAvailability(item.id, item.startDate, item.endDate).enough ||
+           stockAvailability(item.id, item.startDate, item.endDate).available < (item.qty || 1))
+        ).map(item => item.name + (item.qty > 1 ? ' (qty ' + item.qty + ')' : ''));
+        if (conflicts.length) {
+          alert('These items are no longer available for the selected dates:\n\n' + conflicts.join('\n') + '\n\nPlease pick different dates.');
+          return;
+        }
+
+        const sizes = Array.prototype.map.call(document.querySelectorAll('[data-opt="size"]'), s => s.value);
+        const occs = Array.prototype.map.call(document.querySelectorAll('[data-opt="occasion"]'), s => s.value);
+
+        const coName = u ? u.first + ' ' + (u.last || '') : document.getElementById('coName').value;
+        const coEmail = u ? u.email : document.getElementById('coEmail').value;
+        const coPhone = document.getElementById('coPhone').value.trim();
+        const coAddr = document.getElementById('coAddr').value.trim();
+        const coCity = document.getElementById('coCity').value;
+        const coZip = document.getElementById('coZip').value.trim();
+        const items = cart.map((item, idx) => ({
+          productId: item.id, name: item.name, img: item.img,
+          startDate: item.startDate || '', endDate: item.endDate || '',
+          qty: item.qty || 1, size: sizes[idx] || '', occasion: occs[idx] || '',
+          price: item.price || 0, days: item.days || 1,
+          total: rentalTotal(item.price, item.days || 1, item.qty)
+        }));
+        const doneSuccess = () => {
+          if (singleItem) saveCart(getCart().filter(c => String(c.id) !== singleItem)); else saveCart([]);
+          const el = document.getElementById('coContent');
+          el.innerHTML = '<div class="order-success" style="text-align:center;padding:60px 0;"><div class="check-ring"><svg viewBox="0 0 24 24" style="width:40px;height:40px;fill:#4CAF50;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><h2 style="font-family:var(--serif);color:var(--white);margin-bottom:12px;">Order Placed!</h2><p style="color:var(--text-muted);margin-bottom:24px;">Thank you for your rental. Our team will confirm your booking on the <a href="messages.html" style="color:var(--gold);">Messages page</a>. Payment is on delivery.</p><a href="account.html" class="btn-primary">View My Rentals</a></div>';
+          try { bounceCart(); } catch (e) {}
+        };
+        if (SERVER_MODE) {
+          api('POST', '/api/orders', { body: { name: coName, email: coEmail, phone: coPhone, addr: coAddr, city: coCity, zip: coZip, items: items } })
+            .then(doneSuccess)
+            .catch(err => alert((err.message || 'Booking failed') + ' Please pick different dates or contact us.'));
+        } else {
+          const orders = JSON.parse(localStorage.getItem('luxe_orders') || '[]');
+          items.forEach(it => orders.push({
+            id: Date.now() + Math.random(), name: coName, email: coEmail, phone: coPhone,
+            addr: coAddr, city: coCity, zip: coZip, item: it.name, img: it.img, productId: it.productId,
+            startDate: it.startDate, endDate: it.endDate, qty: it.qty, size: it.size, occasion: it.occasion,
+            dates: (it.startDate || 'TBD') + ' — ' + (it.endDate || 'TBD'), total: it.total,
+            status: 'Pending', userEmail: u ? u.email : ''
+          }));
+          localStorage.setItem('luxe_orders', JSON.stringify(orders));
+doneSuccess();
+        }
+      });
+    }
+    renderCheckout();
+  });
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account — Rent-RO-Vastra</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-loader" id="pageLoader"><div class="loader-spinner"></div></div>
+
+    <header class="main-header">
+    <a href="index.html" class="header-logo">Rent-RO-Vastra</a>
+    <div class="header-search">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+      <input type="text" id="headerSearch" placeholder="Search designer pieces...">
+    </div>
+    <div class="header-icons">
+      <a href="wishlist.html" class="header-icon" title="Wishlist">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <span class="h-badge" id="wishBadge" style="display:none">0</span>
+      </a>
+      <a href="cart.html" class="header-icon" title="Cart">
+        <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        <span class="h-badge" id="cartCount">0</span>
+      </a>
+      <a href="messages.html" class="header-icon header-msg" title="Messages"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg><span class="h-badge" id="msgBadge" style="display:none">0</span></a>
+      <a href="auth.html" class="header-icon header-account" title="Account">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </a>
+    </div>
+  </header><nav>
+    <div class="nav-inner">
+      <div class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="catalog.html">Collection</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <section style="padding-top: 120px; padding-bottom: 60px;">
+    <div class="container">
+      <div id="authGate"></div>
+      <div class="account-grid" id="accountArea" style="display:none;">
+        <aside class="account-sidebar">
+          <div class="account-avatar"><span id="userInitial">J</span></div>
+          <div class="account-name" id="userName">Jane Doe</div>
+          <div class="account-email" id="userEmail">jane@example.com</div>
+          <nav class="account-nav">
+            <a href="#" data-section="rentals" class="active">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+              My Rentals
+            </a>
+            <a href="#" data-section="profile">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              Profile
+            </a>
+            <a href="#" data-section="settings">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+              Settings
+            </a>
+            <a href="#" id="logoutBtn" style="color:#ff8a80;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+              Logout
+            </a>
+          </nav>
+        </aside>
+        <div class="account-content">
+          <div class="account-section active" id="sec-rentals">
+            <h2 style="font-family:var(--serif);color:var(--white);margin-bottom:24px;">My Rentals</h2>
+            <div id="rentalsList"></div>
+          </div>
+          <div class="account-section" id="sec-profile">
+            <h2 style="font-family:var(--serif);color:var(--white);margin-bottom:24px;">Profile</h2>
+            <form id="profileForm" style="max-width:500px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="form-group"><label>First Name</label><input type="text" id="profFirst"></div>
+                <div class="form-group"><label>Last Name</label><input type="text" id="profLast"></div>
+              </div>
+              <div class="form-group"><label>Email</label><input type="email" id="profEmail" readonly></div>
+              <div class="form-group"><label>Phone</label><input type="tel" id="profPhone"></div>
+              <button type="submit" class="btn-primary" style="text-align:center;">Save Changes</button>
+            </form>
+          </div>
+          <div class="account-section" id="sec-settings">
+            <h2 style="font-family:var(--serif);color:var(--white);margin-bottom:24px;">Account Settings</h2>
+            <div style="max-width:500px;">
+              <div class="form-group"><label>Current Password</label><input type="password" id="settOldPass" placeholder="Current password"></div>
+              <div class="form-group"><label>New Password</label><input type="password" id="settNewPass" placeholder="New password"></div>
+              <div class="form-group"><label>Confirm New Password</label><input type="password" id="settConfirm" placeholder="Confirm"></div>
+              <button class="btn-primary" id="changePassBtn" style="text-align:center;">Change Password</button>
+              <div class="lock-error" id="passMsg" style="margin-top:12px;"></div>
+              <hr style="border:none;border-top:1px solid rgba(201,169,110,0.15);margin:32px 0;">
+              <button class="btn-outline" id="deleteAccBtn" style="border-color:#ff8a80;color:#ff8a80;text-align:center;width:100%;">Delete Account</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand"><div class="logo">Rent-RO-Vastra</div><p>Premium fashion rental for the modern individual.</p></div>
+        <div class="footer-col"><h4>Quick Links</h4><a href="catalog.html">Collection</a><a href="how-it-works.html">How It Works</a><a href="about.html">About Us</a><a href="contact.html">Contact</a></div>
+        <div class="footer-col"><h4>Categories</h4><a href="catalog.html">Evening Wear</a><a href="catalog.html">Formal</a><a href="catalog.html">Cocktail</a><a href="catalog.html">Accessories</a></div>
+        <div class="footer-col"><h4>Support</h4><a href="faq.html">FAQ</a><a href="faq.html#sizing">Sizing Guide</a><a href="faq.html#delivery">Delivery Info</a><a href="faq.html#returns">Returns</a></div>
+<div class="footer-col"><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms &amp; Conditions</a><a href="cookies.html">Cookie &amp; Storage Policy</a><a href="refunds.html">Refund Policy</a></div>
+
+      </div>
+      <div class="footer-bottom"><span>&copy; 2026 Rent-RO-Vastra. All rights reserved. Made with love by Rovin Yadav</span><span>Premium Fashion Rental</span></div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script src="store.js"></script>
+  <script>
+    storeReady(function () {
+    const user = currentUser();
+    if (!user) {
+      document.getElementById('authGate').innerHTML = '<div style="text-align:center;padding:60px 0;"><h2 style="font-family:var(--serif);color:var(--white);margin-bottom:16px;">Please login</h2><p style="color:var(--text-muted);margin-bottom:24px;">You need to be logged in to view your account</p><a href="auth.html" class="btn-primary">Login / Register</a></div>';
+    } else {
+      document.getElementById('accountArea').style.display = 'grid';
+      document.getElementById('userInitial').textContent = user.first.charAt(0).toUpperCase();
+      document.getElementById('userName').textContent = user.first + ' ' + (user.last || '');
+      document.getElementById('userEmail').textContent = user.email;
+      document.getElementById('profFirst').value = user.first;
+      document.getElementById('profLast').value = user.last || '';
+      document.getElementById('profEmail').value = user.email;
+      document.getElementById('profPhone').value = user.phone || '';
+
+// Rentals
+      function renderRentals() {
+        const orders = getOrders().filter(o => o.userEmail === user.email).sort((a, b) => (b.id || 0) - (a.id || 0));
+        const rList = document.getElementById('rentalsList');
+        if (orders.length === 0) {
+          rList.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><p>No rentals yet</p><a href="catalog.html" style="color:var(--gold);font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;">Browse Collection</a></div>';
+          return;
+        }
+        rList.innerHTML = orders.map(o => {
+          const meta = [o.size, o.occasion].filter(Boolean).join(' · ') + (o.refund === 50 ? ' · 50% charge (late cancel)' : o.refund === 100 && o.status === 'Cancelled' ? ' · full refund' : '');
+          const cancellable = o.status === 'Pending' || o.status === 'Confirmed';
+          return '<div class="rental-card"><img src="' + o.img + '" alt=""><div class="rental-card-info"><div class="rental-card-name">' + o.item + '</div><div class="rental-card-dates">' + o.dates + '</div>' + (meta ? '<div class="rental-card-dates">Size: ' + meta + '</div>' : '') + '<div class="rental-card-price">₹' + o.total + '</div><span class="badge ' + (o.status === 'Confirmed' ? 'badge-green' : o.status === 'Pending' ? 'badge-yellow' : 'badge-red') + '">' + o.status + '</span>' + (cancellable ? '<button class="card-btn" data-cancel="' + o.id + '" style="flex:0 0 auto;padding:8px 14px;font-size:0.6rem;margin-top:10px;max-width:180px;">Cancel Booking</button>' : '') + '</div></div>';
+        }).join('');
+        document.querySelectorAll('[data-cancel]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = parseFloat(btn.dataset.cancel);
+          const order = getOrders().find(o => o.id === id);
+          const late = cancelRefund(order) === 50;
+          if (confirm('Cancel this booking?' + (late ? '\n\nDeliveries fall within 48 hours of this rental, so a 50% charge applies.' : '\n\nFree cancellation — 48+ hours before delivery.') + '\n\nYour dates will be freed for other renters.')) {
+            cancelOrder(id);
+            showToast(late ? 'Cancelled — 50% charge applies' : 'Cancelled — full refund');
+            renderRentals();
+          }
+          });
+        });
+      }
+      renderRentals();
+    }
+
+    // Nav
+    document.querySelectorAll('.account-nav a[data-section]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelectorAll('.account-nav a').forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
+        document.querySelectorAll('.account-section').forEach(x => x.classList.remove('active'));
+        document.getElementById('sec-' + a.dataset.section).classList.add('active');
+      });
+    });
+
+    // Profile save
+    document.getElementById('profileForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const u = currentUser();
+      u.first = document.getElementById('profFirst').value.trim();
+      u.last = document.getElementById('profLast').value.trim();
+      u.phone = document.getElementById('profPhone').value.trim();
+      saveUser(u);
+      document.getElementById('userName').textContent = u.first + ' ' + (u.last || '');
+      document.getElementById('userInitial').textContent = u.first.charAt(0).toUpperCase();
+      alert('Profile updated!');
+    });
+
+    // Change pass
+    document.getElementById('changePassBtn').addEventListener('click', () => {
+      const msg = document.getElementById('passMsg');
+      const oldP = document.getElementById('settOldPass').value;
+      const newP = document.getElementById('settNewPass').value;
+      const conf = document.getElementById('settConfirm').value;
+const u = currentUser();
+      hashPass(oldP).then(h => {
+        if (h !== u.pass && oldP !== u.pass) { msg.style.color = '#ff8a80'; msg.textContent = 'Current password incorrect'; return; }
+        if (newP.length < 6) { msg.style.color = '#ff8a80'; msg.textContent = 'Min 6 characters'; return; }
+        if (newP !== conf) { msg.style.color = '#ff8a80'; msg.textContent = 'Passwords do not match'; return; }
+        hashPass(newP).then(nh => { u.pass = nh; saveUser(u); });
+        msg.style.color = '#4CAF50'; msg.textContent = 'Password updated!';
+        document.getElementById('settOldPass').value = '';
+        document.getElementById('settNewPass').value = '';
+        document.getElementById('settConfirm').value = '';
+      });
+    });
+
+    // Delete account
+    document.getElementById('deleteAccBtn').addEventListener('click', () => {
+      if (confirm('Delete your account? This cannot be undone.')) {
+        deleteUser();
+        window.location.href = 'index.html';
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', e => {
+      e.preventDefault();
+      logout();
+      window.location.href = 'index.html';
+    });
+  });
+  </script>
+</body>
+</html>
+
+

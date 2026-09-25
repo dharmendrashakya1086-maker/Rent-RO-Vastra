@@ -1,0 +1,1998 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Rent-RO-Vastra</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --gold: #C9A96E;
+      --gold-light: #E8D5B0;
+      --black: #0A0A0A;
+      --dark: #1A1A1A;
+      --dark2: #2A2A2A;
+      --white: #FEFEFE;
+      --text: #E0E0E0;
+      --text-muted: #999;
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Lato', Arial, sans-serif;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--sans); background: #0e0e0e; color: var(--text); line-height: 1.6; overflow-x: hidden; }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+    button { cursor: pointer; font-family: var(--sans); }
+    ul { list-style: none; }
+    .logo { font-family: var(--serif); font-size: 1.6rem; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; }
+    .logo span { font-weight: 400; color: var(--text); }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 14px 18px; background: var(--dark2);
+      border: 1px solid rgba(201,169,110,0.2); color: var(--text);
+      font-family: var(--sans); font-size: 0.9rem; transition: var(--transition);
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--gold); }
+    .form-group select option { background: var(--dark); }
+    .btn-primary {
+      display: inline-block; padding: 16px 40px; background: var(--gold);
+      color: var(--black); font-size: 0.8rem; letter-spacing: 3px;
+      text-transform: uppercase; font-weight: 700; transition: var(--transition); border: none;
+    }
+    .btn-primary:hover { background: var(--gold-light); }
+    .btn-outline {
+      display: inline-block; padding: 16px 40px; border: 1px solid var(--gold);
+      color: var(--gold); font-size: 0.8rem; letter-spacing: 3px;
+      text-transform: uppercase; background: transparent; transition: var(--transition);
+    }
+    .btn-outline:hover { background: var(--gold); color: var(--black); }
+
+    /* LOCK SCREEN */
+    .lock-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .lock-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(10,10,10,0.92), rgba(26,26,26,0.85)),
+                  url('https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1920&q=80') center/cover;
+    }
+    .lock-box {
+      position: relative; z-index: 2; width: min(420px, 90vw);
+      background: var(--dark); border: 1px solid rgba(201,169,110,0.2);
+      padding: clamp(32px, 6vw, 56px); text-align: center;
+    }
+    .lock-icon {
+      width: 64px; height: 64px; margin: 0 auto 24px;
+      border: 2px solid var(--gold); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .lock-icon svg { width: 28px; height: 28px; fill: var(--gold); }
+    .lock-box h1 { font-family: var(--serif); font-size: 1.5rem; color: var(--white); margin-bottom: 8px; }
+    .lock-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 32px; }
+    .lock-input-wrap { position: relative; margin-bottom: 24px; }
+    .lock-input-wrap input {
+      width: 100%; padding: 16px 20px; padding-right: 50px;
+      background: var(--black); border: 1px solid rgba(201,169,110,0.2);
+      color: var(--text); font-size: 1.1rem; letter-spacing: 6px;
+      text-align: center; font-family: var(--sans);
+    }
+    .lock-input-wrap input:focus { outline: none; border-color: var(--gold); }
+    .lock-input-wrap input::placeholder { letter-spacing: 3px; color: #555; font-size: 0.85rem; }
+    .lock-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+    }
+    .lock-toggle svg { width: 20px; height: 20px; fill: var(--text-muted); }
+    .lock-btn {
+      width: 100%; padding: 16px; background: var(--gold); border: none;
+      color: var(--black); font-size: 0.8rem; letter-spacing: 3px;
+      text-transform: uppercase; font-weight: 700; cursor: pointer;
+      transition: var(--transition);
+    }
+    .lock-btn:hover { background: var(--gold-light); }
+    .lock-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .lock-error {
+      color: #e74c3c; font-size: 0.8rem; margin-top: 12px;
+      min-height: 20px; transition: var(--transition);
+    }
+    .lock-hint {
+      margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(201,169,110,0.1);
+      font-size: 0.75rem; color: var(--text-muted);
+    }
+    .lock-hint a { color: var(--gold); }
+
+    /* DASHBOARD */
+    .dashboard { display: none; }
+    .dashboard.active { display: block; }
+    .dash-sidebar {
+      width: 260px; height: 100vh; background: var(--dark);
+      border-right: 1px solid rgba(201,169,110,0.15);
+      padding: 32px 0; position: fixed; top: 0; left: 0; z-index: 100;
+      display: flex; flex-direction: column; overflow-y: auto;
+    }
+    .dash-sidebar-header { padding: 0 24px 32px; border-bottom: 1px solid rgba(201,169,110,0.1); }
+    .dash-sidebar-header .logo { font-size: 1.2rem; }
+    .dash-sidebar-header p { font-size: 0.7rem; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+    .dash-nav { flex: 1; padding: 24px 0; }
+    .dash-nav a {
+      display: flex; align-items: center; gap: 12px; padding: 12px 24px;
+      color: var(--text-muted); font-size: 0.85rem; transition: var(--transition);
+      border-left: 3px solid transparent;
+    }
+    .dash-nav a:hover { color: var(--text); background: rgba(201,169,110,0.05); }
+    .dash-nav a.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,169,110,0.08); }
+    .dash-nav a svg { width: 18px; height: 18px; fill: currentColor; min-width: 18px; }
+    .dash-nav-bottom { padding: 16px 24px; border-top: 1px solid rgba(201,169,110,0.1); }
+    .dash-nav-bottom a {
+      display: flex; align-items: center; gap: 12px; padding: 10px 0;
+      color: var(--text-muted); font-size: 0.8rem; transition: var(--transition);
+    }
+    .dash-nav-bottom a:hover { color: #e74c3c; }
+    .dash-nav-bottom a svg { width: 18px; height: 18px; fill: currentColor; }
+
+    .dash-main { margin-left: 260px; padding: 32px; min-height: 100vh; }
+    .dash-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+    .dash-top h2 { font-family: var(--serif); font-size: 1.5rem; color: var(--white); }
+    .dash-welcome { font-size: 0.85rem; color: var(--text-muted); }
+
+    .dash-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .dash-stat {
+      background: var(--dark); border: 1px solid rgba(201,169,110,0.1);
+      padding: 24px;
+    }
+    .dash-stat-label { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    .dash-stat-val { font-family: var(--serif); font-size: 1.8rem; color: var(--gold); }
+    .dash-stat-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+    .dash-section { display: none; }
+    .dash-section.active { display: block; }
+
+    .dash-table-wrap { overflow-x: auto; border: 1px solid rgba(201,169,110,0.1); }
+    .dash-table {
+      width: 100%; border-collapse: collapse; min-width: 600px;
+    }
+    .dash-table th {
+      text-align: left; padding: 14px 16px; background: var(--dark);
+      font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); border-bottom: 1px solid rgba(201,169,110,0.15);
+    }
+    .dash-table td {
+      padding: 14px 16px; border-bottom: 1px solid rgba(201,169,110,0.08);
+      font-size: 0.85rem; color: var(--text);
+    }
+    .dash-table tr:hover td { background: rgba(201,169,110,0.03); }
+    .dash-table .thumb { width: 48px; height: 64px; object-fit: cover; border: 1px solid rgba(201,169,110,0.15); }
+    .badge { padding: 4px 10px; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; }
+    .badge-green { background: rgba(76,175,80,0.15); color: #4CAF50; }
+    .badge-yellow { background: rgba(255,193,7,0.15); color: #FFC107; }
+    .badge-red { background: rgba(231,76,60,0.15); color: #e74c3c; }
+
+    .dash-actions { display: flex; gap: 6px; }
+    .dash-actions button {
+      padding: 6px 10px; border: 1px solid rgba(201,169,110,0.2); background: transparent;
+      color: var(--text-muted); font-size: 0.7rem; cursor: pointer; transition: var(--transition);
+    }
+    .dash-actions button:hover { border-color: var(--gold); color: var(--gold); }
+    .dash-actions button.danger:hover { border-color: #e74c3c; color: #e74c3c; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999;
+      display: none; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--dark); border: 1px solid rgba(201,169,110,0.2);
+      width: min(520px, 100%); max-height: 90vh; overflow-y: auto; padding: 32px;
+    }
+    .modal h3 { font-family: var(--serif); font-size: 1.2rem; color: var(--white); margin-bottom: 24px; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px; background: none; border: none;
+      color: var(--text-muted); font-size: 1.2rem; cursor: pointer;
+    }
+    .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+    .modal-actions button { flex: 1; }
+
+    .add-btn {
+      padding: 10px 20px; background: var(--gold); border: none; color: var(--black);
+      font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase;
+      font-weight: 700; cursor: pointer; transition: var(--transition);
+    }
+    .add-btn:hover { background: var(--gold-light); }
+
+    /* SETTINGS */
+    .settings-card {
+      background: var(--dark); border: 1px solid rgba(201,169,110,0.1);
+      padding: 32px; max-width: 500px;
+    }
+    .settings-card h3 { font-family: var(--serif); color: var(--white); margin-bottom: 24px; }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center; padding: 60px 24px; color: var(--text-muted);
+    }
+    .empty-state svg { width: 48px; height: 48px; fill: #333; margin-bottom: 16px; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* MOBILE SIDEBAR */
+    .dash-hamburger {
+      display: none; position: fixed; top: 16px; left: 16px; z-index: 200;
+      background: var(--dark); border: 1px solid rgba(201,169,110,0.2);
+      padding: 10px; cursor: pointer; width: 44px; height: 44px;
+      align-items: center; justify-content: center;
+    }
+    .dash-hamburger svg { width: 20px; height: 20px; fill: var(--gold); }
+    .dash-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 140;
+    }
+    .dash-overlay.active { display: block; }
+
+    @media (max-width: 768px) {
+      .dash-hamburger { display: flex; }
+      .dash-sidebar {
+        transform: translateX(-100%); transition: var(--transition); z-index: 150;
+        width: 280px;
+      }
+      .dash-sidebar.open { transform: translateX(0); }
+      .dash-main { margin-left: 0; padding: 24px; padding-top: 72px; }
+      .dash-stats { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .dash-stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOCK SCREEN -->
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-bg"></div>
+    <div class="lock-box">
+      <div class="lock-icon">
+        <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+      </div>
+      <h1>Admin Access</h1>
+      <p>Enter your password to access the dashboard</p>
+      <div class="lock-input-wrap">
+        <input type="password" id="lockPass" placeholder="Enter password" maxlength="20" autocomplete="off">
+        <button class="lock-toggle" id="lockToggle" type="button">
+          <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+        </button>
+      </div>
+      <button class="lock-btn" id="lockBtn">Unlock</button>
+      <div class="lock-error" id="lockError"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard" id="dashboard">
+    <button class="dash-hamburger" id="dashHam">
+      <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </button>
+    <div class="dash-overlay" id="dashOverlay"></div>
+
+    <aside class="dash-sidebar" id="dashSidebar">
+      <div class="dash-sidebar-header">
+        <a href="index.html" class="logo">Rent-RO-Vastra</a>
+        <p>Admin Panel</p>
+      </div>
+      <nav class="dash-nav">
+        <a href="#" data-section="overview" class="active">
+          <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          Overview
+        </a>
+        <a href="#" data-section="products">
+          <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
+          Products
+        </a>
+        <a href="#" data-section="orders">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+          Bookings
+        </a>
+        <a href="#" data-section="ai">
+          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          AI Assistant
+        </a>
+<a href="#" data-section="settings">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          Settings
+        </a>
+        <a href="#" data-section="messages">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+          Messages
+        </a>
+<a href="#" data-section="reviews">
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          Reviews
+        </a>
+        <a href="migrate.html">
+          <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+          Migrate Data
+        </a>
+      </nav>
+      <div class="dash-nav-bottom">
+        <a href="#" id="dashLogout">
+          <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          Logout
+        </a>
+      </div>
+    </aside>
+
+    <main class="dash-main">
+      <!-- OVERVIEW -->
+      <div class="dash-section active" id="sec-overview">
+        <div class="dash-top">
+          <div>
+            <h2>Dashboard</h2>
+            <span class="dash-welcome">Welcome back, Admin</span>
+          </div>
+        </div>
+        <div class="dash-stats">
+          <div class="dash-stat">
+            <div class="dash-stat-label">Total Products</div>
+            <div class="dash-stat-val" id="statProducts">0</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-label">Active Bookings</div>
+            <div class="dash-stat-val" id="statOrders">0</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-label">Revenue (Est.)</div>
+            <div class="dash-stat-val" id="statRevenue">₹0</div>
+          </div>
+<div class="dash-stat">
+            <div class="dash-stat-label">Avg. Daily Rate</div>
+            <div class="dash-stat-val" id="statAvg">₹0</div>
+          </div>
+          <div class="dash-stat">
+            <div class="dash-stat-label">Reviews</div>
+            <div class="dash-stat-val" id="statReviews">0</div>
+          </div>
+        </div>
+        <h3 style="color:var(--white);font-family:var(--serif);margin-bottom:16px;">Recent Bookings</h3>
+        <div class="dash-table-wrap">
+          <table class="dash-table">
+            <thead><tr><th>Customer</th><th>Item</th><th>Dates</th><th>Fit / Occasion</th><th>Status</th></tr></thead>
+            <tbody id="recentOrdersBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyOrders" style="display:none;">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+          <p>No bookings yet</p>
+        </div>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div class="dash-section" id="sec-products">
+        <div class="dash-top">
+          <h2>Products</h2>
+          <button class="add-btn" id="addProductBtn">+ Add Product</button>
+        </div>
+        <div class="dash-table-wrap">
+          <table class="dash-table">
+            <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price/Day</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="productsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="dash-section" id="sec-orders">
+        <div class="dash-top">
+          <h2>Bookings</h2>
+        </div>
+        <div class="dash-table-wrap">
+          <table class="dash-table">
+            <thead><tr><th>Customer</th><th>Email</th><th>Item</th><th>Dates</th><th>Fit / Occasion</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyOrders2" style="display:none;">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+          <p>No bookings yet</p>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="dash-section" id="sec-settings">
+        <div class="dash-top">
+          <h2>Settings</h2>
+        </div>
+        <div class="settings-card">
+          <h3>Change Admin Password</h3>
+          <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" id="setOldPass" placeholder="Current password">
+          </div>
+          <div class="form-group">
+            <label>New Password</label>
+            <input type="password" id="setNewPass" placeholder="New password (min 4 chars)">
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" id="setConfirmPass" placeholder="Confirm new password">
+          </div>
+<button class="btn-primary" id="savePassBtn" style="width:100%;text-align:center;">Save Password</button>
+          <div class="lock-error" id="passError" style="margin-top:12px;"></div>
+        </div>
+        <div class="settings-card" style="margin-top:24px;">
+          <h3>AI Chat Assistant</h3>
+          <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px;">Optional: connect a real AI (OpenAI or Gemini) so the site chat answers anything. Leave its key empty to use the built-in smart assistant. Keys are stored locally in your browser.</p>
+          <div class="form-group">
+            <label>Provider</label>
+            <select id="aiProvider" style="width:100%;padding:14px 18px;background:var(--dark2);border:1px solid rgba(201,169,110,0.2);color:var(--text);font-family:var(--sans);font-size:0.88rem;">
+              <option value="">Off (built-in assistant)</option>
+              <option value="openai">OpenAI</option>
+              <option value="gemini">Google Gemini</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>API Key <span style="font-weight:400;color:#8a8a8a;font-size:0.75rem;">(Gemini: leave empty to use the server&rsquo;s hidden key)</span></label>
+            <input type="text" id="aiKey" placeholder="sk-..." style="width:100%;padding:14px 18px;background:var(--dark2);border:1px solid rgba(201,169,110,0.2);color:var(--text);font-family:var(--sans);font-size:0.88rem;">
+          </div>
+          <button class="btn-primary" id="saveAiBtn" style="width:100%;text-align:center;">Save AI Settings</button>
+          <div class="lock-error" id="aiError" style="margin-top:12px;"></div>
+        </div>
+      </div>
+
+<!-- MESSAGES -->
+      <div class="dash-section" id="sec-messages">
+        <div class="dash-top">
+          <h2>Messages</h2>
+          <span class="dash-welcome">Send messages to users</span>
+        </div>
+        <div class="settings-card">
+          <h3>Send New Message</h3>
+          <div class="form-group">
+            <label>Recipient</label>
+            <select id="msgRecipient" style="width:100%;padding:14px 18px;background:var(--dark2);border:1px solid rgba(201,169,110,0.2);color:var(--text);font-family:var(--sans);font-size:0.88rem;">
+              <option value="ALL">All Users</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea id="msgBody" rows="4" placeholder="Type your message..." style="width:100%;padding:14px 18px;background:var(--dark2);border:1px solid rgba(201,169,110,0.2);color:var(--text);font-family:var(--sans);font-size:0.88rem;resize:vertical;"></textarea>
+          </div>
+          <button class="btn-primary" id="msgSendBtn" style="width:100%;text-align:center;">Send Message</button>
+          <div class="lock-error" id="msgError" style="margin-top:12px;"></div>
+        </div>
+        <div class="settings-card" style="margin-top:24px;">
+          <h3>Message History</h3>
+          <div class="dash-table-wrap">
+            <table class="dash-table">
+              <thead><tr><th>From / To</th><th>Message</th><th>Time</th></tr></thead>
+              <tbody id="msgHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REVIEWS -->
+      <div class="dash-section" id="sec-reviews">
+        <div class="dash-top">
+          <h2>Reviews</h2>
+          <span class="dash-welcome">Manage website &amp; product reviews</span>
+        </div>
+        <div class="settings-card">
+          <h3>Website Reviews</h3>
+          <div class="dash-table-wrap">
+            <table class="dash-table">
+              <thead><tr><th>Rating</th><th>Reviewer</th><th>Review</th><th>Date</th><th></th></tr></thead>
+              <tbody id="reviewsSiteBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="settings-card" style="margin-top:24px;">
+          <h3>Product Reviews</h3>
+          <div class="dash-table-wrap">
+            <table class="dash-table">
+              <thead><tr><th>Rating</th><th>Reviewer</th><th>Product</th><th>Review</th><th>Date</th><th></th></tr></thead>
+              <tbody id="reviewsItemBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI ASSISTANT -->
+      <div class="dash-section" id="sec-ai">
+        <div class="dash-top">
+          <h2>AI Assistant</h2>
+          <span class="dash-welcome">Smart insights for your business</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;">
+          <div style="background:linear-gradient(135deg,var(--dark),var(--dark2));border:1px solid rgba(201,169,110,0.2);padding:24px;grid-column:1/-1;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--black)"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              </div>
+              <div>
+                <div style="color:var(--white);font-family:var(--serif);font-size:1.1rem;">Business AI</div>
+                <div style="color:var(--gold);font-size:0.7rem;letter-spacing:1px;">ANALYZING YOUR DATA</div>
+              </div>
+            </div>
+            <div id="aiInsights" style="color:var(--text);font-size:0.9rem;line-height:1.8;"></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:32px;">
+          <div style="background:var(--dark);border:1px solid rgba(201,169,110,0.1);padding:24px;">
+            <h4 style="color:var(--gold);font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Top Performing Products</h4>
+            <div id="aiTopProducts"></div>
+          </div>
+          <div style="background:var(--dark);border:1px solid rgba(201,169,110,0.1);padding:24px;">
+            <h4 style="color:var(--gold);font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Smart Suggestions</h4>
+            <div id="aiSuggestions"></div>
+          </div>
+          <div style="background:var(--dark);border:1px solid rgba(201,169,110,0.1);padding:24px;">
+            <h4 style="color:var(--gold);font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Demand Forecast</h4>
+            <div id="aiForecast"></div>
+          </div>
+        </div>
+
+        <div style="background:var(--dark);border:1px solid rgba(201,169,110,0.1);padding:24px;margin-bottom:32px;">
+          <h4 style="color:var(--gold);font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Quick Actions</h4>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <button class="add-btn" onclick="aiAutoPrice()">Auto-Optimize Prices</button>
+            <button class="add-btn" onclick="aiGenerateReport()">Generate Report</button>
+            <button class="add-btn" onclick="aiSuggestProducts()">Suggest New Products</button>
+            <button class="add-btn" onclick="aiCleanCatalog()">Clean Inactive Items</button>
+          </div>
+          <div id="aiActionResult" style="margin-top:16px;color:var(--text);font-size:0.85rem;min-height:20px;"></div>
+        </div>
+
+        <div style="background:var(--dark);border:1px solid rgba(201,169,110,0.1);padding:24px;">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h4 style="color:var(--gold);font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">AI Chat</h4>
+            <button class="add-btn" style="font-size:0.72rem;padding:5px 10px;" onclick="aiClearChat()">Clear chat</button>
+          </div>
+          <div id="aiChatMessages" style="max-height:300px;overflow-y:auto;margin-bottom:16px;padding:8px 0;"></div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="aiChatInput" placeholder="Ask anything about your business..." style="flex:1;padding:12px 16px;background:var(--black);border:1px solid rgba(201,169,110,0.2);color:var(--text);font-family:var(--sans);font-size:0.88rem;">
+            <button class="add-btn" id="aiChatSend">Ask</button>
+            <button class="add-btn ai-mic-btn" id="aiChatMic" title="Give tasks by voice" style="flex:0 0 auto;padding:12px 14px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ADD/EDIT PRODUCT MODAL -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal" style="position:relative;">
+      <button class="modal-close" id="modalClose">&times;</button>
+      <h3 id="modalTitle">Add Product</h3>
+      <input type="hidden" id="editId">
+      <div class="form-group">
+        <label>Product Name</label>
+        <input type="text" id="pName" placeholder="e.g. Sabyasachi Silk Lehenga">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="pCategory">
+            <option value="evening">Evening Wear</option>
+            <option value="formal">Formal</option>
+            <option value="cocktail">Cocktail</option>
+            <option value="outerwear">Outerwear</option>
+            <option value="accessories">Accessories</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Price Per Day (₹)</label>
+          <input type="number" id="pPrice" placeholder="7499" min="1">
+        </div>
+<div class="form-group">
+          <label>Image URL</label>
+          <input type="url" id="pImg" placeholder="https://images.unsplash.com/...">
+        </div>
+        <div class="form-group">
+          <label>Stock (pieces owned)</label>
+          <input type="number" id="pStock" placeholder="3" min="1" value="3">
+        </div>
+      </div>
+<div class="form-group">
+        <label>Gallery Images — one URL per line (first one is the main image)</label>
+        <textarea id="pImages" rows="4" placeholder="https://images.unsplash.com/photo-1?w=600&q=80
+https://images.unsplash.com/photo-2?w=600&q=80"></textarea>
+        <div id="pImagesPreview" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>Styles (comma separated)</label>
+          <input type="text" id="pStyle" placeholder="elegant, glamorous">
+        </div>
+        <div class="form-group">
+          <label>Budget Tier</label>
+          <select id="pBudget">
+            <option value="mid">Mid (₹3,899-5,499)</option>
+            <option value="premium">Premium (₹5,999-8,999)</option>
+            <option value="luxury">Luxury (₹9,000+)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="pGender">
+            <option value="women">Women</option>
+            <option value="men">Men</option>
+            <option value="unisex">Unisex</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-outline" id="modalCancel" style="text-align:center;">Cancel</button>
+        <button class="btn-primary" id="modalSave" style="text-align:center;">Save Product</button>
+      </div>
+    </div>
+</div>
+
+  <script src="admin-backend.js"></script>
+  <script>
+  (function() {
+    const DEFAULT_PASS = 'luxe123';
+    const LS_PASS = 'luxe_admin_pass';
+    const LS_PRODUCTS = 'luxe_products';
+    const LS_ORDERS = 'luxe_orders';
+
+    const defaultProducts = [
+      { id: 1, name: 'Sabyasachi Silk Lehenga', category: 'evening', occasion: ['gala','wedding','reception','sangeet'], style: ['elegant','classic','glamorous'], budget: 'premium', price: 7499, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
+      { id: 2, name: 'Tarun Tahiliani Sherwani', category: 'formal', occasion: ['wedding','engagement','reception','formal'], style: ['classic','royal','sharp'], budget: 'mid', price: 5499, img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', link: 'detail.html', gender: 'men', active: true },
+      { id: 3, name: 'Manish Malhotra Cocktail Gown', category: 'cocktail', occasion: ['party','cocktail','reception','date night'], style: ['glamorous','chic','feminine'], budget: 'premium', price: 6099, img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
+      { id: 4, name: 'Anita Dongre Anarkali Suit', category: 'outerwear', occasion: ['festival','puja','family function','diwali'], style: ['classic','elegant','traditional'], budget: 'mid', price: 4699, img: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
+      { id: 5, name: 'Ritu Kumar Bridal Lehenga', category: 'evening', occasion: ['wedding','sangeet','mehendi','reception'], style: ['glamorous','bridal','ornate'], budget: 'premium', price: 7999, img: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
+      { id: 6, name: 'Rahul Mishra Tuxedo', category: 'formal', occasion: ['gala','wedding','cocktail','formal event'], style: ['glamorous','bold','luxurious'], budget: 'luxury', price: 9299, img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', link: 'detail.html', gender: 'men', active: true },
+      { id: 7, name: 'Kundan Bridal Set', category: 'accessories', occasion: ['wedding','engagement','reception','sangeet'], style: ['elegant','classic','glamorous'], budget: 'mid', price: 3899, img: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
+      { id: 8, name: 'Anamika Khrama Cocktail Dress', category: 'cocktail', occasion: ['party','cocktail','night out','birthday'], style: ['chic','trendy','feminine'], budget: 'premium', price: 6599, img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
+      { id: 9, name: 'Masaba Gupta Printed Jacket', category: 'outerwear', occasion: ['casual','brunch','college','travel'], style: ['edgy','bold','trendy'], budget: 'mid', price: 4099, img: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', link: 'detail.html', gender: 'unisex', active: true },
+      { id: 10, name: 'Sabyasachi Heritage Saree', category: 'accessories', occasion: ['wedding','festival','diwali','pooja'], style: ['classic','luxurious','traditional'], budget: 'luxury', price: 10099, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
+      { id: 11, name: 'Neeta Lulla Evening Gown', category: 'evening', occasion: ['gala','black-tie','red carpet','cocktail'], style: ['glamorous','luxurious','elegant'], budget: 'luxury', price: 8899, img: 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
+      { id: 12, name: 'Shantanu & Nikhil Blazer', category: 'formal', occasion: ['interview','business','dinner','wedding'], style: ['sharp','trendy','professional'], budget: 'mid', price: 4999, img: 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80', link: 'detail.html', gender: 'men', active: true }
+    ];
+
+    const defaultOrders = [];
+
+    const DEFAULT_GALLERY = {
+      1: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', 'https://images.unsplash.com/photo-1565483299862-1e4e0b0f45f0?w=400&q=80'],
+      2: ['https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80'],
+      3: ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80'],
+      4: ['https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80', 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', 'https://images.unsplash.com/photo-1551803091-e20673f15770?w=400&q=80'],
+      5: ['https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80'],
+      6: ['https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80'],
+      7: ['https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80'],
+      8: ['https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80'],
+      9: ['https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', 'https://images.unsplash.com/photo-1551803091-e20673f15770?w=400&q=80', 'https://images.unsplash.com/photo-1544441893-675973e31985?w=400&q=80'],
+      10: ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80', 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80'],
+      11: ['https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80', 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80'],
+      12: ['https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80', 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80']
+    };
+
+    function getPass() { return localStorage.getItem(LS_PASS) || DEFAULT_PASS; }
+    function setPass(p) { localStorage.setItem(LS_PASS, p); }
+function getProducts() {
+      const d = JSON.parse(localStorage.getItem(LS_PRODUCTS) || 'null') || defaultProducts;
+      return d.map(p => {
+        if (p.stock === undefined) p = Object.assign({}, p, { stock: 3 });
+        if (!p.images || p.images.length < 2) {
+          const def = DEFAULT_GALLERY[p.id] || [p.img].filter(Boolean);
+          p = Object.assign({}, p, { images: def });
+        }
+        if (!p.img) p = Object.assign({}, p, { img: p.images[0] });
+        return p;
+      });
+    }
+    function saveProducts(p) { localStorage.setItem(LS_PRODUCTS, JSON.stringify(p)); }
+function getOrders() {
+      const d = localStorage.getItem(LS_ORDERS);
+      return d ? JSON.parse(d) : defaultOrders;
+    }
+    function saveOrders(o) { localStorage.setItem(LS_ORDERS, JSON.stringify(o)); }
+    function stockAvailability(productId, startDate, endDate) {
+      const product = getProducts().find(p => p.id === productId);
+      if (!product) return { total: 0, booked: 0, available: 0, enough: false };
+      const total = product.stock || 1;
+      if (!startDate || !endDate) return { total, booked: 0, available: total, enough: total > 0 };
+      const buf = 10;
+      const shift = (d, n) => { const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return x.toISOString().split('T')[0]; };
+      const booked = getOrders().filter(o =>
+        o.productId === productId && o.status !== 'Cancelled' && o.startDate && o.endDate &&
+        startDate <= shift(o.endDate, buf) && shift(o.startDate, -buf) <= endDate
+      ).length;
+      const available = Math.max(0, total - booked);
+      return { total, booked, available, enough: available > 0 };
+    }
+    const MSG_KEY_A = 'luxe_messages';
+    function getUsers() { return JSON.parse(localStorage.getItem('luxe_users') || '[]'); }
+    function getMessages() { return JSON.parse(localStorage.getItem(MSG_KEY_A) || '[]'); }
+    function saveMessages(m) { localStorage.setItem(MSG_KEY_A, JSON.stringify(m)); }
+    function sendMessage(from, to, body) {
+      const msgs = getMessages();
+      msgs.push({ id: Date.now() + Math.random(), from: from, to: to, body: body, time: Date.now(), readBy: [] });
+      saveMessages(msgs);
+    }
+    function adminMessages() {
+      return getMessages().filter(m => m.from === 'admin' || m.to === 'admin' || m.to === 'ALL')
+        .slice().sort((a, b) => b.time - a.time);
+    }
+    function bookedCount(productId) {
+      return getOrders().filter(o => String(o.productId) === String(productId) && o.status !== 'Cancelled').length;
+    }
+
+    // LOCK SCREEN
+    const lockScreen = document.getElementById('lockScreen');
+    const dashboard = document.getElementById('dashboard');
+    const lockPass = document.getElementById('lockPass');
+    const lockBtn = document.getElementById('lockBtn');
+    const lockError = document.getElementById('lockError');
+    const lockToggle = document.getElementById('lockToggle');
+
+    // Clear any prior session if ?Author used — always require password
+    if (location.search.toLowerCase().includes('author')) {
+      sessionStorage.removeItem('luxe_admin_auth');
+    }
+
+    // Check if already logged in this session
+    if (sessionStorage.getItem('luxe_admin_auth') === '1') {
+      lockScreen.style.display = 'none';
+      dashboard.classList.add('active');
+      loadDashboard();
+    }
+
+    lockToggle.addEventListener('click', () => {
+      lockPass.type = lockPass.type === 'password' ? 'text' : 'password';
+    });
+
+    lockBtn.addEventListener('click', tryLogin);
+    lockPass.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+function tryLogin() {
+      const val = lockPass.value.trim();
+      if (!val) { lockError.textContent = 'Please enter a password'; return; }
+      if (window.ADMIN && window.ADMIN.server) {
+        const em = (document.getElementById('lockEmail') || { value: '' }).value.trim();
+        if (!em) { lockError.textContent = 'Enter your admin email'; const el = document.getElementById('lockEmail'); if (el) el.focus(); return; }
+        lockBtn.disabled = true;
+        lockError.textContent = 'Signing in…';
+        ADMIN.login(em, val).then(user => {
+          lockBtn.disabled = false;
+          if (user && user.role === 'admin') {
+            lockError.textContent = '';
+            sessionStorage.setItem('luxe_admin_auth', '1');
+            lockScreen.style.display = 'none';
+            dashboard.classList.add('active');
+            loadDashboard();
+          } else {
+            lockError.textContent = 'Not an admin account, or wrong password.';
+            lockPass.value = '';
+            lockPass.focus();
+          }
+        });
+        return;
+      }
+      if (val === getPass()) {
+        lockError.textContent = '';
+        sessionStorage.setItem('luxe_admin_auth', '1');
+        lockScreen.style.display = 'none';
+        dashboard.classList.add('active');
+        loadDashboard();
+      } else {
+        lockError.textContent = 'Incorrect password. Try again.';
+        lockPass.value = '';
+        lockPass.focus();
+      }
+    }
+
+    // NAVIGATION
+    document.querySelectorAll('.dash-nav a').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const sec = a.dataset.section;
+        document.querySelectorAll('.dash-nav a').forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
+        document.querySelectorAll('.dash-section').forEach(x => x.classList.remove('active'));
+        document.getElementById('sec-' + sec).classList.add('active');
+        // Close mobile sidebar
+        document.getElementById('dashSidebar').classList.remove('open');
+        document.getElementById('dashOverlay').classList.remove('active');
+      });
+    });
+
+    // MOBILE SIDEBAR
+    document.getElementById('dashHam').addEventListener('click', () => {
+      document.getElementById('dashSidebar').classList.toggle('open');
+      document.getElementById('dashOverlay').classList.toggle('active');
+    });
+    document.getElementById('dashOverlay').addEventListener('click', () => {
+      document.getElementById('dashSidebar').classList.remove('open');
+      document.getElementById('dashOverlay').classList.remove('active');
+    });
+
+    // LOGOUT
+document.getElementById('dashLogout').addEventListener('click', e => {
+      e.preventDefault();
+      if (window.ADMIN && window.ADMIN.server) ADMIN.logout();
+      sessionStorage.removeItem('luxe_admin_auth');
+      dashboard.classList.remove('active');
+      lockScreen.style.display = 'flex';
+      lockPass.value = '';
+      lockError.textContent = '';
+    });
+
+// MESSAGING
+    function renderMsgRecipients() {
+      const users = getUsers();
+      const sel = document.getElementById('msgRecipient');
+      sel.innerHTML = '<option value="ALL">All Users</option>' +
+        users.map(u => '<option value="' + u.email + '">' + u.first + ' ' + (u.last || '') + ' (' + u.email + ')</option>').join('');
+    }
+    document.getElementById('msgSendBtn').addEventListener('click', () => {
+      const to = document.getElementById('msgRecipient').value;
+      const body = document.getElementById('msgBody').value.trim();
+      const err = document.getElementById('msgError');
+      if (!body) { err.style.color = '#e74c3c'; err.textContent = 'Please type a message.'; return; }
+      err.textContent = '';
+      sendMessage('admin', to, body);
+      document.getElementById('msgBody').value = '';
+      err.style.color = '#4CAF50';
+      err.textContent = to === 'ALL' ? 'Message sent to all users.' : 'Message sent.';
+      renderMsgHistory();
+    });
+    function renderMsgHistory() {
+      const msgs = adminMessages();
+      document.getElementById('msgHistoryBody').innerHTML = msgs.length === 0
+        ? '<tr><td colspan="3" style="color:var(--text-muted);text-align:center;">No messages yet</td></tr>'
+        : msgs.map(m => {
+          const who = m.from === 'admin' ? 'Admin → ' + (m.to === 'ALL' ? 'All Users' : m.to) : m.from + ' → Admin';
+          const time = new Date(m.time).toLocaleString();
+          return '<tr><td>' + esc(who) + '</td><td>' + esc(m.body) + '</td><td>' + time + '</td></tr>';
+        }).join('');
+    }
+
+// REVIEWS
+    function getReviewsAll() { return JSON.parse(localStorage.getItem('luxe_reviews') || '[]'); }
+    function saveReviewsAll(r) { localStorage.setItem('luxe_reviews', JSON.stringify(r)); }
+    function deleteReview(id) { saveReviewsAll(getReviewsAll().filter(r => r.id !== id)); }
+
+    function renderReviews() {
+      const reviews = getReviewsAll().slice().sort((a, b) => b.time - a.time);
+      const stars = n => n >= 5 ? '★★★★★' : n >= 4 ? '★★★★☆' : n >= 3 ? '★★★☆☆' : n >= 2 ? '★★☆☆☆' : n >= 1 ? '★☆☆☆☆' : '☆☆☆☆☆';
+      const date = t => new Date(t).toLocaleString();
+      const siteRows = reviews.filter(r => r.type === 'site').map(r =>
+        '<tr><td style="color:#f5c518;white-space:nowrap;">' + stars(r.rating) + '</td><td>' + esc(r.name || 'Anonymous') + '</td><td>' + esc(r.text) + '</td><td style="white-space:nowrap;">' + date(r.time) + '</td><td><button class="danger" onclick="deleteReviewRow(' + r.id + ')">Delete</button></td></tr>'
+      ).join('');
+      document.getElementById('reviewsSiteBody').innerHTML = siteRows ||
+        '<tr><td colspan="5" style="color:var(--text-muted);text-align:center;">No website reviews yet</td></tr>';
+
+      const products = getProducts();
+      const itemRows = reviews.filter(r => r.type === 'item').map(r => {
+        const p = products.find(x => x.id === r.itemId);
+        return '<tr><td style="color:#f5c518;white-space:nowrap;">' + stars(r.rating) + '</td><td>' + esc(r.name || 'Anonymous') + '</td><td>' + esc(p ? p.name : 'Item #' + (r.itemId || '?')) + '</td><td>' + esc(r.text) + '</td><td style="white-space:nowrap;">' + date(r.time) + '</td><td><button class="danger" onclick="deleteReviewRow(' + r.id + ')">Delete</button></td></tr>';
+      }).join('');
+      document.getElementById('reviewsItemBody').innerHTML = itemRows ||
+        '<tr><td colspan="6" style="color:var(--text-muted);text-align:center;">No product reviews yet</td></tr>';
+      document.getElementById('statReviews').textContent = reviews.length;
+    }
+
+    window.deleteReviewRow = function (id) {
+      if (!confirm('Delete this review?')) return;
+      deleteReview(id);
+      renderReviews();
+      loadDashboard();
+    };
+
+// LOAD DASHBOARD
+    function loadDashboard() {
+      const products = getProducts();
+      const orders = getOrders();
+      const activeP = products.filter(p => p.active !== false);
+
+      // Stats
+      document.getElementById('statProducts').textContent = activeP.length;
+      document.getElementById('statOrders').textContent = orders.length;
+      const rev = orders.reduce((s, o) => s + (o.total || 0), 0);
+      document.getElementById('statRevenue').textContent = '₹' + rev.toFixed(0);
+      const avg = activeP.length ? (activeP.reduce((s, p) => s + p.price, 0) / activeP.length).toFixed(0) : 0;
+      document.getElementById('statAvg').textContent = '₹' + avg;
+
+      // Recent orders
+      const rBody = document.getElementById('recentOrdersBody');
+      const eOrders = document.getElementById('emptyOrders');
+      if (orders.length === 0) {
+        rBody.innerHTML = '';
+        eOrders.style.display = 'block';
+      } else {
+        eOrders.style.display = 'none';
+        rBody.innerHTML = orders.slice(-5).reverse().map(o => `
+          <tr>
+            <td>${esc(o.name)}</td>
+<td>${esc(o.item)}</td>
+            <td>${esc(o.dates)}</td>
+            <td>${esc([o.size, o.occasion].filter(Boolean).join(' · ')) || '—'}</td>
+            <td><span class="badge badge-green">${esc(o.status)}</span></td>
+          </tr>
+        `).join('');
+      }
+
+renderProducts();
+      renderOrders();
+      renderMsgRecipients();
+      renderMsgHistory();
+      renderReviews();
+    }
+
+    // PRODUCTS TABLE
+    function renderProducts() {
+      const products = getProducts();
+      const body = document.getElementById('productsBody');
+      body.innerHTML = products.map(p => {
+        const total = p.stock || 1;
+        const free = Math.max(0, total - bookedCount(p.id));
+        const low = free <= 1;
+        return `
+        <tr>
+          <td><img src="${esc(p.img)}" class="thumb" alt=""></td>
+          <td>${esc(p.name)}</td>
+          <td>${esc(p.category)}</td>
+          <td><strong style="color:var(--gold)">₹${p.price}</strong></td>
+          <td><span style="color:#4CAF50;font-weight:600">${total} pc</span><br><span style="color:${low ? '#e74c3c' : '#aaa'};font-size:0.75rem;">${free} free now</span></td>
+          <td><span class="badge ${p.active !== false ? 'badge-green' : 'badge-red'}">${p.active !== false ? 'Active' : 'Hidden'}</span></td>
+          <td>
+            <div class="dash-actions">
+              <button onclick="editProduct(${p.id})">Edit</button>
+              <button onclick="toggleProduct(${p.id})">${p.active !== false ? 'Hide' : 'Show'}</button>
+              <button class="danger" onclick="deleteProduct(${p.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `}).join('');
+    }
+
+    // ORDERS TABLE
+    function renderOrders() {
+      const orders = getOrders();
+      const body = document.getElementById('ordersBody');
+      const eOrders = document.getElementById('emptyOrders2');
+      if (orders.length === 0) {
+        body.innerHTML = '';
+        eOrders.style.display = 'block';
+      } else {
+        eOrders.style.display = 'none';
+        body.innerHTML = orders.map((o, i) => `
+          <tr>
+            <td>${esc(o.name)}</td>
+            <td>${esc(o.email)}</td>
+<td>${esc(o.item)}</td>
+            <td>${esc(o.dates)}</td>
+            <td>${esc([o.size, o.occasion].filter(Boolean).join(' · ')) || '—'}</td>
+            <td><strong style="color:var(--gold)">₹${o.total}</strong></td>
+            <td><span class="badge ${o.status === 'Confirmed' ? 'badge-green' : o.status === 'Pending' ? 'badge-yellow' : 'badge-red'}">${esc(o.status)}</span></td>
+            <td>
+              <div class="dash-actions">
+                <button onclick="updateOrderStatus(${i},'Confirmed')">Confirm</button>
+                <button onclick="updateOrderStatus(${i},'Cancelled')" class="danger">Cancel</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // PRODUCT CRUD
+    document.getElementById('addProductBtn').addEventListener('click', () => {
+      document.getElementById('modalTitle').textContent = 'Add Product';
+      document.getElementById('editId').value = '';
+      clearModal();
+      document.getElementById('productModal').classList.add('active');
+    });
+
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    document.getElementById('productModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+    document.getElementById('pImages').addEventListener('input', () => {
+      const urls = document.getElementById('pImages').value.split('\n').map(s => s.trim()).filter(Boolean);
+      document.getElementById('pImagesPreview').innerHTML = urls.map(u => '<img src="' + u + '" style="width:56px;height:70px;object-fit:cover;border-radius:6px;border:1px solid rgba(201,169,110,0.2);" onerror="this.style.opacity=0.2">').join('');
+    });
+
+    document.getElementById('modalSave').addEventListener('click', () => {
+      const name = document.getElementById('pName').value.trim();
+      const category = document.getElementById('pCategory').value;
+      const price = parseFloat(document.getElementById('pPrice').value);
+      const stock = parseInt(document.getElementById('pStock').value) || 1;
+      const img = document.getElementById('pImg').value.trim();
+      const images = document.getElementById('pImages').value.split('\n').map(s => s.trim()).filter(Boolean);
+      const occasion = document.getElementById('pOccasion').value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+      const style = document.getElementById('pStyle').value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+      const budget = document.getElementById('pBudget').value;
+      const gender = document.getElementById('pGender').value;
+
+      if (!name || !price || !img) { alert('Name, price, and image URL are required.'); return; }
+
+      let products = getProducts();
+      const editId = document.getElementById('editId').value;
+
+      if (editId) {
+        const idx = products.findIndex(p => p.id === parseInt(editId));
+        if (idx >= 0) {
+products[idx] = { ...products[idx], name, category, price, stock, img, images: images.length ? images : [img], occasion, style, budget, gender };
+        }
+      } else {
+        const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
+        products.push({ id: newId, name, category, price, stock, img, images: images.length ? images : [img], occasion, style, budget, gender, link: 'detail.html', active: true });
+      }
+
+      saveProducts(products);
+      closeModal();
+      renderProducts();
+      loadDashboard();
+    });
+
+    window.editProduct = function(id) {
+      const p = getProducts().find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('modalTitle').textContent = 'Edit Product';
+      document.getElementById('editId').value = p.id;
+      document.getElementById('pName').value = p.name;
+      document.getElementById('pCategory').value = p.category;
+      document.getElementById('pPrice').value = p.price;
+      document.getElementById('pStock').value = p.stock || 1;
+      document.getElementById('pImg').value = p.img;
+      document.getElementById('pImages').value = (p.images && p.images.length ? p.images : [p.img]).join('\n');
+      document.getElementById('pImages').dispatchEvent(new Event('input'));
+      document.getElementById('pOccasion').value = (p.occasion || []).join(', ');
+      document.getElementById('pStyle').value = (p.style || []).join(', ');
+      document.getElementById('pBudget').value = p.budget;
+      document.getElementById('pGender').value = p.gender;
+      document.getElementById('productModal').classList.add('active');
+    };
+
+    window.toggleProduct = function(id) {
+      let products = getProducts();
+      const p = products.find(x => x.id === id);
+      if (p) { p.active = !p.active; saveProducts(products); renderProducts(); loadDashboard(); }
+    };
+
+    window.deleteProduct = function(id) {
+      if (!confirm('Delete this product?')) return;
+      let products = getProducts().filter(x => x.id !== id);
+      saveProducts(products);
+      renderProducts();
+      loadDashboard();
+    };
+
+    window.updateOrderStatus = function(idx, status) {
+      let orders = getOrders();
+      if (orders[idx]) { orders[idx].status = status; saveOrders(orders); renderOrders(); loadDashboard(); }
+    };
+
+    function closeModal() {
+      document.getElementById('productModal').classList.remove('active');
+      clearModal();
+    }
+
+    function clearModal() {
+      document.getElementById('pName').value = '';
+      document.getElementById('pPrice').value = '';
+      document.getElementById('pStock').value = 3;
+      document.getElementById('pImg').value = '';
+      document.getElementById('pImages').value = '';
+      document.getElementById('pOccasion').value = '';
+      document.getElementById('pStyle').value = '';
+      document.getElementById('editId').value = '';
+    }
+
+    // SETTINGS - Change Password
+    document.getElementById('savePassBtn').addEventListener('click', () => {
+      const oldP = document.getElementById('setOldPass').value;
+      const newP = document.getElementById('setNewPass').value;
+      const confP = document.getElementById('setConfirmPass').value;
+const err = document.getElementById('passError');
+
+      if (window.ADMIN && window.ADMIN.server) {
+        if (newP.length < 4) { err.textContent = 'New password must be at least 4 characters'; return; }
+        if (newP !== confP) { err.textContent = 'Passwords do not match'; return; }
+        ADMIN.changePass(oldP, newP).then(ok => {
+          err.style.color = ok ? '#4CAF50' : '#e74c3c';
+          err.textContent = ok ? 'Password updated successfully!' : 'Current password is incorrect';
+          if (ok) {
+            document.getElementById('setOldPass').value = '';
+            document.getElementById('setNewPass').value = '';
+            document.getElementById('setConfirmPass').value = '';
+          }
+        });
+        return;
+      }
+
+      if (oldP !== getPass()) { err.textContent = 'Current password is incorrect'; return; }
+      if (newP.length < 4) { err.textContent = 'New password must be at least 4 characters'; return; }
+      if (newP !== confP) { err.textContent = 'Passwords do not match'; return; }
+
+      setPass(newP);
+      err.style.color = '#4CAF50';
+      err.textContent = 'Password updated successfully!';
+      document.getElementById('setOldPass').value = '';
+      document.getElementById('setNewPass').value = '';
+      document.getElementById('setConfirmPass').value = '';
+setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
+    });
+
+    // AI CHAT config
+    // ponytail: keys live in server.js — the browser talks to /api/ai, never Gemini directly.
+    const AI_PROXY = (function(){ try { return (window.location.protocol === 'file:' ? 'http://localhost:3010' : '') + '/api/ai'; } catch (e) { return '/api/ai'; } })();
+    const DEFAULT_AI = { provider: 'gemini', enabled: true };
+    function loadAiSettings() {
+      try {
+        const c = JSON.parse(localStorage.getItem('luxe_chat_ai') || 'null') || DEFAULT_AI;
+        document.getElementById('aiProvider').value = c.provider;
+        document.getElementById('aiKey').value = c.key || '';
+      } catch(e) {}
+    }
+    loadAiSettings();
+    document.getElementById('saveAiBtn').addEventListener('click', () => {
+      const provider = document.getElementById('aiProvider').value;
+      const key = document.getElementById('aiKey').value.trim();
+      const err = document.getElementById('aiError');
+      if (provider === 'openai' && !key) { err.style.color = '#e74c3c'; err.textContent = 'Enter an API key for openai.'; return; }
+      if (provider === 'gemini' && !key) localStorage.removeItem('luxe_chat_ai');
+      else {
+        const cfg = { provider: provider, key: key, enabled: !!provider };
+        localStorage.setItem('luxe_chat_ai', JSON.stringify(cfg));
+      }
+      err.style.color = '#4CAF50';
+      err.textContent = provider === 'gemini' && !key
+        ? 'AI chat enabled via the server\u2019s hidden key.' :
+        provider ? 'AI chat enabled (' + provider + '). New chat messages will use it.' : 'Built-in assistant active.';
+      setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
+    });
+
+// ============ AI ASSISTANT ============
+    function generateAIInsights() {
+      const products = getProducts();
+      const orders = getOrders();
+      const active = products.filter(p => p.active !== false);
+      const revenue = orders.reduce((s, o) => s + (o.total || 0), 0);
+      const confirmed = orders.filter(o => o.status === 'Confirmed').length;
+      const pending = orders.filter(o => o.status === 'Pending').length;
+      const cancelled = orders.filter(o => o.status === 'Cancelled').length;
+
+      const catRev = {};
+      orders.forEach(o => { const k = o.category || o.item || '—'; catRev[k] = (catRev[k] || 0) + (o.total || 0); });
+      const topCatRev = Object.entries(catRev).sort((a, b) => b[1] - a[1])[0];
+
+      const booked = {};
+      orders.forEach(o => { booked[o.name] = (booked[o.name] || 0) + 1; });
+      const slow = active.filter(p => !booked[p.name]);
+      const lowStock = active.filter(p => (p.stock || 1) <= 1);
+
+      const insights = [];
+      if (orders.length === 0) {
+        insights.push("No bookings yet. Your catalog is ready — promote on Instagram & WhatsApp to land your first customers.");
+        insights.push("Add 2-3 luxury pieces (₹8,000+) to test premium demand in Mainpuri & Etawah.");
+      } else {
+        insights.push("Revenue: <strong>₹" + revenue.toLocaleString('en-IN') + "</strong> across " + orders.length + " bookings (" + confirmed + " confirmed, " + pending + " pending, " + cancelled + " cancelled).");
+        insights.push("Average booking value: <strong>₹" + (revenue / orders.length).toFixed(0) + "</strong>.");
+        if (topCatRev) insights.push("Top revenue category: <strong>" + esc(topCatRev[0]) + "</strong> — ₹" + topCatRev[1].toLocaleString('en-IN') + ". Double down here.");
+        if (pending > 0) insights.push("You have <strong>" + pending + " pending booking" + (pending > 1 ? 's' : '') + "</strong> — confirm them fast to lock in revenue.");
+        const upcoming = orders.filter(o => o.status !== 'Cancelled' && o.startDate && new Date(o.startDate).getTime() >= new Date().setHours(0, 0, 0, 0)).length;
+        if (upcoming) insights.push("Upcoming rentals on the calendar: <strong>" + upcoming + "</strong>.");
+      }
+      if (slow.length) insights.push("Slow movers (" + slow.length + "): never booked — " + slow.slice(0, 3).map(p => p.name).join(', ') + ". Feature or bundle them.");
+      if (lowStock.length) insights.push("Low stock warning: " + lowStock.map(p => p.name + ' (' + (p.stock || 1) + ' left)').join(', ') + " — restock before the next peak.");
+      if (active.length < 10) insights.push("Catalog has " + active.length + " active items. Aim for 20+ for better search visibility.");
+
+      document.getElementById('aiInsights').innerHTML = insights.map(i => '<div style="margin-bottom:8px;">• ' + i + '</div>').join('');
+    }
+
+    function generateTopProducts() {
+      const products = getProducts();
+      const orders = getOrders();
+      const el = document.getElementById('aiTopProducts');
+      const ranked = products.map(p => {
+        const mine = orders.filter(o => (o.item === p.name || o.productId === p.id) && o.status !== 'Cancelled');
+        const count = mine.length;
+        const rev = mine.reduce((s, o) => s + (o.total || 0), 0);
+        return { ...p, bookings: count, rev };
+      }).sort((a, b) => b.bookings - a.bookings).slice(0, 5);
+
+      if (ranked.every(p => p.bookings === 0)) {
+        el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">No booking data yet. As orders come in, top products will appear here.</div>';
+      } else {
+        el.innerHTML = ranked.map((p, i) => '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(201,169,110,0.08);"><span style="color:var(--text);font-size:0.85rem;">' + (i + 1) + '. ' + esc(p.name) + '</span><span style="color:var(--gold);font-size:0.8rem;">' + p.bookings + '× · ₹' + p.rev.toLocaleString('en-IN') + '</span></div>').join('');
+      }
+    }
+
+    function generateSuggestions() {
+      const products = getProducts();
+      const orders = getOrders();
+      const reviews = getReviewsAll();
+      const el = document.getElementById('aiSuggestions');
+      const suggestions = [];
+      const cats = {};
+      products.forEach(p => { if (p.active !== false) cats[p.category] = (cats[p.category] || 0) + 1; });
+
+      const bookedCats = {};
+      orders.forEach(o => { const k = o.category || o.item || '—'; bookedCats[k] = (bookedCats[k] || 0) + 1; });
+      const bookedCatNames = Object.keys(bookedCats);
+
+      if (orders.length && bookedCatNames.length) {
+        const weak = Object.keys(cats).filter(c => !bookedCatNames.includes(c));
+        if (weak.length) suggestions.push("No rentals from <strong>" + weak.join(', ') + "</strong> yet — market these categories with a special offer.");
+      }
+      if (reviews.length < 3) suggestions.push("You have " + reviews.length + " review(s). Send a broadcast asking happy customers to leave a review.");
+      const lowStock = products.filter(p => p.active !== false && (p.stock || 1) <= 1);
+      if (lowStock.length) suggestions.push("Low stock on " + lowStock.slice(0, 2).map(p => p.name).join(', ') + " — restock ahead of weekends.");
+      const peakNow = [0, 1, 2, 10, 11].includes(new Date().getMonth());
+      suggestions.push(peakNow
+        ? "Peak season engine ON — raise prices 10-15% on high-demand items via Auto-Optimize."
+        : "Off-season: run a monsoon discount bundle (2 items = 15% off) to keep utilization up.");
+      suggestions.push("Bundle bridal packages (lehenga + jewelry + dupatta) at one price to lift order value.");
+      suggestions.push("Reply to every message fast — responsiveness is the #1 driver of rentals in small markets.");
+
+      el.innerHTML = suggestions.map(s => '<div style="margin-bottom:8px;font-size:0.85rem;color:var(--text);">💡 ' + s + '</div>').join('');
+    }
+
+    function generateForecast() {
+      const orders = getOrders();
+      const el = document.getElementById('aiForecast');
+      const month = new Date().getMonth();
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const byMonth = Array(12).fill(0);
+      orders.forEach(o => {
+        if (o.startDate) { const m = new Date(o.startDate + 'T00:00:00').getMonth(); if (!isNaN(m)) byMonth[m]++; }
+      });
+      const max = Math.max(1, ...byMonth);
+      const seasons = [
+        { months: [0, 1, 2], label: 'Wedding Peak', demand: 'Very High' },
+        { months: [3, 4], label: 'Summer Parties', demand: 'Moderate' },
+        { months: [5, 6, 7], label: 'Monsoon / Off', demand: 'Low' },
+        { months: [8, 9], label: 'Festive Buildup', demand: 'High' },
+        { months: [10, 11], label: 'Wedding + Festive Peak', demand: 'Very High' }
+      ];
+      const cur = seasons.find(s => s.months.includes(month));
+      const barHtml = months.map((m, i) => {
+        const color = seasons.find(s => s.months.includes(i)).demand === 'Low' ? '#e74c3c' : seasons.find(s => s.months.includes(i)).demand === 'Moderate' ? '#FFC107' : '#4CAF50';
+        const w = Math.round((byMonth[i] / max) * 100);
+        return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:0.75rem;"><span style="width:32px;color:var(--text-muted);">' + m + '</span><div style="flex:1;background:rgba(201,169,110,0.1);height:10px;border-radius:2px;"><div style="width:' + w + '%;height:10px;background:' + color + ';border-radius:2px;"></div></div><span style="width:22px;text-align:right;color:var(--text);">' + byMonth[i] + '</span></div>';
+      }).join('');
+      const hasData = orders.some(o => o.startDate);
+      el.innerHTML = (hasData ? '<div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;">Rentals by month (from actual bookings):</div>' + barHtml : '<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px;">No dated bookings yet — showing the seasonal pattern.</div>' + barHtml) +
+        '<div style="margin-top:12px;font-size:0.8rem;color:var(--text-muted);line-height:1.6;">Current: <span style="color:#4CAF50;font-weight:700;">' + cur.label + ' — ' + cur.demand + ' Demand</span><br>Tip: ' + (cur.demand === 'Very High' ? 'Raise prices & stock hard.' : cur.demand === 'High' ? 'Push festive bundles & referrals.' : 'Run discounts, refresh marketing.') + '</div>';
+    }
+
+    // Quick actions
+    window.aiAutoPrice = function() {
+      const el = document.getElementById('aiActionResult');
+      const products = getProducts();
+      const month = new Date().getMonth();
+      const isPeak = [0,1,2,10,11].includes(month);
+      let changed = 0;
+      products.forEach(p => {
+        if (p.active !== false) {
+          const adjustment = isPeak ? 1.1 : 0.95;
+          p.price = Math.round(p.price * adjustment / 100) * 100;
+          changed++;
+        }
+      });
+      saveProducts(products);
+      el.innerHTML = '<span style="color:#4CAF50;">✓ Prices ' + (isPeak ? 'increased by 10%' : 'adjusted by -5%') + ' for ' + changed + ' items based on seasonal demand.</span>';
+      loadDashboard();
+    };
+
+    window.aiGenerateReport = function() {
+      const el = document.getElementById('aiActionResult');
+      const products = getProducts();
+      const orders = getOrders();
+      const active = products.filter(p => p.active !== false);
+      const revenue = orders.reduce((s, o) => s + (o.total || 0), 0);
+      const report = '<div style="background:var(--black);padding:16px;margin-top:8px;border:1px solid rgba(201,169,110,0.1);"><strong style="color:var(--gold);">Business Report — ' + new Date().toLocaleDateString('en-IN') + '</strong><br><br>' +
+        'Active Products: ' + active.length + '<br>' +
+        'Total Bookings: ' + orders.length + '<br>' +
+        'Revenue: ₹' + revenue.toLocaleString('en-IN') + '<br>' +
+        'Avg Booking Value: ₹' + (orders.length ? (revenue / orders.length).toFixed(0) : 0) + '<br>' +
+        'Categories: ' + Object.keys(active.reduce((a, p) => { a[p.category] = 1; return a; }, {})).join(', ') + '<br>' +
+        '</div>';
+      el.innerHTML = report;
+    };
+
+    window.aiSuggestProducts = function() {
+      const el = document.getElementById('aiActionResult');
+      const newProducts = [
+        { name: 'Manish Malhotra Saree', category: 'evening', price: 8499, occasions: 'wedding, reception, cocktail' },
+        { name: 'Ethnic Kurti Set', category: 'cocktail', price: 3499, occasions: 'festival, pooja, casual' },
+        { name: 'Velvet Sherwani', category: 'formal', price: 7999, occasions: 'wedding, sangeet, reception' },
+        { name: 'Polki Jewelry Set', category: 'accessories', price: 5499, occasions: 'wedding, engagement, mehendi' },
+        { name: 'Lehenga Choli', category: 'evening', price: 6999, occasions: 'wedding, navratri, garba' }
+      ];
+      el.innerHTML = '<div style="margin-top:8px;">' + newProducts.map(p => '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.08);"><div><strong style="color:var(--white);">' + p.name + '</strong><br><span style="color:var(--text-muted);font-size:0.8rem;">' + p.category + ' • ₹' + p.price.toLocaleString('en-IN') + '/day • ' + p.occasions + '</span></div><button class="add-btn" onclick="aiAddSuggested(\'' + p.name + '\',\'' + p.category + '\',' + p.price + ')">Add</button></div>').join('') + '</div>';
+    };
+
+    window.aiAddSuggested = function(name, cat, price) {
+      let products = getProducts();
+      const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
+      products.push({ id: newId, name, category: cat, price, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'], occasion: ['wedding','party'], style: ['elegant'], budget: 'mid', gender: 'women', active: true, link: 'detail.html' });
+      saveProducts(products);
+      document.getElementById('aiActionResult').innerHTML = '<span style="color:#4CAF50;">✓ ' + name + ' added to catalog!</span>';
+      loadDashboard();
+    };
+
+    window.aiCleanCatalog = function() {
+      let products = getProducts();
+      const before = products.length;
+      products = products.filter(p => p.active !== false);
+      const removed = before - products.length;
+      if (removed > 0) {
+        saveProducts(products);
+        document.getElementById('aiActionResult').innerHTML = '<span style="color:#4CAF50;">✓ Removed ' + removed + ' inactive items from catalog.</span>';
+        loadDashboard();
+      } else {
+        document.getElementById('aiActionResult').innerHTML = '<span style="color:var(--text-muted);">No inactive items to clean.</span>';
+      }
+    };
+
+// AI Chat — Multi-intent assistant
+    let chatState = { flow: null, step: 0, data: {} };
+
+    function aiChatReply(text, options) {
+      const msgs = document.getElementById('aiChatMessages');
+      msgs.innerHTML += '<div style="margin-bottom:8px;"><span style="background:var(--dark2);color:var(--text);padding:8px 14px;display:inline-block;border-radius:12px 12px 12px 2px;font-size:0.85rem;border:1px solid rgba(201,169,110,0.1);">' + text + '</span></div>';
+      if (options && options.length) {
+        const optHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0 0;">' + options.map(o => '<button class="add-btn" style="font-size:0.78rem;padding:6px 12px;margin:0;" onclick="aiChatPick(\'' + o.replace(/'/g, "\\'") + '\')">' + o + '</button>').join('') + '</div>';
+        msgs.innerHTML += optHtml;
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function aiChatUser(text) {
+      const msgs = document.getElementById('aiChatMessages');
+      msgs.innerHTML += '<div style="text-align:right;margin-bottom:8px;"><span style="background:var(--gold);color:var(--black);padding:8px 14px;display:inline-block;border-radius:12px 12px 2px 12px;font-size:0.85rem;">' + esc(text) + '</span></div>';
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function aiTyping(on) {
+      const msgs = document.getElementById('aiChatMessages');
+      let el = document.getElementById('aiTypingBubble');
+      if (on) {
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'aiTypingBubble';
+          el.style.cssText = 'margin-bottom:8px;color:var(--text-muted);font-size:0.8rem;';
+          el.textContent = 'Styla is analyzing your data…';
+          msgs.appendChild(el);
+        }
+      } else if (el) el.remove();
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function aiChatIntro() {
+      if (document.getElementById('aiChatMessages').children.length) return;
+      const products = getProducts();
+      const orders = getOrders();
+      aiChatReply('Hi! I\'m Styla — your business AI. I have <strong>full access</strong> to this admin panel: products, bookings, availability, reviews, inbox replies, broadcasts, customers and settings. Speak or type in English, Hindi or Hinglish — e.g. "confirm bookings", "sabyasachi ka price 7000 karo", "reviews hatao", "inbox dikhao". (' + products.length + ' products, ' + orders.length + ' bookings.) What do you need?', ['Confirm bookings', 'Change price', 'Check availability', 'Inbox / Reply', 'Customers list', 'Manage reviews', 'Send broadcast', 'Store summary', 'Change password', 'Add product']);
+    }
+
+    window.aiChatPick = function(val) {
+      aiChatUser(val);
+      setTimeout(() => aiProcessInput(val), 150);
+    };
+
+    window.aiClearChat = function() {
+      document.getElementById('aiChatMessages').innerHTML = '';
+      chatState = { flow: null, step: 0, data: {} };
+      aiChatIntro();
+    };
+
+    function askAdminAI(msg) {
+      let cfg;
+      try { cfg = JSON.parse(localStorage.getItem('luxe_chat_ai') || 'null') || DEFAULT_AI; } catch(e) { cfg = DEFAULT_AI; }
+      if (!cfg || !cfg.enabled) return Promise.resolve(null);
+      const p = getProducts();
+      const o = getOrders();
+      const ctx = 'Store: ' + p.length + ' active products, ' + o.length + ' bookings, revenue ₹' + o.reduce((s, x) => s + (x.total || 0), 0).toLocaleString('en-IN') + '. Products: ' + p.slice(0, 15).map(x => x.name + ' (₹' + x.price + ', ' + x.category + ')').join('; ');
+      const system = 'You are Styla, the admin AI for a luxury rental store. You have full access to the admin panel and can confirm/cancel bookings, edit products (name, price, stock, category, occasion, style, budget, gender, image, active), delete products, manage reviews, reply to messages, send broadcasts, list customers, show availability, change the password, and open any section when the author says things like "open products". Answer in the language the author used (English, Hindi or Hinglish), short and practical, under 90 words. For actions, reply with the exact command phrase the author should say, e.g. say "Confirm bookings" or "Change price of <item> to <number>". ' + ctx;
+      return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: msg }) })
+        .then(r => r.json())
+        .then(j => j.text || null)
+        .catch(() => null);
+    }
+
+    function hinglish(s) {
+      const nums = { ek: '1', do: '2', teen: '3', chaar: '4', char: '4', paanch: '5', chhe: '6', saat: '7', aath: '8', nau: '9', das: '10', pehla: '1', dusra: '2', teesra: '3' };
+      s = ' ' + s + ' ';
+      s = s.replace(/ (please|plz|kripya|bhaiya?|ji|sir|maam|yaar|thoda|bas|aap) /g, ' ');
+      s = s.replace(/\b(hain|haan|han|ha)\b/g, ' yes ');
+      s = s.replace(/\bnahi(?:n| ho)?\b|\bna ho\b/g, ' no ');
+      Object.keys(nums).forEach(k => { s = s.replace(new RegExp('\\b' + k + '\\b', 'g'), ' ' + nums[k] + ' '); });
+      s = s.replace(/\b(dikhao|dikha|dikh|deko|dekh|batao|bata|dikhe)\b/g, ' show ')
+        .replace(/\b(bhejo|bejo|bhej|send karo|bhej do)\b/g, ' send ')
+        .replace(/\b(hatao|hata do|remove karo|delete karo|band karo|mitao)\b/g, ' delete ')
+        .replace(/\b(badlo|badal|change karo)\b/g, ' change ')
+        .replace(/\b(kholo|khol|khole|switch karo|jao to)\b/g, ' open ')
+        .replace(/\b(cancel karo)\b/g, ' cancel ')
+        .replace(/\b(confirm karo)\b/g, ' confirm ')
+        .replace(/\b(password|pass)\s+(change|badlo|badal|set|update|new)\b/g, ' change password ');
+      s = s.replace(/\b(karo|karein|kijiye|kar do|kar de|de do|de dena|dijiye|chahiye|chahta|chahti|chaho|karna|karne|karni|kar|kr|krna|kro|kiya|ki|ke|ka|kya|ko|mein|me|hoga|hona|dena|wala|wali|saara|sab|hai|de)\b /g, ' ');
+      return s.replace(/\s+/g, ' ').trim();
+    }
+
+    function aiProcessInput(input) {
+      const msg = hinglish(input.toLowerCase().trim());
+      const products = getProducts();
+      const orders = getOrders();
+
+      // ===== INTENT DETECTION =====
+      if (chatState.flow === null) {
+        const want = t => t.split(/[\s,!?.]+/).some(w => msg.includes(w.slice(0, 4)));
+        const isConfirm = /confirm|approve|accept|yes/.test(msg);
+        const isCancel = /cancel|decline|reject|no/.test(msg);
+        const isBookingTalk = /order|booking|rental|booked|shipping/.test(msg);
+
+        // one-shot quick actions: change price / stock
+        const qnum = (msg.match(/(\d{1,})/) || [])[1];
+        const qHit = () => {
+          let best = null;
+          products.filter(p => p.active !== false).forEach(p => {
+            const toks = p.name.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+            if (toks.some(t => msg.includes(t))) best = (!best || p.name.length > best.name.length) ? p : best;
+          });
+          return best;
+        };
+        if (qnum && /price|rate|cost|charge|daam/.test(msg)) {
+          const p = qHit();
+          if (p) { let all = getProducts(); all[all.findIndex(x => x.id === p.id)].price = parseInt(qnum); saveProducts(all); loadDashboard(); aiChatReply('Updated <strong>' + p.name + '</strong> — price is now <strong>₹' + qnum + '</strong>/day. ✓', ['Edit another', 'Back to menu']); return; }
+        }
+        if (qnum && /stock|qty|pcs|pieces/.test(msg)) {
+          const p = qHit();
+          if (p) { let all = getProducts(); all[all.findIndex(x => x.id === p.id)].stock = parseInt(qnum); saveProducts(all); loadDashboard(); aiChatReply('Set <strong>' + p.name + '</strong> stock to <strong>' + qnum + '</strong>. ✓', ['Edit another', 'Back to menu']); return; }
+        }
+
+        // navigate to a panel ("open products tab kholo")
+        if (!/summary|status|how many|detail|report|dikh/.test(msg) && /(open|khol\w*|go to|switch|jump|tab|panel|section|page)/.test(msg)) {
+          const sec = /overview|dashboard/.test(msg) ? 'overview' : /review/.test(msg) ? 'reviews' : /message|inbox|mail/.test(msg) ? 'messages' : /order|booking/.test(msg) ? 'orders' : /product/.test(msg) ? 'products' : /setting|password|config|key/.test(msg) ? 'settings' : /styla|assistant|ai agent|ai panel|ai chat/.test(msg) ? 'ai' : null;
+          if (sec) { const lnk = document.querySelector('.dash-nav a[data-section="' + sec + '"]'); if (lnk) lnk.click(); aiChatReply('Opened <strong>' + sec + '</strong>. ✓', ['Store summary', 'Confirm bookings', 'Back to menu']); return; }
+        }
+
+        if (isBookingTalk && (isConfirm || msg.includes('pending'))) return startOrderFlow('confirm');
+        if (isBookingTalk && isCancel) return startOrderFlow('cancel');
+        if (isBookingTalk && (/list|show|status|summary|what|all|how many|today|week/.test(msg) || msg.length < 20)) return showOrdersSummary();
+
+        if (/availab|stock|free|left on|free on/.test(msg)) return startAvailFlow();
+        if (/password|badal.*pass|change password|pass\w* (change|new|set)|new password/.test(msg)) return startPasswordFlow();
+        if (/review/.test(msg)) return startReviewFlow();
+
+        const sending = msg.includes('send') || msg.includes('bhej') || msg.includes('mail');
+        if (/broadcast|announce|sabko/.test(msg) || (sending && /all|sab|everyone|saab|user|message/.test(msg))) return startBroadcastFlow();
+        if (/inbox|unread|reply/.test(msg) || (msg.includes('message') && !sending)) return startInboxFlow();
+        if (/user|customer|kharidaar|khareedaar|member/.test(msg)) return showUsers();
+
+        if (/summary|stats|revenue|how many|cheap|expensive|insight|health|report|performance|business|overview/.test(msg)) return showStoreSummary(msg);
+
+        if (/edit|update|change/.test(msg)) { chatState.flow = 'edit'; chatState.step = 1; chatState.data = {}; const cats = [...new Set(products.filter(p => p.active !== false).map(p => p.category))]; aiChatReply('Which category?', cats.map(c => c.charAt(0).toUpperCase() + c.slice(1))); return; }
+        if (/delete|remove/.test(msg) && !msg.includes('review')) { chatState.flow = 'delete'; chatState.step = 1; chatState.data = {}; const cats = [...new Set(products.filter(p => p.active !== false).map(p => p.category))]; aiChatReply('Which category? Pick one:', cats.map(c => c.charAt(0).toUpperCase() + c.slice(1))); return; }
+        if (/add|new|create/.test(msg) && !msg.includes('how many')) { chatState.flow = 'add'; chatState.step = 1; chatState.data = {}; aiChatReply("What's the product name?"); return; }
+
+        if (/help|menu|what can|options|hi|hello|hey|bolo|suno/.test(msg)) { aiChatReply('I have full access to the admin panel — products (add / edit / delete / price / stock), bookings (confirm / cancel), availability, reviews, inbox replies, broadcasts, customers list, and settings (password, AI key). Try:', ['Confirm bookings', 'Cancel a booking', 'Check availability', 'Inbox / Reply', 'Customers list', 'Manage reviews', 'Send broadcast', 'Store summary', 'Open settings', 'Change password', 'Add product', 'Edit product', 'Delete product']); return; }
+
+        // Fallback: real LLM if configured, else helpful fallback
+        aiTyping(true);
+        askAdminAI(input).then(ans => {
+          aiTyping(false);
+          if (ans) aiChatReply(ans);
+          else aiChatReply("I can handle anything in the admin panel — just ask in English, Hindi or Hinglish. Try:", ['Confirm bookings', 'Cancel a booking', 'Check availability', 'Inbox / Reply', 'Customers list', 'Manage reviews', 'Send broadcast', 'Store summary', 'Change password', 'Add product', 'Edit product', 'Delete product']);
+        });
+        return;
+      }
+
+      // ===== ORDER: CONFIRM PENDING =====
+      if (chatState.flow === 'order-confirm') {
+        if (chatState.step === 1) {
+          const pending = orders.filter(o => o.status === 'Pending');
+          if (msg.includes('all') || msg === 'confirm all') {
+            pending.forEach(o => { o.status = 'Confirmed'; }); saveOrders(orders); loadDashboard();
+            aiChatReply('Confirmed all ' + pending.length + ' pending bookings. ✓', ['Show orders', 'Check availability', 'Back to menu']);
+            chatState.flow = null; chatState.step = 0; return;
+          }
+          const pick = parseInt(msg) - 1;
+          const target = (!isNaN(pick) && pending[pick]) ? pending[pick] : pending.find(o => (o.name + ' ' + o.item).toLowerCase().includes(msg));
+          if (!target) { aiChatReply("Pick a number (1-" + pending.length + "):", pending.map((o, i) => (i + 1) + ' ' + o.name + ' — ' + o.item)); return; }
+          target.status = 'Confirmed';
+          saveOrders(orders);
+          loadDashboard();
+          aiChatReply('Confirmed <strong>' + target.name + '</strong> — ' + target.item + ' (' + (target.dates || 'TBD') + '). ✓', ['Confirm more', 'Show orders', 'Back to menu']);
+          chatState.flow = null; chatState.step = 0;
+          return;
+        }
+      }
+
+      // ===== ORDER: CANCEL A BOOKING =====
+      if (chatState.flow === 'order-cancel') {
+        if (chatState.step === 1) {
+          const active = orders.filter(o => o.status !== 'Cancelled');
+          if (!active.length) { aiChatReply('No active bookings to cancel.'); chatState.flow = null; return; }
+          const pick = parseInt(msg) - 1;
+          const target = (!isNaN(pick) && active[pick]) ? active[pick] : active.find(o => (o.name + ' ' + o.item).toLowerCase().includes(msg));
+          if (!target) { aiChatReply("Pick a number (1-" + active.length + "):", active.map((o, i) => (i + 1) + ' ' + o.name + ' — ' + o.item + ' [' + o.status + ']')); return; }
+          chatState.data.target = target;
+          aiChatReply('Cancel booking for <strong>' + target.name + '</strong> (' + (target.dates || 'TBD') + ')?', ['Yes, cancel it', 'No, keep it']);
+          chatState.step = 2;
+          return;
+        }
+        if (chatState.step === 2) {
+          if (msg.includes('yes')) {
+            const t = chatState.data.target;
+            const idx = orders.findIndex(o => o.id === t.id || (o.name === t.name && o.item === t.item && o.dates === t.dates));
+            if (idx !== -1) { orders[idx].status = 'Cancelled'; saveOrders(orders); loadDashboard(); }
+            aiChatReply('Cancelled <strong>' + t.name + '</strong>' + (t.item ? ' — ' + t.item : '') + '. ✓', ['Cancel another', 'Show orders', 'Back to menu']);
+          } else {
+            aiChatReply('Booking kept. ✓', ['Cancel a booking', 'Show orders', 'Back to menu']);
+          }
+          chatState.flow = null; chatState.step = 0;
+          return;
+        }
+      }
+
+      // ===== AVAILABILITY =====
+      if (chatState.flow === 'availability') {
+        if (chatState.step === 1) {
+          let s, e;
+          if (msg.includes('week')) {
+            s = new Date(), e = new Date(Date.now() + 6 * 86400000);
+          } else if (msg.match(/\d{1,2}[\/\-]\d{1,2}/) || /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/.test(msg) || msg.includes('tomorrow')) {
+            const parsed = parseAdminDate(msg);
+            s = parsed.start; e = parsed.end;
+          } else {
+            s = null; e = null;
+          }
+          let rows = products.filter(p => p.active !== false).map(p => {
+            const a = s && e ? stockAvailability(p.id, s, e) : null;
+            return { p, a };
+          }).sort((a, b) => (a.a ? a.a.available : a.p.stock) - (b.a ? b.a.available : b.p.stock));
+          if (msg.includes('low') || msg.includes('booked') || msg.includes('short')) rows = rows.filter(r => r.a ? !r.a.enough : (r.p.stock || 1) <= 1);
+          if (msg.includes('free') || msg.includes('available') || msg.includes('ready')) rows = rows.filter(r => r.a ? r.a.enough : true);
+          const head = s && e ? ' for ' + s + ' → ' + e : ' (total stock)';
+          const html = rows.slice(0, 8).map(r => '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,169,110,0.08);font-size:0.85rem;"><span>' + esc(r.p.name) + '</span><span style="color:' + (r.a ? (r.a.enough ? '#4CAF50' : '#e74c3c') : (r.p.stock >= 2 ? '#4CAF50' : '#e74c3c')) + ';">' + (r.a ? (r.a.available + '/' + r.a.total + ' free' + (r.a.enough ? '' : ' — booked!')) : (r.p.stock + ' in stock')) + '</span></div>').join('');
+          aiChatReply('<strong>Availability</strong>' + head + ':<br>' + html, ['Show booked items', 'Show free items', 'Back to menu']);
+          chatState.flow = null; chatState.step = 0;
+          return;
+        }
+      }
+
+      // ===== REVIEWS =====
+      if (chatState.flow === 'reviews') {
+        const all = getReviewsAll();
+        if (chatState.step === 1) {
+          const site = all.filter(r => r.type === 'site');
+          const item = all.filter(r => r.type === 'item');
+          if (msg.includes('website')) {
+            if (!site.length) { aiChatReply('No website reviews yet.'); chatState.flow = null; return; }
+            aiChatReply('Website reviews (' + site.length + '):', site.map((r, i) => (i + 1) + ' ' + (r.name || 'Anonymous') + ' — ' + r.rating + '★: ' + r.text));
+            chatState.step = 2; chatState.data.list = site; return;
+          }
+          if (msg.includes('product')) {
+            if (!item.length) { aiChatReply('No product reviews yet.'); chatState.flow = null; return; }
+            const P = products;
+            aiChatReply('Product reviews (' + item.length + '):', item.map((r, i) => (i + 1) + ' ' + (r.name || 'Anonymous') + ' ' + r.rating + '★ on ' + (P.find(x => x.id === r.itemId) ? esc(P.find(x => x.id === r.itemId).name) : 'item') + ' — ' + r.text));
+            chatState.step = 2; chatState.data.list = item; return;
+          }
+          aiChatReply('Which reviews?', ['Website reviews', 'Product reviews']);
+          return;
+        }
+        if (chatState.step === 2) {
+          const list = chatState.data.list;
+          const pick = parseInt(msg) - 1;
+          const target = (!isNaN(pick) && list[pick]) ? list[pick] : list.find(r => (r.text || '').toLowerCase().includes(msg));
+          if (!target) { aiChatReply("Pick a number (1-" + list.length + "):", list.map((r, i) => (i + 1) + ' ' + r.name)); return; }
+          chatState.data.target = target;
+          aiChatReply('Delete this review?<br><em>"' + esc(target.text) + '"</em>', ['Yes, delete it', 'No, keep it']);
+          chatState.step = 3;
+          return;
+        }
+        if (chatState.step === 3) {
+          if (msg.includes('yes')) {
+            deleteReview(chatState.data.target.id);
+            loadDashboard();
+            aiChatReply('Review deleted. ✓', ['Manage more reviews', 'Back to menu']);
+          } else {
+            aiChatReply('Review kept. ✓', ['Manage more reviews', 'Back to menu']);
+          }
+          chatState.flow = null; chatState.step = 0;
+          return;
+        }
+      }
+
+      // ===== BROADCAST =====
+      if (chatState.flow === 'broadcast') {
+        if (chatState.step === 1) {
+          chatState.data.to = /^all/i.test(msg) || msg === 'all users' || msg.includes('everyone') ? 'ALL' : msg;
+          chatState.step = 2;
+          aiChatReply('Sending to <strong>' + (chatState.data.to === 'ALL' ? 'All Users' : chatState.data.to) + '</strong>. Type the message:');
+          return;
+        }
+        if (chatState.step === 2) {
+          sendMessage('admin', chatState.data.to, input);
+          aiChatReply('Broadcast sent to ' + (chatState.data.to === 'ALL' ? 'all users' : chatState.data.to) + '. ✓', ['Send another', 'Back to menu']);
+          chatState.flow = null; chatState.step = 0;
+          return;
+        }
+      }
+
+      // ===== INBOX / REPLY =====
+      if (chatState.flow === 'inbox') {
+        if (chatState.step === 1) {
+          const msgs = getMessages().slice(-10).reverse();
+          const pick = parseInt(msg) - 1;
+          const target = (!isNaN(pick) && msgs[pick]) ? msgs[pick] : msgs.find(m => (m.from + ' ' + m.to).toLowerCase().includes(msg));
+          if (!target) { aiChatReply('Pick a number or sender:', msgs.map((m, i) => (i + 1) + ' ' + (m.from === 'admin' ? '→ ' + m.to : m.from))); return; }
+          chatState.data.to = target.from === 'admin' ? target.to : target.from;
+          if (target.from !== 'admin') {
+            const all = getMessages();
+            const mm = all.find(x => x.id === target.id);
+            if (mm && !mm.readBy) mm.readBy = [];
+            if (mm && !mm.readBy.length) mm.readBy.push(Date.now());
+            saveMessages(all);
+          }
+          chatState.step = 2;
+          aiChatReply('Reply to <strong>' + chatState.data.to + '</strong>. Type your reply:');
+          return;
+        }
+        if (chatState.step === 2) {
+          sendMessage('admin', chatState.data.to, input);
+          aiChatReply('Reply sent to <strong>' + chatState.data.to + '</strong>. ✓', ['Reply to another', 'Send broadcast', 'Back to menu']);
+          chatState.flow = null; chatState.step = 0; chatState.data = {};
+          return;
+        }
+      }
+
+      // ===== CHANGE PASSWORD =====
+      if (chatState.flow === 'password') {
+        if (chatState.step === 1) {
+          const np = input.trim();
+          if (np.length < 4) { aiChatReply('Password too short — use at least 4 characters:'); return; }
+          chatState.data.np = np;
+          chatState.step = 2;
+          aiChatReply('Got it. Now type the CURRENT password to confirm:');
+          return;
+        }
+        if (chatState.step === 2) {
+          if (input.trim() === getPass()) {
+            setPass(chatState.data.np);
+            aiChatReply('Password changed. ✓ Remember it — this unlocks the admin panel.', ['Back to menu']);
+          } else {
+            aiChatReply("Current password didn't match — nothing was changed.", ['Try again', 'Back to menu']);
+          }
+          chatState.flow = null; chatState.step = 0; chatState.data = {};
+          return;
+        }
+      }
+
+      // ===== PRODUCT EDIT =====
+      if (chatState.flow === 'edit') {
+        if (chatState.step === 1) {
+          const cat = msg;
+          chatState.data.category = cat;
+          const filtered = products.filter(p => p.active !== false && p.category.toLowerCase().includes(cat));
+          if (!filtered.length) { aiChatReply("No active products in '" + cat + "'. Try another category."); chatState.flow = null; return; }
+          chatState.data.filtered = filtered;
+          chatState.step = 2;
+          aiChatReply('Found ' + filtered.length + ' products. Which one?', filtered.map((p, i) => (i + 1) + '. ' + p.name));
+          return;
+        }
+        if (chatState.step === 2) {
+          const list = chatState.data.filtered;
+          const pick = parseInt(msg) - 1;
+          const product = (!isNaN(pick) && list[pick]) ? list[pick] : list.find(p => p.name.toLowerCase().includes(msg));
+          if (!product) { aiChatReply("Didn't find that. Pick a number (1-" + list.length + "):", list.map((p, i) => (i + 1) + '. ' + p.name)); return; }
+          chatState.data.product = product;
+          chatState.step = 3;
+          aiChatReply('Editing <strong>' + product.name + '</strong> (₹' + product.price + '). What to change?', ['Name', 'Price', 'Category', 'Occasion', 'Style', 'Budget', 'Gender', 'Image URL', 'Active (Show/Hide)']);
+          return;
+        }
+        if (chatState.step === 3) {
+          chatState.data.field = msg;
+          chatState.step = 4;
+          const f = chatState.data.field;
+          if (f.includes('name')) aiChatReply('Current: <strong>' + chatState.data.product.name + '</strong>. Type the new name:');
+          else if (f.includes('price')) aiChatReply('Current: <strong>₹' + chatState.data.product.price + '</strong>/day. Type the new price (number):');
+          else if (f.includes('category')) aiChatReply('Current: <strong>' + chatState.data.product.category + '</strong>. Type new category:', ['evening', 'formal', 'cocktail', 'outerwear', 'accessories']);
+          else if (f.includes('occasion')) aiChatReply('Current: <strong>' + (chatState.data.product.occasion || []).join(', ') + '</strong>. Type new occasions (comma-separated):');
+          else if (f.includes('style')) aiChatReply('Current: <strong>' + (chatState.data.product.style || []).join(', ') + '</strong>. Type new styles (comma-separated):');
+          else if (f.includes('budget')) aiChatReply('Current: <strong>' + chatState.data.product.budget + '</strong>. Pick new budget:', ['mid', 'premium', 'luxury']);
+          else if (f.includes('gender')) aiChatReply('Current: <strong>' + chatState.data.product.gender + '</strong>. Pick new gender:', ['women', 'men', 'unisex']);
+          else if (f.includes('image') || f.includes('img') || f.includes('url')) aiChatReply('Current image set. Type the new image URL:');
+          else if (f.includes('active') || f.includes('show/hide')) aiChatReply('Show or hide <strong>' + chatState.data.product.name + '</strong> in the store?', ['Show it', 'Hide it']);
+          else { aiChatReply('Field not recognized. Pick one:', ['Name', 'Price', 'Category', 'Occasion', 'Style', 'Budget', 'Gender', 'Image URL']); chatState.step = 3; }
+          return;
+        }
+        if (chatState.step === 4) {
+          const product = chatState.data.product;
+          const field = chatState.data.field;
+          const val = input;
+          let allProducts = getProducts();
+          const idx = allProducts.findIndex(p => p.id === product.id);
+          if (idx === -1) { aiChatReply('Product not found. Starting over.'); chatState.flow = null; return; }
+          if (field.includes('name')) allProducts[idx].name = val;
+          else if (field.includes('price')) allProducts[idx].price = parseInt(val) || allProducts[idx].price;
+          else if (field.includes('category')) allProducts[idx].category = val.toLowerCase();
+          else if (field.includes('occasion')) allProducts[idx].occasion = val.split(',').map(s => s.trim().toLowerCase());
+          else if (field.includes('style')) allProducts[idx].style = val.split(',').map(s => s.trim().toLowerCase());
+          else if (field.includes('budget')) allProducts[idx].budget = val.toLowerCase();
+          else if (field.includes('gender')) allProducts[idx].gender = val.toLowerCase();
+          else if (field.includes('image') || field.includes('img') || field.includes('url')) { allProducts[idx].img = val; allProducts[idx].images = [val]; }
+          else if (field.includes('active')) allProducts[idx].active = /show|visible|yes|active/.test(val.toLowerCase());
+          saveProducts(allProducts);
+          loadDashboard();
+          aiChatReply('Updated <strong>' + allProducts[idx].name + '</strong> successfully! ✓', ['Edit another', 'Delete product', 'Back to menu']);
+          chatState.flow = null; chatState.step = 0; chatState.data = {};
+          return;
+        }
+      }
+
+      // ===== PRODUCT DELETE =====
+      if (chatState.flow === 'delete') {
+        if (chatState.step === 1) {
+          const cat = msg;
+          chatState.data.category = cat;
+          const filtered = products.filter(p => p.active !== false && p.category.toLowerCase().includes(cat));
+          if (!filtered.length) { aiChatReply("No active products in '" + cat + "'."); chatState.flow = null; return; }
+          chatState.data.filtered = filtered;
+          chatState.step = 2;
+          aiChatReply('Which product to delete?', filtered.map((p, i) => (i + 1) + '. ' + p.name));
+          return;
+        }
+        if (chatState.step === 2) {
+          const list = chatState.data.filtered;
+          const pick = parseInt(msg) - 1;
+          const product = (!isNaN(pick) && list[pick]) ? list[pick] : list.find(p => p.name.toLowerCase().includes(msg));
+          if (!product) { aiChatReply('Pick a number (1-' + list.length + '):', list.map((p, i) => (i + 1) + '. ' + p.name)); return; }
+          chatState.data.product = product;
+          chatState.step = 3;
+          aiChatReply('Delete <strong>' + product.name + '</strong> (₹' + product.price + ')? This hides it from the store.', ['Yes, delete it', 'No, cancel']);
+          return;
+        }
+        if (chatState.step === 3) {
+          if (msg.includes('yes') || msg.includes('delete') || msg.includes('confirm')) {
+            let allProducts = getProducts();
+            const idx = allProducts.findIndex(p => p.id === chatState.data.product.id);
+            if (idx !== -1) { allProducts[idx].active = false; saveProducts(allProducts); loadDashboard(); }
+            aiChatReply('Deleted <strong>' + chatState.data.product.name + '</strong>. ✓', ['Delete another', 'Edit product', 'Back to menu']);
+          } else {
+            aiChatReply('Cancelled. ✓', ['Delete another', 'Edit product', 'Back to menu']);
+          }
+          chatState.flow = null; chatState.step = 0; chatState.data = {};
+          return;
+        }
+      }
+
+      // ===== PRODUCT ADD =====
+      if (chatState.flow === 'add') {
+        if (chatState.step === 1) {
+          chatState.data.name = input;
+          chatState.step = 2;
+          aiChatReply('Got it — <strong>' + input + '</strong>. Which category?', ['evening', 'formal', 'cocktail', 'outerwear', 'accessories']);
+          return;
+        }
+        if (chatState.step === 2) {
+          chatState.data.category = msg;
+          chatState.step = 3;
+          aiChatReply('Category: <strong>' + msg + '</strong>. What\'s the price per day? (₹ number only)');
+          return;
+        }
+        if (chatState.step === 3) {
+          chatState.data.price = parseInt(msg);
+          if (isNaN(chatState.data.price)) { aiChatReply('Please type a number only (e.g. 6000):'); return; }
+          chatState.step = 4;
+          aiChatReply('Price: <strong>₹' + chatState.data.price + '</strong>/day. Which gender?', ['women', 'men', 'unisex']);
+          return;
+        }
+        if (chatState.step === 4) {
+          chatState.data.gender = msg;
+          const d = chatState.data;
+          let allProducts = getProducts();
+          const newId = allProducts.length ? Math.max(...allProducts.map(p => p.id)) + 1 : 1;
+          allProducts.push({
+            id: newId, name: d.name, category: d.category.toLowerCase(), price: d.price,
+            img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80',
+            images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'],
+            occasion: ['wedding'], style: ['elegant'], budget: 'mid', gender: d.gender, active: true, link: 'detail.html'
+          });
+          saveProducts(allProducts);
+          loadDashboard();
+          aiChatReply('Added <strong>' + d.name + '</strong> — ₹' + d.price + '/day, ' + d.category + ', ' + d.gender + '. ✓', ['Add another', 'Edit product', 'Back to menu']);
+          chatState.flow = null; chatState.step = 0; chatState.data = {};
+          return;
+        }
+      }
+
+      // In flow but didn't match — restart
+      aiChatReply('Let me restart. What do you want to do?', ['Confirm bookings', 'Check availability', 'Manage reviews', 'Add product', 'Back to menu']);
+      chatState.flow = null; chatState.step = 0; chatState.data = {};
+    }
+
+    function startOrderFlow(kind) {
+      chatState.flow = kind === 'confirm' ? 'order-confirm' : 'order-cancel';
+      chatState.step = 1; chatState.data = {};
+      const orders = getOrders();
+      if (kind === 'confirm') {
+        const pending = orders.filter(o => o.status === 'Pending');
+        if (!pending.length) { aiChatReply('No pending bookings — all confirmed or cancelled. ✓', ['Show orders', 'Back to menu']); chatState.flow = null; return; }
+        aiChatReply('Pending bookings (' + pending.length + ') — pick a number or say "All":', pending.map((o, i) => (i + 1) + ' ' + o.name + ' — ' + o.item + ' (' + (o.dates || 'TBD') + ')'));
+      } else {
+        const active = orders.filter(o => o.status !== 'Cancelled');
+        if (!active.length) { aiChatReply('No active bookings to cancel.', ['Back to menu']); chatState.flow = null; return; }
+        aiChatReply('Active bookings — pick a number:', active.map((o, i) => (i + 1) + ' ' + o.name + ' — ' + o.item + ' [' + o.status + ']'));
+        chatState.data.list = active;
+      }
+    }
+
+    function showOrdersSummary() {
+      const orders = getOrders();
+      if (!orders.length) { aiChatReply('No bookings yet.', ['Confirm bookings', 'Back to menu']); return; }
+      const conf = orders.filter(o => o.status === 'Confirmed').length;
+      const pend = orders.filter(o => o.status === 'Pending').length;
+      const canc = orders.filter(o => o.status === 'Cancelled').length;
+      const rev = orders.reduce((s, o) => s + (o.total || 0), 0);
+      aiChatReply('<strong>Bookings</strong>: ' + orders.length + ' total — ' + conf + ' confirmed, ' + pend + ' pending, ' + canc + ' cancelled.<br>Revenue: <strong>₹' + rev.toLocaleString('en-IN') + '</strong> (avg ₹' + (orders.length ? (rev / orders.length).toFixed(0) : 0) + ').<br>' + (pend ? 'Action: ' + pend + ' pending need your confirmation.' : 'All clear — no pending work.'), ['Confirm pending', 'Latest bookings', 'Back to menu']);
+    }
+
+    function showStoreSummary(msg) {
+      const products = getProducts();
+      const orders = getOrders();
+      const active = products.filter(p => p.active !== false);
+      const rev = orders.reduce((s, o) => s + (o.total || 0), 0);
+      const cheapest = active.slice().sort((a, b) => a.price - b.price)[0];
+      const priciest = active.slice().sort((a, b) => b.price - a.price)[0];
+      const bookedNames = {};
+      orders.forEach(o => { if (o.status !== 'Cancelled') bookedNames[o.item || o.name] = (bookedNames[o.item || o.name] || 0) + 1; });
+      const top = Object.entries(bookedNames).sort((a, b) => b[1] - a[1])[0];
+      aiChatReply('<strong>Store summary</strong><br>• Products: ' + active.length + ' active<br>• Bookings: ' + orders.length + ' · Revenue: ₹' + rev.toLocaleString('en-IN') + '<br>• Cheapest: <strong>' + esc(cheapest.name) + '</strong> ₹' + cheapest.price + '/day<br>• Premium: <strong>' + esc(priciest.name) + '</strong> ₹' + priciest.price + '/day<br>' + (top ? '• Most-rented: <strong>' + esc(top[0]) + '</strong> (' + top[1] + '×)' : '• No rentals yet'), ['Order summary', 'Availability', 'Suggest new products', 'Back to menu']);
+    }
+
+    function startAvailFlow() {
+      chatState.flow = 'availability'; chatState.step = 1; chatState.data = {};
+      aiChatReply('Availability check — for which period?', ['Today / This week', 'Whole month', 'Show booked items', 'Full stock list']);
+    }
+
+    function startReviewFlow() {
+      chatState.flow = 'reviews'; chatState.step = 1; chatState.data = {};
+      const all = getReviewsAll();
+      if (!all.length) { aiChatReply('No reviews yet. Ask customers to leave reviews after a rental. ✓', ['Back to menu']); chatState.flow = null; return; }
+      aiChatReply('You have ' + all.length + ' review(s). Which list?', ['Website reviews', 'Product reviews']);
+    }
+
+    function startBroadcastFlow() {
+      chatState.flow = 'broadcast'; chatState.step = 1; chatState.data = {};
+      const users = getUsers();
+      const opts = ['All Users'].concat(users.map(u => u.email));
+      aiChatReply('Send a broadcast to whom?', opts);
+    }
+
+    function startInboxFlow() {
+      chatState.flow = 'inbox'; chatState.step = 1; chatState.data = {};
+      const msgs = getMessages().slice(-10).reverse();
+      if (!msgs.length) { aiChatReply('Your inbox is empty. ✓', ['Send broadcast', 'Back to menu']); chatState.flow = null; return; }
+      aiChatReply('Inbox (' + msgs.length + ' recent) — reply to whom?', msgs.map((m, i) => (i + 1) + ' ' + (m.from === 'admin' ? '→ ' + m.to : m.from + ' → you') + ' : ' + String(m.body || '').slice(0, 32)));
+    }
+
+    function startPasswordFlow() {
+      chatState.flow = 'password'; chatState.step = 1; chatState.data = {};
+      aiChatReply('Change admin password — type the NEW password (min 4 characters):');
+    }
+
+    function showUsers() {
+      const users = getUsers();
+      const orders = getOrders();
+      if (!users.length) { aiChatReply('No registered customers yet. ✓', ['Send broadcast', 'Back to menu']); return; }
+      const rows = users.map(u => {
+        const oo = orders.filter(o => String(o.name || '').toLowerCase().split(/\s+/)[0] === String(u.first || '').toLowerCase());
+        const spend = oo.reduce((s, x) => s + (x.total || 0), 0);
+        return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,169,110,0.08);font-size:0.85rem;"><span>' + esc(u.first || u.email) + ' (' + esc(u.email) + ')</span><span>' + oo.length + ' booking(s) · ₹' + spend.toLocaleString('en-IN') + '</span></div>';
+      }).join('');
+      aiChatReply('<strong>Customers (' + users.length + ')</strong>:<br>' + rows, ['Send broadcast', 'Show orders', 'Back to menu']);
+    }
+
+    function parseAdminDate(str) {
+      const t = str.toLowerCase().trim();
+      const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+      const d = new Date();
+      if (/^month|whole month/.test(t)) return { start: d.toISOString().split('T')[0], end: new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0] };
+      let m = t.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+      if (m) { const dy = +m[1], mo = +m[2]; const y = m[3] ? +m[3] : d.getFullYear(); const dd = new Date(y, mo - 1, dy); return { start: dd.toISOString().split('T')[0], end: dd.toISOString().split('T')[0] }; }
+      m = t.match(/(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/);
+      if (m) { const dd = new Date(d.getFullYear(), months.indexOf(m[2]), +m[1]); return { start: dd.toISOString().split('T')[0], end: dd.toISOString().split('T')[0] }; }
+      if (t.includes('tomorrow')) { d.setDate(d.getDate() + 1); return { start: d.toISOString().split('T')[0], end: d.toISOString().split('T')[0] }; }
+      return null;
+    }
+
+    function aiHandleKeydown(e) {
+      if (e.key === 'Enter') document.getElementById('aiChatSend').click();
+    }
+
+    document.getElementById('aiChatSend').addEventListener('click', () => {
+      const input = document.getElementById('aiChatInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+      aiChatUser(msg);
+      input.value = '';
+      setTimeout(() => aiProcessInput(msg), 150);
+    });
+
+    const aiMicBtn = document.getElementById('aiChatMic');
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (aiMicBtn && SR) {
+      let aiRec = null, aiListening = false;
+      const setMic = on => {
+        aiListening = on;
+        aiMicBtn.style.background = on ? 'var(--gold)' : '';
+        aiMicBtn.style.color = on ? 'var(--black)' : '';
+      };
+      aiMicBtn.addEventListener('click', () => {
+        const input = document.getElementById('aiChatInput');
+        if (aiListening) {
+          setMic(false);
+          aiRec && aiRec.stop();
+          return;
+        }
+        aiRec = new SR();
+        aiRec.lang = 'en-IN';
+        aiRec.interimResults = true;
+        aiRec.onresult = e => {
+          let t = '';
+          for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+          input.value = t;
+        };
+        aiRec.onend = () => {
+          setMic(false);
+          const m = input.value.trim();
+          if (m) document.getElementById('aiChatSend').click();
+        };
+        aiRec.onerror = () => setMic(false);
+        setMic(true);
+        aiRec.start();
+      });
+    } else if (aiMicBtn) {
+      aiMicBtn.style.display = 'none';
+    }
+
+    document.getElementById('aiChatInput').addEventListener('keydown', aiHandleKeydown);
+
+    // Init analytics + chat intro on AI section load
+    const origNavClick = document.querySelectorAll('.dash-nav a[data-section]');
+    origNavClick.forEach(a => {
+      a.addEventListener('click', () => {
+        if (a.dataset.section === 'ai') {
+          generateAIInsights();
+          generateTopProducts();
+          generateSuggestions();
+          generateForecast();
+          aiChatIntro();
+        }
+      });
+    });
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+    // server-mode bridges: admin-backend.js unlocks the panel and refreshes data through these
+    if (typeof window.addEventListener === 'function') {
+      window.addEventListener('admin-auth', e => {
+        if (e.detail && e.detail.ok) {
+          lockScreen.style.display = 'none';
+          dashboard.classList.add('active');
+          loadDashboard();
+        }
+      });
+      window.addEventListener('admin-data', () => { try { loadDashboard(); } catch (e) {} });
+    }
+
+    // data refreshes can invalidate order indices (server sorts newest-first) => re-render
+    window.innerAdminRefreshAdminOrders = renderOrders;
+  })();
+  </script>
+</body>
+</html>
+

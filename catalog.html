@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collection — Rent-RO-Vastra</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-loader" id="pageLoader"><div class="loader-spinner"></div></div>
+
+    <header class="main-header">
+    <a href="index.html" class="header-logo">Rent-RO-Vastra</a>
+    <div class="header-search">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+      <input type="text" id="headerSearch" placeholder="Search designer pieces...">
+    </div>
+    <div class="header-icons">
+      <a href="wishlist.html" class="header-icon" title="Wishlist">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <span class="h-badge" id="wishBadge" style="display:none">0</span>
+      </a>
+      <a href="cart.html" class="header-icon" title="Cart">
+        <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        <span class="h-badge" id="cartCount">0</span>
+      </a>
+      <a href="messages.html" class="header-icon header-msg" title="Messages"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg><span class="h-badge" id="msgBadge" style="display:none">0</span></a>
+      <a href="auth.html" class="header-icon header-account" title="Account">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </a>
+    </div>
+  </header><nav>
+    <div class="nav-inner">
+      <div class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="catalog.html" class="active">Collection</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <section style="padding-top: 140px; padding-bottom: 40px; text-align: center;">
+    <div class="container">
+      <div class="section-tag">Our Collection</div>
+      <h1 class="section-title">Curated Luxury</h1>
+      <p class="section-sub">Every piece is hand-selected and inspected before every rental</p>
+    </div>
+  </section>
+
+  <section style="padding-top: 0;">
+    <div class="container">
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="evening">Evening Wear</button>
+        <button class="filter-btn" data-filter="formal">Formal</button>
+        <button class="filter-btn" data-filter="cocktail">Cocktail</button>
+        <button class="filter-btn" data-filter="outerwear">Outerwear</button>
+        <button class="filter-btn" data-filter="accessories">Accessories</button>
+      </div>
+
+      <div class="card-grid" id="catalogGrid">
+        <div class="card" data-category="evening">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=600&q=80" alt="Silk Lehenga" class="card-img">
+          </div>
+          <span class="card-badge">New</span>
+          <div class="card-body">
+            <div class="card-category">Evening Wear</div>
+            <div class="card-title">Sabyasachi Silk Lehenga</div>
+            <div class="card-price"><strong>₹7,499</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="formal">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&q=80" alt="Sherwani" class="card-img">
+          </div>
+          <div class="card-body">
+            <div class="card-category">Formal</div>
+            <div class="card-title">Tarun Tahiliani Sherwani</div>
+            <div class="card-price"><strong>₹5,499</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="cocktail">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80" alt="Cocktail Gown" class="card-img">
+          </div>
+          <span class="card-badge">Popular</span>
+          <div class="card-body">
+            <div class="card-category">Cocktail</div>
+            <div class="card-title">Manish Malhotra Cocktail Gown</div>
+            <div class="card-price"><strong>₹6,099</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="outerwear">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&q=80" alt="Anarkali Suit" class="card-img">
+          </div>
+          <div class="card-body">
+            <div class="card-category">Ethnic Wear</div>
+            <div class="card-title">Anita Dongre Anarkali Suit</div>
+            <div class="card-price"><strong>₹4,699</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="evening">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=600&q=80" alt="Bridal Lehenga" class="card-img">
+          </div>
+          <div class="card-body">
+            <div class="card-category">Evening Wear</div>
+            <div class="card-title">Ritu Kumar Bridal Lehenga</div>
+            <div class="card-price"><strong>₹7,999</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="formal">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&q=80" alt="Tuxedo" class="card-img">
+          </div>
+          <span class="card-badge">Premium</span>
+          <div class="card-body">
+            <div class="card-category">Formal</div>
+            <div class="card-title">Rahul Mishra Tuxedo</div>
+            <div class="card-price"><strong>₹9,299</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="accessories">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=600&q=80" alt="Kundan Set" class="card-img">
+          </div>
+          <div class="card-body">
+            <div class="card-category">Accessories</div>
+            <div class="card-title">Kundan Bridal Set</div>
+            <div class="card-price"><strong>₹3,899</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="cocktail">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600&q=80" alt="Cocktail Dress" class="card-img">
+          </div>
+          <div class="card-body">
+            <div class="card-category">Cocktail</div>
+            <div class="card-title">Anamika Khrama Cocktail Dress</div>
+            <div class="card-price"><strong>₹6,599</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="outerwear">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=600&q=80" alt="Printed Jacket" class="card-img">
+          </div>
+          <div class="card-body">
+            <div class="card-category">Fusion Wear</div>
+            <div class="card-title">Masaba Gupta Printed Jacket</div>
+            <div class="card-price"><strong>₹4,099</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="accessories">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=80" alt="Heritage Saree" class="card-img">
+          </div>
+          <span class="card-badge">Exclusive</span>
+          <div class="card-body">
+            <div class="card-category">Accessories</div>
+            <div class="card-title">Sabyasachi Heritage Saree</div>
+            <div class="card-price"><strong>₹10,099</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="evening">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=600&q=80" alt="Evening Gown" class="card-img">
+          </div>
+          <div class="card-body">
+            <div class="card-category">Evening Wear</div>
+            <div class="card-title">Neeta Lulla Evening Gown</div>
+            <div class="card-price"><strong>₹8,899</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="formal">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=600&q=80" alt="Blazer" class="card-img">
+          </div>
+          <div class="card-body">
+            <div class="card-category">Formal</div>
+            <div class="card-title">Shantanu & Nikhil Blazer</div>
+            <div class="card-price"><strong>₹4,999</strong> / day</div>
+          </div>
+          <div class="card-actions">
+            <a href="detail.html" class="card-btn filled">View Details</a>
+          </div>
+</div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="logo">Rent-RO-Vastra</div>
+          <p>Premium fashion rental for the modern individual.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <a href="catalog.html">Collection</a>
+          <a href="how-it-works.html">How It Works</a>
+          <a href="about.html">About Us</a>
+          <a href="contact.html">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h4>Categories</h4>
+          <a href="catalog.html">Evening Wear</a>
+          <a href="catalog.html">Formal</a>
+          <a href="catalog.html">Cocktail</a>
+          <a href="catalog.html">Accessories</a>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+<a href="faq.html">FAQ</a>
+          <a href="faq.html#sizing">Sizing Guide</a>
+          <a href="faq.html#delivery">Delivery Info</a>
+          <a href="faq.html#returns">Returns</a>
+        </div>
+<div class="footer-col"><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms &amp; Conditions</a><a href="cookies.html">Cookie &amp; Storage Policy</a><a href="refunds.html">Refund Policy</a></div>
+
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 Rent-RO-Vastra. All rights reserved. Made with love by Rovin Yadav</span>
+        <span>Premium Fashion Rental</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script src="store.js"></script>
+<script>
+    storeReady(function () {
+    var PRODUCTS = getProducts();
+    document.querySelectorAll('.card').forEach(card => {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', e => {
+        if (e.target.closest('button')) return;
+        const pid = card.dataset.productId;
+        window.location.href = pid ? 'detail.html?id=' + pid : 'detail.html';
+      });
+      const actions = card.querySelector('.card-actions');
+      if (!actions) return;
+      const link = actions.querySelector('a');
+      const title = card.querySelector('.card-title').textContent;
+      const product = PRODUCTS.find(p => p.name === title) || null;
+      const priceEl = card.querySelector('.card-price strong');
+      var stockEl;
+      if (product) {
+        card.dataset.productId = product.id;
+        const total = product.stock || 1;
+        const stockHtml = '<div style="margin:0 0 12px clamp(14px,2.5vw,20px);"><span style="display:inline-block;padding:4px 10px;border:1px solid ' + (total <= 1 ? 'rgba(231,76,60,0.5)' : 'rgba(76,175,80,0.4)') + ';color:' + (total <= 1 ? '#e74c3c' : '#4CAF50') + ';font-size:0.62rem;letter-spacing:1.5px;text-transform:uppercase;">' + (total <= 1 ? total + ' piece available' : total + ' pieces available') + '</span></div>';
+        actions.insertAdjacentHTML('beforebegin', stockHtml);
+      }
+const btn = document.createElement('button');
+      btn.className = 'card-btn filled';
+      btn.textContent = 'Add to Cart';
+      btn.addEventListener('click', () => {
+        const price = parseInt(priceEl.textContent.replace('₹','').replace(/,/g,''));
+        const img = card.querySelector('.card-img').src;
+        const cat = card.querySelector('.card-category').textContent;
+        const id = product ? product.id : Date.now();
+        const item = { id: id, name: title, category: cat, price: price, img: img };
+        if (addToCart(item)) {
+          btn.textContent = 'Added!';
+          btn.style.background = '#4CAF50';
+          flyToCart(item, btn);
+          setTimeout(() => { btn.textContent = 'Add to Cart'; btn.style.background = ''; }, 1500);
+        } else {
+          window.location.href = 'cart.html?item=' + item.id;
+        }
+      });
+      const wishBtn = document.createElement('button');
+      wishBtn.className = 'card-btn wish-btn';
+      wishBtn.title = 'Add to wishlist';
+      wishBtn.textContent = '♡';
+      const realId = product ? product.id : null;
+      if (realId && inWishlist(realId)) { wishBtn.textContent = '♥'; wishBtn.style.color = '#e74c3c'; wishBtn.style.borderColor = '#e74c3c'; }
+      wishBtn.addEventListener('click', () => {
+        const img = card.querySelector('.card-img').src;
+        const cat = card.querySelector('.card-category').textContent;
+        const price = parseInt(priceEl.textContent.replace('₹','').replace(/,/g,''));
+        const item = { id: realId || Date.now(), name: title, category: cat, price: price, img: img };
+        const added = toggleWishlist(item);
+        wishBtn.textContent = added ? '♥' : '♡';
+        wishBtn.style.color = added ? '#e74c3c' : '';
+        wishBtn.style.borderColor = added ? '#e74c3c' : '';
+        if (added) {
+          wishBtn.classList.remove('pop'); void wishBtn.offsetWidth; wishBtn.classList.add('pop');
+          flyToWishlist(item, wishBtn);
+        } else {
+          showToast('Removed from wishlist');
+        }
+      });
+actions.prepend(wishBtn);
+      actions.prepend(btn);
+});
+  });
+  </script>
+  <script>
+    // Category filter bar + header search (#q=...) — both combine to hide/show cards
+    (function () {
+      var cat = 'all';
+      function apply() {
+        var m = location.hash.match(/#q=(.*)$/);
+        var q = (m ? decodeURIComponent(m[1]) : '').trim().toLowerCase();
+        document.querySelectorAll('.card').forEach(function (card) {
+          var showCat = cat === 'all' || card.dataset.category === cat;
+          var showQ = !q || card.textContent.toLowerCase().indexOf(q) !== -1;
+          card.style.display = showCat && showQ ? '' : 'none';
+        });
+      }
+      document.querySelectorAll('.filter-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          cat = btn.dataset.filter;
+          apply();
+        });
+      });
+      apply();
+      window.addEventListener('hashchange', apply);
+    })();
+  </script>
+  <script src="chat.js"></script>
+
+  <!-- AI Chat Widget -->
+  <button class="chat-bubble" id="chatBubble">
+    <span class="chat-icon"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/><path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg></span>
+    <span class="chat-close"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span>
+  </button>
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+      <div class="chat-avatar">LR</div>
+      <div class="chat-header-info">
+        <h4>Style Assistant</h4>
+        <span>Online</span>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-bar">
+      <input type="text" id="chatInput" placeholder="Ask me anything...">
+      <button id="chatSend">Send</button>
+    </div>
+  </div>
+</body>
+</html>
+
+

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: rent-rovastra
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: GEMINI_KEY
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASS
+        sync: false
+
+databases:
+  - name: rent-rovastra-db
+    plan: free
+    databaseName: rentro
+    user: rentro

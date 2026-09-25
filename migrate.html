@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Migrate Your Data — Rent-RO-Vastra</title>
+<link rel="stylesheet" href="styles.css">
+<script src="admin-backend.js"></script>
+<style>
+  body { min-height: 100vh; padding: 40px 16px; }
+  .mig-wrap { max-width: 640px; margin: 0 auto; background: var(--dark2); border: 1px solid rgba(201,169,110,0.2); border-radius: 16px; padding: 32px; }
+  .mig-wrap h1 { font-family: var(--serif); color: var(--white); margin-bottom: 6px; }
+  .mig-wrap .sub { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 22px; line-height: 1.6; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 6px; }
+  .field input { width: 100%; padding: 14px 18px; background: var(--black); border: 1px solid rgba(201,169,110,0.2); color: var(--text); font-family: var(--sans); font-size: 0.9rem; border-radius: 8px; }
+  .btn-primary { width: 100%; text-align: center; margin-top: 8px; }
+  .status { margin-top: 18px; font-size: 0.85rem; line-height: 1.7; color: var(--text-muted); white-space: pre-wrap; }
+  .status .ok { color: #4CAF50; } .status .bad { color: #ff8a80; }
+  .rows { min-height: 16px; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="index.html" class="logo">Rent-RO<span>-</span>Vastra</a>
+  <a href="index.html" class="nav-link">Back to Shop</a>
+</nav>
+<div class="mig-wrap">
+  <h1>Data Migration</h1>
+  <p class="sub">Your website is now hosted with a real database. Everything that lives only in <strong>this browser</strong> (your accounts, orders, reviews, messages, custom products) needs to be moved once — from this browser into the database. Sign in with your <strong>admin account</strong>, then press Migrate. Your browser data stays put; a copy is imported to the server.</p>
+
+  <div id="migLogin">
+    <div class="field"><label>Admin email</label><input type="email" id="miEmail" placeholder="admin@rentro-vastra.in"></div>
+    <div class="field"><label>Admin password</label><input type="password" id="miPass" placeholder="Your admin password"></div>
+    <button class="btn-primary" id="miLoginBtn">Login</button>
+  </div>
+
+  <div id="migPanel" style="display:none;">
+    <div class="status" id="miPreview"></div>
+    <button class="btn-primary" id="miRunBtn">Migrate this browser's data</button>
+  </div>
+
+  <div class="status" id="miStatus"></div>
+  <div class="status" id="miOut"></div>
+</div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const rows = function (name, arr) {
+    if (!Array.isArray(arr) || !arr.length) return [];
+    return [name + ': ' + arr.length + (arr.length === 1 ? ' record' : ' records') + ' found'];
+  };
+  const collect = function () {
+    const out = {};
+    const read = k => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } };
+    out.users = read('luxe_users') || [];
+    out.products = read('luxe_products') || [];
+    out.orders = read('luxe_orders') || [];
+    out.reviews = read('luxe_reviews') || [];
+    out.messages = read('luxe_messages') || [];
+    return out;
+  };
+
+  function showPreview() {
+    const d = collect();
+    const lines = [];
+    ['users', 'products', 'orders', 'reviews', 'messages'].forEach(k => lines.push.apply(lines, rows(k, d[k])));
+    $('miPreview').innerHTML = lines.length
+      ? 'Found in this browser:\n' + lines.join('\n')
+      : 'Nothing to migrate yet in this browser. New visitors and orders are saved straight to the database.';
+  }
+
+  $('miLoginBtn').addEventListener('click', () => {
+    const email = $('miEmail').value.trim();
+    const pass = $('miPass').value;
+    $('miStatus').textContent = 'Signing in…';
+    if (!window.ADMIN || !window.ADMIN.server) { $('miStatus').className = 'status bad'; $('miStatus').textContent = 'No backend detected — start the server (node server.js → http://localhost:3010) or open this page from the live site.'; return; }
+    ADMIN.login(email, pass).then(user => {
+      if (user && user.role === 'admin') {
+        $('miStatus').className = 'status ok';
+        $('miStatus').textContent = 'Signed in as ' + email + '.';
+        $('migLogin').style.display = 'none';
+        $('migPanel').style.display = 'block';
+        showPreview();
+      } else {
+        $('miStatus').className = 'status bad';
+        $('miStatus').textContent = 'Not an admin account, or wrong password.';
+      }
+    });
+  });
+
+  $('miRunBtn').addEventListener('click', () => {
+    const d = collect();
+    const total = (d.users.length + d.products.length + d.orders.length + d.reviews.length + d.messages.length);
+    if (!total) { $('miStatus').className = 'status'; $('miStatus').textContent = 'Nothing to migrate.'; return; }
+    $('miStatus').className = 'status';
+    $('miStatus').textContent = 'Migrating ' + total + ' records…';
+    ADMIN.api('/migrate', { method: 'POST', body: d }).then(r => {
+      const imp = r.imported || {};
+      $('miStatus').className = 'status ok';
+      $('miStatus').textContent = 'Done! Copied to the database: ' + total + ' records.';
+      $('miOut').innerHTML = 'Users: ' + imp.users + ' · Products: ' + imp.products +
+        ' · Orders: ' + imp.orders + ' · Reviews: ' + imp.reviews + ' · Messages: ' + imp.messages +
+        '\n\nYour browser data is untouched. Your shop, admin panel and account pages now read from the database.';
+    }).catch(err => {
+      $('miStatus').className = 'status bad';
+      $('miStatus').textContent = 'Migration failed: ' + (err.message || err);
+    });
+  });
+})();
+</script>
+</body>
+</html>
