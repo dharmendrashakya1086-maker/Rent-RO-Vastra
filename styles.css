@@ -553,7 +553,9 @@ footer {
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 4px 24px rgba(201,169,110,0.4);
   transition: var(--transition);
+  touch-action: none;
 }
+.chat-bubble.dragging { transform: none !important; box-shadow: 0 4px 24px rgba(201,169,110,0.4); }
 .chat-bubble:hover { transform: scale(1.08); box-shadow: 0 6px 32px rgba(201,169,110,0.6); }
 .chat-bubble svg { width: 28px; height: 28px; fill: var(--black); }
 .chat-bubble .chat-close { display: none; }

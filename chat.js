@@ -86,6 +86,7 @@
   }
 
   // ---------- DOM ----------
+  let _suppress = false;
   function init() {
     el.bubble = document.getElementById('chatBubble');
     el.panel = document.getElementById('chatPanel');
@@ -99,7 +100,11 @@
       el.bubble.setAttribute('aria-expanded', 'false');
     }
 
-    el.bubble.addEventListener('click', toggle);
+    el.bubble.addEventListener('click', () => {
+      if (_suppress) { _suppress = false; return; }
+      toggle();
+    });
+    enableBubbleDrag();
     el.sendBtn.addEventListener('click', sendUserMsg);
     el.input.addEventListener('keydown', e => { if (e.key === 'Enter') sendUserMsg(); });
     el.messages.addEventListener('click', e => {
@@ -124,6 +129,52 @@
         state.step = 'menu';
       }
     }
+  }
+
+  // Drag the chat bubble anywhere on screen; position persists per device.
+  function enableBubbleDrag() {
+    const b = el.bubble;
+    try {
+      const saved = JSON.parse(localStorage.getItem('luxe_chat_bubble_pos') || 'null');
+      if (saved) {
+        b.style.left = saved.left + 'px';
+        b.style.top = saved.top + 'px';
+        b.style.right = 'auto';
+        b.style.bottom = 'auto';
+      }
+    } catch (e) {}
+    let drag = null;
+    b.addEventListener('pointerdown', e => {
+      const r = b.getBoundingClientRect();
+      drag = { startX: e.clientX, startY: e.clientY, baseX: r.left, baseY: r.top, moved: false };
+      b.style.transition = 'none';
+      b.classList.add('dragging');
+      if (b.setPointerCapture) b.setPointerCapture(e.pointerId);
+    });
+    b.addEventListener('pointermove', e => {
+      if (!drag) return;
+      const dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+      if (!drag.moved && Math.hypot(dx, dy) > 6) drag.moved = true;
+      if (!drag.moved) return;
+      const w = b.offsetWidth || 60, h = b.offsetHeight || 60;
+      b.style.left = Math.min(Math.max(0, drag.baseX + dx), window.innerWidth - w) + 'px';
+      b.style.top = Math.min(Math.max(0, drag.baseY + dy), window.innerHeight - h) + 'px';
+      b.style.right = 'auto';
+      b.style.bottom = 'auto';
+    });
+    const end = () => {
+      if (!drag) return;
+      if (drag.moved) {
+        _suppress = true;
+        const r = b.getBoundingClientRect();
+        try { localStorage.setItem('luxe_chat_bubble_pos', JSON.stringify({ left: Math.round(r.left), top: Math.round(r.top) })); } catch (e) {}
+      }
+      b.style.transition = '';
+      b.classList.remove('dragging');
+      drag = null;
+    };
+    b.addEventListener('pointerup', end);
+    b.addEventListener('pointercancel', end);
   }
 
   // External API: open the chat and ask Styla something (used by "Ask Styla" buttons site-side).
