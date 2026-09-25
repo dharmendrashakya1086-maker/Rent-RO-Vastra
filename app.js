@@ -73,7 +73,8 @@ function bounceCart() {
 
 // Fly a mini-picture of the item into a header icon (cart or wishlist), starting from the clicked element
 function flyToIcon(item, iconSel, okMsg, originEl) {
-  const icon = document.querySelector('.header-icons ' + iconSel);
+  let icon = document.querySelector('.header-icons ' + iconSel);
+  if (!icon && window.innerWidth <= 900) icon = document.querySelector('.bottom-nav ' + iconSel);
   if (!icon || !item || !item.img) {
     if (icon) { icon.classList.remove('bounce'); void icon.offsetWidth; icon.classList.add('bounce'); }
     showToast(okMsg); return;
