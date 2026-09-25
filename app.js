@@ -3,6 +3,20 @@ if (location.search.toLowerCase().includes('author')) {
   location.href = 'admin.html' + location.search;
 }
 
+// Mobile: pull the hamburger into the main header (far right) and lift the
+// drawer out of the floating glass nav so that nav can be hidden entirely.
+(function () {
+  if (window.innerWidth > 900) return;
+  const hb = document.querySelector('.hamburger');
+  const links = document.getElementById('navLinks');
+  const wrap = document.querySelector('nav:not(.account-nav)');
+  const icons = document.querySelector('.header-icons');
+  if (!hb || !links || !wrap || !icons) return;
+  document.body.appendChild(links);   // drawer becomes viewport-fixed body child
+  icons.appendChild(hb);              // hamburger lands inside the header, right side
+  wrap.style.display = 'none';        // glass navbar gone on mobile
+})();
+
 // Nav pill — transfers between links, settles on the active link, hidden on pages outside the menu
 (function () {
   const host = document.querySelector('nav:not(.account-nav) .nav-links');

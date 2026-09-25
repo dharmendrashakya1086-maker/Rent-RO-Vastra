@@ -201,22 +201,15 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
 .faq-item.open .faq-a { max-height: 300px; padding-bottom: 22px; }
 .faq-a p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.8; }
 
-/* MOBILE NAV */
-@media (max-width: 768px) {
-  .hamburger {
-    display: flex; position: fixed; top: 9px; right: 10px; z-index: 1004;
-    width: 40px; height: 40px; border-radius: 50%;
-    align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(201,169,110,0.25);
-  }
-  .header-icons { margin-right: 48px; }
+/* MOBILE NAV — hamburger lives inside the main header; floating glass nav hidden */
+@media (max-width: 900px) {
+  .hamburger { display: flex; }
   nav {
     left: 0; right: 0; width: auto; max-width: none; transform: none;
     overflow: visible; background: transparent; border: none; box-shadow: none;
   }
   nav::before, nav::after { display: none; }
   nav.scrolled { background: transparent; box-shadow: none; }
-  .nav-inner { justify-content: flex-end; }
   .nav-links {
     position: fixed; top: 0; right: 0; width: min(320px, 85vw); height: 100vh;
     flex-direction: column; background: var(--dark);
@@ -240,7 +233,7 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
 
 /* MOBILE BOTTOM NAV — app-style icon bar, like the header but at the bottom */
 .bottom-nav { display: none; }
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .bottom-nav {
     display: flex; position: fixed; top: auto; left: 0; right: 0; bottom: 0;
     width: auto; max-width: none; transform: none; border-radius: 0; overflow: visible;
