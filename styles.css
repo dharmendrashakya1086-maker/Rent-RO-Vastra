@@ -149,9 +149,9 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
   width: 24px; height: 2px; background: var(--gold); transition: var(--transition);
   transform-origin: center;
 }
-.hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+.hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 4px); }
 .hamburger.active span:nth-child(2) { opacity: 0; }
-.hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
+.hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -4px); }
 
 /* NAV OVERLAY */
 .nav-overlay {
@@ -205,7 +205,7 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
 
 /* MOBILE NAV — hamburger lives inside the main header; floating glass nav hidden */
 @media (max-width: 900px) {
-  .hamburger { display: flex; }
+  .hamburger { display: flex; z-index: 1004; }
   nav {
     left: 0; right: 0; width: auto; max-width: none; transform: none;
     overflow: visible; background: transparent; border: none; box-shadow: none;
