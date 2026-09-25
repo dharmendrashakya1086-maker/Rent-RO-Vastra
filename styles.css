@@ -203,7 +203,13 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
 
 /* MOBILE NAV */
 @media (max-width: 768px) {
-  .hamburger { display: flex; }
+  .hamburger {
+    display: flex; position: fixed; top: 9px; right: 10px; z-index: 1004;
+    width: 40px; height: 40px; border-radius: 50%;
+    align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(201,169,110,0.25);
+  }
+  .header-icons { margin-right: 48px; }
   nav {
     left: 0; right: 0; width: auto; max-width: none; transform: none;
     overflow: visible; background: transparent; border: none; box-shadow: none;
