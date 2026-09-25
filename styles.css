@@ -233,12 +233,14 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
 .bottom-nav { display: none; }
 @media (max-width: 768px) {
   .bottom-nav {
-    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
-    justify-content: space-around; align-items: stretch;
+    display: flex; position: fixed; top: auto; left: 0; right: 0; bottom: 0;
+    width: auto; max-width: none; transform: none; border-radius: 0; overflow: visible;
+    z-index: 1000; justify-content: space-around; align-items: stretch;
     background: rgba(8,8,8,0.92); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
     border-top: 1px solid rgba(201,169,110,0.15);
     padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
   }
+  .bottom-nav::before, .bottom-nav::after { display: none; }
   .bottom-nav a {
     position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 3px; min-width: 52px; padding: 4px 2px; color: var(--text-muted);
