@@ -169,6 +169,50 @@ app.post('/api/auth/login', async (req, res) => {
   res.json({ user: loginUser(req, res, u, !!remember) });
 });
 
+// ---- Email OTP auth (Resend) ----
+// ponytail: in-memory OTP map; expires in 5 min. Fine for this scale, per-user DB table if rate abuse matters.
+const otps = new Map();
+app.post('/api/auth/otp/send', async (req, res) => {
+  const email = String((req.body || {}).email || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email' });
+  const code = String(crypto.randomInt(100000, 1000000));
+  otps.set(email, { code, exp: Date.now() + 5 * 60000 });
+  const key = process.env.RESEND_KEY;
+  if (!key) { otps.delete(email); return res.status(500).json({ error: 'Email service not configured (RESEND_KEY missing)' }); }
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || 'Rent-RO-Vastra <onboarding@resend.dev>',
+        to: [email],
+        subject: 'Your Rent-RO-Vastra login code',
+        html: '<p>Your login code is <b>' + code + '</b>.</p><p>It expires in 5 minutes. If you did not request this, ignore this email.</p>'
+      })
+    });
+    if (!r.ok) throw new Error((await r.text()).slice(0, 200));
+    res.json({ sent: true });
+  } catch (e) {
+    otps.delete(email);
+    console.error('OTP send failed:', e.message);
+    res.status(500).json({ error: 'Could not send email - check RESEND_KEY and sender address' });
+  }
+});
+
+app.post('/api/auth/otp/verify', async (req, res) => {
+  const email = String((req.body || {}).email || '').trim().toLowerCase();
+  const code = String((req.body || {}).code || '').trim();
+  const rec = otps.get(email);
+  if (!rec || rec.exp < Date.now() || rec.code !== code) return res.status(401).json({ error: 'Invalid or expired code' });
+  otps.delete(email);
+  let u = (await q('SELECT * FROM users WHERE email=$1', [email])).rows[0];
+  if (!u) {
+    u = (await q('INSERT INTO users (email,name,phone,password_hash,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      [email, email.split('@')[0], '', '', 'user', now()])).rows[0];
+  }
+  res.json({ user: loginUser(req, res, u, true) });
+});
+
 app.post('/api/auth/logout', (req, res) => {
   res.clearCookie(SESSION_COOKIE);
   res.json({ ok: true });
