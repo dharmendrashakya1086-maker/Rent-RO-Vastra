@@ -772,8 +772,18 @@ footer {
   .chat-bubble { bottom: 88px; right: 16px; width: 52px; height: 52px; }
   .chat-bubble svg { width: 24px; height: 24px; }
   .filter-bar { gap: 6px; }
-  .filter-btn { padding: 8px 12px; font-size: 0.6rem; letter-spacing: 1px; }
+  .filter-btn { padding: 10px 14px; font-size: 0.62rem; letter-spacing: 1px; min-height: 42px; }
   .card-grid { grid-template-columns: 1fr; }
+  input, select, textarea { font-size: 16px; }
+  .qty-btn { width: 36px; height: 36px; }
+  .account-sidebar { padding: 20px 12px; }
+}
+
+/* TIGHT PHONES: stack multi-column form rows */
+@media (max-width: 600px) {
+  .checkout-row { grid-template-columns: 1fr; }
+  .cart-item { flex-direction: column; }
+  .cart-item-img { width: 130px; height: 170px; }
 }
 
 /* LANDSCAPE MOBILE */
