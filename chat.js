@@ -26,16 +26,16 @@
   if (!products.length) products = defaultProducts;
 
   const KB = {
-    pricing: "हमारी कीमतें ₹3,899/दिन से शुरू। मल्टी-डे छूट: 3 दिन = 15% ऑफ, 7 दिन = 25% ऑफ। मैनपुरी और इटावा में फ्री डिलीवरी।",
-    delivery: "मैनपुरी और इटावा जिलों में फ्री नेक्स्ट-डे डिलीवरी। आपके event से 1-2 दिन पहले आइटम पहुंच जाता है।",
-    returns: "ड्राई क्लीनिंग की ज़रूरत नहीं! दिए गए बैग में आइटम रखकर pickup सेट करें। बाकी हम संभाल लेते हैं।",
-    damage: "हल्का wear normal माना जाता है। महत्वपूर्ण damage या stain पर repair/replacement charges लग सकते हैं — रेंटर की जिम्मेदारी। ",
-    sizing: "हमारे पास महिलाओं के लिए XS-XXL और पुरुषों के लिए S-3XL साइज हैं। Fit ठीक न लगे तो 24 घंटे के भीतर फ्री exchange।",
-    booking: "सबसे अच्छी availability के लिए 1-2 हफ्ते पहले बुक करें। Wedding और festive season में popular आइटम जल्दी निकल जाते हैं।",
-    cancellation: "डिलीवरी से 48 घंटे पहले तक फ्री cancellation। 48 घंटे के भीतर 50% charge। ",
-    cleaning: "हर rental के बाद सभी आइटम professional तरीके से साफ़ किए जाते हैं। आपको कुछ नहीं करना।",
-    members: "Rent-RO-Vastra members को new arrivals की early access, सभी rentals पर 10% off, और free priority delivery मिलती है।",
-    brands: "हम साथ लेकर चलते हैं Sabyasachi, Manish Malhotra, Tarun Tahiliani, Anita Dongre, Rahul Mishra, Ritu Kumar, Neeta Lulla, Masaba Gupta, Anamika Khanna और 200+ और ब्रांड।"
+    pricing: "Pricing ₹3,899/din se start. Multi-day discount bhi hai — 3 din = 15% off, 7 din = 25% off. Manipur aur Itawa me delivery free.",
+    delivery: "Manipur aur Itawa me next-day delivery free. Tumhare event se 1-2 din pehle hi piece pahunch jata hai.",
+    returns: "Dry cleaning ki tension mat lo — wapas dete waqt bas bag me daal do, pickup set kar do, baaki hum sambhal lenge.",
+    damage: "Normal halka wear chalega. Real damage ya stain hua to repair/replacement charge lagega — woh renter ki jimmedari hai.",
+    sizing: "Sizes: ladies XS-XXL, gents S-3XL. Fit na lage to 24 ghante ke andar free exchange ho jata hai.",
+    booking: "Best availability ke liye 1-2 hafte pehle book kar lo. Wedding aur festive season me popular pieces jaldi khatam ho jaate hain.",
+    cancellation: "Delivery se 48 ghante pehle tak free cancellation. 48 ghante ke andar 50% charge lagta hai.",
+    cleaning: "Har rental ke baad sab kuch professional cleaning + ironing hota hai. Tumhe kuch nahi karna.",
+    members: "Rent-RO-Vastra members ko new arrivals ki early access, har rental pe 10% off aur free priority delivery milti hai.",
+    brands: "Sath chalte hain Sabyasachi, Manish Malhotra, Tarun Tahiliani, Anita Dongre, Rahul Mishra, Ritu Kumar, Neeta Lulla, Masaba Gupta, Anamika Khanna aur 200+ aur brands."
   };
 
   const el = {};
@@ -200,18 +200,18 @@
   function showProductIntro(p) {
     const pro = products.find(x => x.id === p.id) || null;
     if (pro) rememberTaste({ lastView: pro.name, cat: pro.category });
-    const name = pro ? pro.name : (p.name || 'यह piece');
+    const name = pro ? pro.name : (p.name || 'ye piece');
     const price = eff(pro || p);
     const a = pro ? stockAvailability(pro.id) : null;
-    const stockLine = a ? (a.enough ? `${a.available} of ${a.total} अभी free` : `${a.total} pieces listed`) : '';
+    const stockLine = a ? (a.enough ? `${a.available} of ${a.total} abhi free` : `${a.total} pieces listed`) : '';
     addBotMsg(
-      `**${esc(name)}** — ${fmt(price)}/दिन\n` +
+      `**${esc(name)}** — ${fmt(price)}/din\n` +
       `• ${catLabel(pro ? pro.category : p.category)}\n` +
       `• Stock: ${stockLine}\n` +
       `• Free next-day delivery · Mainpuri & Etawah\n` +
-      `• 3+ दिन 15% off · 7 दिन 25% off\n` +
+      `• 3+ din 15% off · 7 din 25% off\n` +
       `• Sizes XS–XXL\n\n` +
-      `Apne event date ki live availability, pricing, ya koi bhi question — poochhiye, main yahi hoon।`
+      `Apne event date ki live availability, pricing ya koi bhi sawaal — pooch lo, main yahin hoon.`
     );
     if (pro) { const c = document.createElement('div'); c.appendChild(showProductCard(pro)); addBotMsg('', c); }
     showOptions(['check availability', 'pricing', 'browse all', 'start over']);
@@ -269,17 +269,17 @@
     const a = forceAvail || availFor(p);
     let badge = '';
     if (a) {
-      if (a.enough) badge = `<div class="chat-avail good">उपलब्ध · ${a.available} of ${a.total} बचे</div>`;
-      else badge = `<div class="chat-avail bad">इस window में शायद booked है</div>`;
+      if (a.enough) badge = `<div class="chat-avail good">Available · ${a.available} of ${a.total} bache hain</div>`;
+      else badge = `<div class="chat-avail bad">Is window me shayad booked hai</div>`;
     }
-    card.innerHTML = `<img src="${esc(p.img)}" alt="${esc(p.name)}"><div class="chat-product-card-body"><h5>${esc(p.name)}</h5><div class="chat-card-price">${fmt(eff(p))}/दिन — ${p.category}${(p.discount > 0 ? ' <s style="opacity:.6">' + fmt(p.price) + '</s> · ' + p.discount + '% OFF' : '')}</div><div class="chat-card-note">3+ दिन 15% ऑफ · 7 दिन 25% ऑफ</div>${badge}<a href="${(p.link || 'detail.html')}?id=${encodeURIComponent(p.id)}">देखें और Rent करें</a></div>`;
+    card.innerHTML = `<img src="${esc(p.img)}" alt="${esc(p.name)}"><div class="chat-product-card-body"><h5>${esc(p.name)}</h5><div class="chat-card-price">${fmt(eff(p))}/din — ${p.category}${(p.discount > 0 ? ' <s style="opacity:.6">' + fmt(p.price) + '</s> · ' + p.discount + '% OFF' : '')}</div><div class="chat-card-note">3+ din 15% off · 7 din 25% off</div>${badge}<a href="${(p.link || 'detail.html')}?id=${encodeURIComponent(p.id)}">Dekho aur rent karo</a></div>`;
     return card;
   }
 
   function showCards(list, heading) {
     const cards = document.createElement('div');
     list.forEach(p => cards.appendChild(showProductCard(p)));
-    addBotMsg(heading || `आपके लिए ${list.length} आइटम मिले:`, cards);
+    addBotMsg(heading || `Tumhare liye ${list.length} perfect options:` , cards);
     state.lastResult = list;
   }
 
@@ -419,21 +419,21 @@
 
     if (/^(hi|hii+|hello|hey|yo|namaste|namaskar|pranaam|salaam|hola|ji)\b/.test(t) || t === 'hi') {
       const user = currentUser();
-      addBotMsg(`नमस्ते${user ? ' ' + user.first : ''}! किसी भी occasion के लिए outfit ढूंढ सकती हूँ, budget में piece suggest कर सकती हूँ, आपके event date पर क्या actually available है check कर सकती हूँ, या pricing & policy समझा सकती हूँ। क्या चाहिए?`);
+      addBotMsg(`Namaste${user ? ' ' + user.first : ''}! Kisi bhi occasion ke liye outfit dhoondh sakti hoon, budget me piece suggest kar sakti hoon, tumhare event date pe kya actually available hai check kar sakti hoon, ya pricing & policy samjha sakti hoon. Kya chahiye?`);
       showMenu();
       return true;
     }
-    if (/thanks|thank you|shukriya|dhanyavad/.test(t)) { addBotMsg("आपका बहुत-बहुत स्वागत है! और कुछ चाहिए — style, budget, ya availability — मैं हूँ।"); showMenu(); return true; }
-    if (/^(bye|goodbye|see you|exit|quit|alvida|phir milenge|tata)\b/.test(t)) { addBotMsg("अलविदा! शानदार दिखें — catalog कभी भी खोल लीजिए। 👋"); return true; }
+    if (/thanks|thank you|shukriya|dhanyavad/.test(t)) { addBotMsg("Welcome bhai! Aur kuch chahiye — style, budget ya availability — main yahin hoon."); showMenu(); return true; }
+    if (/^(bye|goodbye|see you|exit|quit|alvida|phir milenge|tata)\b/.test(t)) { addBotMsg("Alvida! Shandar dikhna — catalog jab chao khol lena. 👋"); return true; }
     if (/^(help|menu|options|what can you do|what do you do)\b/.test(t) || t.includes('capabilities')) {
-      addBotMsg("ये-ये कर सकती हूँ:\n• 💍 Occasion, style & gender के हिसाब से outfits\n• 💰 Budget में pieces\n• 📅 Event date पर real availability check\n• 🔎 नाम या type से खोज (lehenga, sherwani, saree…)\n• ℹ️ Pricing, delivery, returns & policy के जवाब\n\nमैं English, Hindi aur Hinglish तीनों समझती हूँ — \"shaadi ke liye lehenga\" भी चलता है। Try करें: \"wedding lehenga under ₹6,000\" या \"what's free on 10 Nov?\"");
+      addBotMsg("Main ye sab kar sakti hoon:\n• 💍 Occasion, style & gender ke hisaab se outfits\n• 💰 Budget me pieces\n• 📅 Event date pe real availability check\n• 🔎 Naam ya type se search (lehenga, sherwani, saree…)\n• ℹ️ Pricing, delivery, returns & policy ke jawab\n\nEnglish, Hindi aur Hinglish — teeno samajhti hoon. Try karo: \"shaadi ke liye lehenga\" ya \"wedding lehenga under ₹6,000\".");
       showOptions(['wedding lehenga under ₹6,000', "what's free on 10 Nov", 'pricing', 'start over']);
       return true;
     }
     if (t.includes('clear') || t === 'start over' || t === 'reset') {
       clearLog(); el.messages.innerHTML = ''; state.filters = {}; state.dateCtx = null; state.step = 'init';
       const user = currentUser();
-      addBotMsg(`ताज़ा शुरुआत${user ? ', ' + user.first : ''}! आज क्या style करें?`);
+      addBotMsg(`Fresh start${user ? ', ' + user.first : ''}! Aaj kya style karein?`);
       showMenu();
       return true;
     }
@@ -459,7 +459,7 @@
     const hasAvailWord = /availab|free|khali|khaali|left|open|for my event|on that date/.test(t);
     const evtDate = parseDate(t);
     if (hasAvailWord && !evtDate) {
-      addBotMsg("ज़रूर — किस date के लिए live availability check करूँ? Try करें: \"10 Nov\", \"15 november\", \"kal\", या \"tomorrow\"।");
+      addBotMsg("Bilkul — kis date ke liye live availability check karoon? Try karo: \"10 Nov\", \"15 november\", \"kal\" ya \"tomorrow\".");
       showOptions(['tomorrow', 'browse all', 'start over']);
       return true;
     }
@@ -468,11 +468,11 @@
       state.filters.onlyAvailable = true;
       const list = searchProducts(state.filters).slice(0, 3);
       if (list.length) {
-        addBotMsg(`बहुत बढ़िया — **${evtDate.label}** की real bookings check कर रही हूँ। ये रहे actually free pieces:`);
+        addBotMsg(`Badhiya — **${evtDate.label}** ki real bookings check kar rahi hoon. Ye rahe actually free pieces:`);
         showCards(list, '');
-        addBotMsg("यही date रखूँ? Har suggestion पर live availability tag कर दूँगी।", createLink('catalog.html', 'पूरा Collection देखें'));
+        addBotMsg("Yehi date rakhu? Har suggestion pe live availability tag kar dungi.", createLink('catalog.html', 'Poora collection dekho'));
       } else {
-        addBotMsg(`${evtDate.label} के लिए अभी सब booked है — कोई और date try करें या पूरा collection देखें।`);
+        addBotMsg(`${evtDate.label} ke liye abhi sab booked hai — koi aur date try karo ya poora collection dekho.`);
       }
       showOptions(['pick a different date', 'browse all', 'start over']);
       return true;
@@ -482,10 +482,10 @@
     if (evtDate && state.dateCtx) {
       state.dateCtx = evtDate;
       state.filters.onlyAvailable = true;
-      addBotMsg(`ठीक है! ${evtDate.label} पर check करती हूँ।`);
+      addBotMsg(`Theek hai! ${evtDate.label} pe check karti hoon.`);
       const list = searchProducts(state.filters).slice(0, 3);
-      if (list.length) showCards(list, `${evtDate.label} पर उपलब्ध:`);
-      else addBotMsg(`${evtDate.label} पर अभी कुछ free नहीं।`);
+      if (list.length) showCards(list, `${evtDate.label} pe ye available hain:`);
+      else addBotMsg(`${evtDate.label} pe abhi kuch free nahi hai.`);
       showOptions(['browse all', 'start over']);
       return true;
     }
@@ -496,7 +496,7 @@
       state.filters.budget = budget;
       const range = budget.low !== null || budget.high !== null;
       const list = searchProducts({ ...state.filters, sort: budget.sort }).slice(0, 4);
-      const heading = 'ये रहे pieces जो' + (range ? ' आपके budget में fit' : budget.sort === 'price-asc' ? ' — हमारे सबसे किफायती' : budget.sort === 'price-desc' ? ' — हमारे सबसे premium' : '') + ':'
+      const heading = 'Ye raha ' + (range ? 'tumhare budget me fit' : budget.sort === 'price-asc' ? 'hamare sabse saste' : budget.sort === 'price-desc' ? 'hamare sabse premium' : 'options') + ':'
       addBotMsg(heading);
       showCards(list, '');
       showOptions(['make it cheaper', 'more options', 'browse all', 'start over']);
@@ -511,15 +511,14 @@
       if (query) {
         const a = stockAvailability(query.id, evtDate.start, evtDate.end);
         addBotMsg(a.enough
-          ? `अच्छी खबर — ${query.name} ${evtDate.label} पर available है (${a.available} of ${a.total} बचे)। मैं इसे आपके cart में डाल दूँ?`
-          : `माफ़ी, ${query.name} ${evtDate.label} पर पूरी तरह booked लग रहा है (${a.available} of ${a.total} free)। मैं ऐसे ही और styles suggest कर सकती हूँ।`);
+          ? `Achhi khabar — ${query.name} ${evtDate.label} pe available hai (${a.available} of ${a.total} bache hain). Isse cart me daal doon?`
+          : `Maafi, ${query.name} ${evtDate.label} pe poora booked lag raha hai (${a.available} of ${a.total} free). Aise hi aur styles dekh loon?`);
         const cards = document.createElement('div');
         cards.appendChild(showProductCard(query, true));
         addBotMsg('', cards);
       } else {
-        addBotMsg("वह piece मुझे नहीं मिला — पूरी list के लिए catalog देखें। " + (name ? `"${name}" से मिलता-जुलता कुछ नहीं।` : ''));
-        // createLink isn't sent from askLLM; do direct
-        addBotMsg('सारे pieces यहाँ देखें:', createLink('catalog.html', 'पूरा Collection देखें'));
+        addBotMsg("Wo piece mujhe nahi mila — poore list ke liye catalog dekho. " + (name ? `"${name}" se kuch milta-julta nahi.` : ''));
+        addBotMsg('Saare pieces yahin milenge:', createLink('catalog.html', 'Poora collection dekho'));
       }
       showOptions(['browse all', 'start over']);
       return true;
@@ -547,14 +546,14 @@
         if (state.filters.occasion) what.push(state.filters.occasion + ' occasion ke liye');
         if (state.filters.style) what.push(state.filters.style + ' style');
         if (state.filters.name) what.push(state.filters.name);
-        if (state.dateCtx) what.push(state.dateCtx.label + ' पर available');
-        addBotMsg(`ये रहे मेरे picks${what.length ? ' — ' + what.join(', ') : ''}:`);
+        if (state.dateCtx) what.push(state.dateCtx.label + ' pe available');
+        addBotMsg(`Ye rahe mere picks${what.length ? ' — ' + what.join(', ') : ''}:`);
         showCards(list, '');
       } else {
-        addBotMsg("exact match नहीं मिला — ये रहे alternatives:");
+        addBotMsg("Exact match nahi mila — ye raha alternatives:");
         const fallback = products.filter(p => matchesOccasion(p, state.filters.occasion)).slice(0, 2);
         if (fallback.length) showCards(fallback, '');
-        else addBotMsg("कोई और occasion, style या budget try करें — या पूरा collection देखें।", createLink('catalog.html', 'पूरा Collection देखें'));
+        else addBotMsg("Koi aur occasion, style ya budget try karo — ya poora collection dekho.", createLink('catalog.html', 'Poora collection dekho'));
       }
       showOptions(['show more', 'under ₹5,000', 'browse all', 'start over']);
       return true;
@@ -563,7 +562,7 @@
     // Colors — graceful degrade (catalog has no color field)
     const colors = ['red', 'gold', 'black', 'white', 'pink', 'maroon', 'blue', 'green', 'silver', 'navy'];
     if (colors.some(c => t.includes(c))) {
-      addBotMsg("बढ़िया taste! हमारा catalog अभी colors से tag नहीं करता, पर occasion या style के हिसाब से आपकी vibe वाला piece ढूंढ सकती हूँ। आपकी event के लिए कौन सा चलेगा?");
+      addBotMsg("Achhi taste! Hamare catalog me abhi color tag nahi hai, par occasion ya style ke hisaab se tumhari vibe wala piece dhoondh sakti hoon. Tumhare event ke liye kya chalta hai?");
       showOptions(['wedding attire', 'elegant evening', 'formal look', 'pricing']);
       return true;
     }
@@ -578,37 +577,37 @@
     state.step = 'menu';
 
     if (v === 'wedding attire') {
-      addBotMsg("Wedding — बहुत बढ़िया! किसके लिए और क्या budget?");
+      addBotMsg("Wedding — badhiya choice! Kiske liye aur kya budget?");
       showOptions(['bride · under ₹8,000', 'groom · under ₹6,000', 'wedding guest · elegant', 'help me choose']);
     } else if (v === 'bride · under ₹8,000' || v === 'bride · under ₹6,000') {
       state.filters = { occasion: 'wedding', gender: 'women', budget: v.includes('6,000') ? { high: 8000 } : null };
       const list = searchProducts(state.filters).slice(0, 3);
-      showCards(list, list.length ? 'दुल्हन के लिए:' : 'अभी bridal picks खाली:');
+      showCards(list, list.length ? 'Dulhan ke liye:' : 'Bridal picks abhi khaali hain:');
       showOptions(['show more', 'under ₹5,000', 'start over']);
     } else if (v === 'groom · under ₹6,000') {
       state.filters = { occasion: 'wedding', gender: 'men', budget: { high: 8000 } };
       const list = searchProducts(state.filters).slice(0, 3);
-      showCards(list, 'दूल्हे के लिए:');
+      showCards(list, 'Dulhe ke liye:');
       showOptions(['show more', 'under ₹5,000', 'start over']);
     } else if (v === 'wedding guest · elegant') {
       const list = searchProducts({ occasion: 'wedding', gender: 'women', budget: { high: 8000 } }).slice(0, 3);
-      showCards(list, list.length ? 'Wedding guest पिक्स:' : 'अभी guest picks खाली:');
+      showCards(list, list.length ? 'Wedding guest picks:' : 'Guest picks abhi khaali hain:');
       showOptions(['show more', 'start over']);
     } else if (v === 'under ₹5,000') {
       state.filters.budget = { high: 5000 };
       const list = searchProducts({ ...state.filters }).slice(0, 4).sort((a, b) => a.price - b.price);
-      addBotMsg('₹5,000/दिन का उच्चतम budget — ये रहे picks:');
+      addBotMsg('₹5,000/din ka tight budget — ye raha best value:');
       showCards(list, '');
       showOptions(['make it cheaper', 'show more', 'start over']);
     } else if (v === "what's available" || v === "what's free" || v.includes('available')) {
-      addBotMsg("अपना event date बताइए और मैं check करूँगी कि actually क्या free है — example: \"10 Nov\" या \"tomorrow\"।");
+      addBotMsg("Apna event date bata do, main check karti hoon ki actually kya free hai — jaise \"10 Nov\" ya \"tomorrow\".");
       showOptions(['tomorrow', 'browse all', 'start over']);
     } else if (v === 'tomorrow') {
       runIntent('what is free tomorrow');
     } else if (v === 'make it cheaper' || v === 'more options' || v === 'show more') {
       const next = searchProducts({ ...state.filters, budget: typeof state.filters.budget === 'object' && state.filters.budget.high ? { high: state.filters.budget.high * 0.7 } : state.filters.budget });
       const list = next.slice(0, 4);
-      showCards(list, v === 'make it cheaper' ? 'Budget और कम कर रही हूँ:' : 'कुछ और picks:');
+      showCards(list, v === 'make it cheaper' ? 'Budget aur kam kar rahi hoon:' : 'Kuch aur picks:');
       showOptions(['under ₹5,000', 'browse all', 'start over']);
     } else if (v === 'help me choose') {
       runIntent('help');
@@ -619,10 +618,10 @@
     } else if (v === 'start over' || v === "let's start fresh" || v === 'reset') {
       runIntent('start over');
     } else if (v === 'pick a different date') {
-      addBotMsg('ज़रूर — कौन सी date? (जैसे "15 Nov" या "tomorrow")');
+      addBotMsg('Bilkul — kaun si date? (jaise "15 Nov" ya "tomorrow")');
     } else if (/^under ₹\d/.test(v) || /^between ₹/.test(v)) {
       const budget = parseBudget(v);
-      if (budget) { state.filters.budget = budget; const list = searchProducts(state.filters).slice(0, 4); showCards(list, 'इस budget में:'); showOptions(['more options', 'start over']); }
+      if (budget) { state.filters.budget = budget; const list = searchProducts(state.filters).slice(0, 4); showCards(list, 'Is budget me:'); showOptions(['more options', 'start over']); }
     } else {
       // Unmapped chip (e.g. "wedding lehenga under ₹6,000") → run the NL engine, don't double-echo.
       processFreeText(val);
@@ -695,10 +694,10 @@
     const cats = topCategories().filter(Boolean);
     const t = getTaste();
     const who = u ? (u.first || u.name) : 'there';
-    let line = 'नमस्ते ' + who + '! मैं Styla हूँ — आपकी personal style assistant।';
-    if (cats.length) line += '\nआपको ' + cats.map(catLabel).join(' और ') + ' पसंद है, इसलिए मैं उसी हिसाब से सुझाऊँगी।';
-    else line += 'बताइए occasion, budget और date — मैं उसी हिसाब से pieces चुनकर दिखाऊँगी।';
-    if (t.occasion) line += '\nपिछली बार आपने ' + t.occasion + ' ढूंढा था — फिर से देखूँ?';
+    let line = 'Namaste ' + who + '! Main Styla hoon — tumhari personal style assistant.';
+    if (cats.length) line += '\nTumhe ' + cats.map(catLabel).join(' aur ') + ' pasand hai, to main usi hisaab se suggest karungi.';
+    else line += 'Occasion, budget aur date bata do — main usi hisaab se pieces chunke dikhaungi.';
+    if (t.occasion) line += '\nPichli baar tumne ' + t.occasion + ' dhoondha tha — phir se dekhun?';
     addBotMsg(line);
     const chips = [];
     if (cats.length) chips.push(catLabel(cats[0]).toLowerCase() + ' for me');
@@ -733,7 +732,7 @@
     const cats = topCategories().filter(Boolean);
     const pool = (cats.length ? products.filter(p => cats.indexOf(p.category) >= 0) : products).slice(0, 20);
     const catalog = (pool.length ? pool : products.slice(0, 20)).map(p => ({ name: p.name, category: p.category, price: eff(p), gender: p.gender, occasion: prop(p, 'occasion'), style: prop(p, 'style') }));
-    const system = 'You are Styla, the friendly style assistant for Rent-RO-Vastra, an Indian designer rental brand. Users may write in English, Hindi, or Hinglish — always reply in the same language the user used (en-IN style). Keep answers short, friendly, under 90 words. Mention prices in ₹/day. If the user wants products, list up to 3 by name only and say they can be viewed in the catalog. THIS CUSTOMER: ' + customerCard() + '. Use it — greet them by name, suggest pieces matching their likes/occasion/budget, and reference their history ("jaise aapne pehle Sabyasachi liya tha"). Never invent delivery, refund or discount policies: if you do not know, say the team will confirm. Catalog: ' + JSON.stringify(catalog);
+    const system = 'You are Styla, the friendly style concierge for Rent-RO-Vastra, an Indian designer rental brand. STYLE: always reply in Roman-script Hinglish (Latin letters, no Devanagari) - casual, warm, like a stylish friend chatting on WhatsApp: "Bilkul, sangeet ke liye ye lehenga perfect hai", not formal English and not stiff Hindi. Keep it 1-3 short lines, under 70 words, use ₹ for prices (/day). If the user wants products, list up to 3 by name only and say they can be viewed in the catalog. THIS CUSTOMER: ' + customerCard() + '. Use it - greet them by name, suggest pieces matching their likes/occasion/budget, and reference their history ("jaise tumne pehle Sabyasachi liya tha"). Never invent delivery, refund or discount policies: if you do not know, say the team will confirm. Catalog: ' + JSON.stringify(catalog);
     return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: text }) })
       .then(r => r.json())
       .then(j => j.text || null)
@@ -755,7 +754,7 @@
         removeTyping();
         if (ans) { addBotMsg(ans); showMenu(); }
         else {
-          addBotMsg("इसमें मैं मदद कर सकती हूँ! Occasion/style/budget के हिसाब से outfits सुझाती हूँ, आपके event date पर live availability check करती हूँ, या policy के सवालों के जवाब देती हूँ — English, Hindi ya Hinglish में। ऐसा कुछ try करें:");
+          addBotMsg("Ismein main help kar sakti hoon! Occasion/style/budget ke hisaab se outfits, event date pe live availability, ya policy ke sawaal — English, Hindi ya Hinglish kisi bhi me. Ye try karo:");
           showOptions(['wedding lehenga under ₹6,000', "what's free on 10 Nov", 'pricing', 'start over']);
         }
       });
@@ -812,7 +811,7 @@
         el.messages.innerHTML = '';
         state.filters = {}; state.dateCtx = null; state.step = 'init';
         const user = currentUser();
-        addBotMsg(`Chat clear हो गई! नई शुरुआत करते हैं${user ? ', ' + user.first : ''}। कैसा look तलाश रहे हैं?`);
+        addBotMsg(`Chat clear ho gayi${user ? ', ' + user.first : ''}! Naya look kya talaash rahe ho?`);
         showMenu();
       });
       header.appendChild(clr);

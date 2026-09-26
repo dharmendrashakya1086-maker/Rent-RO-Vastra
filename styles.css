@@ -1136,3 +1136,69 @@ body::before {
 /* dark banner sections get a colour edge so they don't read as flat grey */
 section[style*="var(--dark)"] { background-image: linear-gradient(180deg, rgba(232,160,192,0.07), rgba(169,184,240,0.06)) !important; }
 :root { --grad-pop: linear-gradient(120deg, #C9A96E 0%, #E8A0C0 42%, #A9B8F0 72%, #7FD6C4 100%); }
+
+/* ---------- STYLAs VIP concierge look ---------- */
+.chat-bubble {
+  background: var(--grad-pop); background-size: 200% 100%;
+  border: 1px solid rgba(201,169,110,0.5);
+  box-shadow: 0 6px 28px rgba(201,169,110,0.45), 0 0 0 6px rgba(201,169,110,0.07);
+  animation: vipHalo 3.4s ease-in-out infinite;
+}
+.chat-bubble:hover { box-shadow: 0 8px 40px rgba(232,160,192,0.5), 0 0 0 8px rgba(232,160,192,0.10); }
+.chat-bubble svg { fill: #16110a; }
+.chat-bubble .chat-close svg { fill: #16110a; }
+@keyframes vipHalo { 0%, 100% { box-shadow: 0 6px 28px rgba(201,169,110,0.45), 0 0 0 6px rgba(201,169,110,0.07); } 50% { box-shadow: 0 6px 34px rgba(232,160,192,0.5), 0 0 0 11px rgba(232,160,192,0.05); } }
+
+.chat-panel {
+  background: linear-gradient(165deg, #1b1512 0%, #100d0b 55%, #0d0b10 100%);
+  border: 1px solid rgba(201,169,110,0.32);
+  border-radius: 20px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.75), 0 0 60px rgba(201,169,110,0.10);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+.chat-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--a1), var(--gold), var(--a3), transparent);
+}
+.chat-header {
+  padding: 18px 22px; border-bottom: 1px solid rgba(201,169,110,0.18);
+  background: linear-gradient(120deg, rgba(232,160,192,0.09), rgba(169,184,240,0.05) 60%, transparent);
+}
+.chat-avatar {
+  background: var(--grad-pop); background-size: 200% 100%; color: #16110a;
+  box-shadow: 0 0 0 2px rgba(201,169,110,0.55), 0 6px 18px rgba(232,160,192,0.28);
+  letter-spacing: 1px;
+}
+.chat-header-info h4 {
+  font-family: var(--serif); font-size: 1.05rem; letter-spacing: 1px;
+  background: linear-gradient(120deg, #F0DFBA, #E8A0C0 70%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.chat-header-info span { color: #7fd6a6; letter-spacing: 2px; text-transform: uppercase; font-size: 0.6rem; }
+.chat-header-info span::before { content: '● '; }
+
+.chat-messages { background: radial-gradient(120% 40% at 50% 0%, rgba(169,184,240,0.07), transparent 70%); }
+.chat-msg.bot {
+  background: linear-gradient(150deg, rgba(40,33,30,0.95), rgba(22,19,24,0.95));
+  border: 1px solid rgba(201,169,110,0.20);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  color: #EDE7E0;
+}
+.chat-msg.user {
+  background: var(--grad-pop); background-size: 200% 100%; color: #16110a;
+  box-shadow: 0 8px 26px rgba(232,160,192,0.25); font-weight: 500;
+}
+.chat-option {
+  border: 1px solid rgba(232,160,192,0.35); color: var(--a1);
+  background: rgba(232,160,192,0.05); border-radius: 999px;
+}
+.chat-option:hover { background: var(--grad-pop); background-size: 200% 100%; color: #16110a; border-color: transparent; }
+.chat-product-card { border-color: rgba(232,160,192,0.22); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+.chat-product-card:hover { border-color: var(--a1); }
+.chat-voice-btn { border-color: rgba(169,184,240,0.3); color: var(--a3); }
+.chat-voice-btn:hover { border-color: var(--a3); background: rgba(169,184,240,0.1); }
+.chat-avail.good { background: rgba(127,214,166,0.12); }
+#typing span, .chat-typing span { background: var(--a1) !important; }
+/* "start over" / footer hint */
+.chat-panel .chat-input, .chat-panel input[type="text"] { border-color: rgba(232,160,192,0.25) !important; }
+.chat-panel .chat-input:focus { border-color: var(--a1) !important; box-shadow: 0 0 0 3px rgba(232,160,192,0.12) !important; }
