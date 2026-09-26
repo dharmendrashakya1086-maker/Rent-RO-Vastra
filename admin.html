@@ -1637,7 +1637,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       try { cfg = JSON.parse(localStorage.getItem('luxe_chat_ai') || 'null') || DEFAULT_AI; } catch (e) { cfg = DEFAULT_AI; }
       if (!cfg || !cfg.enabled) return Promise.resolve(null);
       const P = getProducts();
-      const system = 'You control a rental store admin panel. The owner gives an instruction in English/Hindi/Hinglish. Reply with ONLY one JSON object, no other text. Schema: {"action":"set_price|set_discount|set_stock|rename|hide|show|delete|add_product|none","product":"product name or id from the list (substring match is fine)","value": number or string or {"name":"...","price":5000,"category":"..."}}. set_discount value = percent 0-90 (0 removes discount). set_price = rupees/day. hide = hide from store, show = show it. delete = soft-delete (hide). If the message is advice/a question or not an action, return {"action":"none"}. Products: ' + JSON.stringify(P.map(function (p) { return { id: p.id, name: p.name }; }));
+      const system = 'You control a rental store admin panel. The owner gives an instruction in English/Hindi/Hinglish. Reply with ONLY one JSON object, no other text. Schema: {"action":"set_price|set_discount|set_discount_all|set_discount_category|set_stock|rename|hide|show|delete|add_product|none","product":"product name, id, or category","value": number or string or {"name":"...","price":5000,"category":"..."}}. set_discount = one product (product=name), set_discount_all = every active product (set product to "all"), set_discount_category = all products in a category (product=evening|formal|cocktail|outerwear|accessories). Discount value = percent 0-90 (0 removes). set_price = rupees/day. hide = hide from store, show = show it. delete = soft-delete (hide). Bulk phrases like "sabhi products pe 20% discount" or "evening category pe 15% off" MUST map to set_discount_all / set_discount_category, never to "none". If the message is advice/a question, return {"action":"none"}. Products: ' + JSON.stringify(P.map(function (p) { return { id: p.id, name: p.name, category: p.category }; }));
       return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: msg }) })
         .then(r => r.json())
         .then(j => {
@@ -1662,13 +1662,29 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         saveProducts(all); loadDashboard();
         return '<strong>' + p.name + '</strong> — price ₹' + p.price + '/day kar diya';
       }
-      if (a.action === 'set_discount') {
-        const p = findP(a.product);
-        if (!p) return "product '" + a.product + "' nahi mila";
-        p.discount = Math.min(90, Math.max(0, Math.round(Number(a.value) || 0)));
+      if (a.action === 'set_discount' || a.action === 'set_discount_all' || a.action === 'set_discount_category') {
+        const d = Math.min(90, Math.max(0, Math.round(Number(a.value) || 0)));
+        let targets = [];
+        let scope = '';
+        if (a.action === 'set_discount_all' || /^(all|sab|sabhi|every|har)$/i.test(String(a.product || '').trim())) {
+          targets = all.filter(p => p.active !== false);
+          scope = 'sabhi active products';
+        } else if (a.action === 'set_discount_category') {
+          const c = String(a.product || '').toLowerCase();
+          targets = all.filter(p => p.active !== false && String(p.category || '').toLowerCase().includes(c));
+          scope = c + ' category';
+        } else {
+          const p = findP(a.product);
+          if (!p) return "product '" + a.product + "' nahi mila";
+          targets = [p];
+          scope = p.name;
+        }
+        if (!targets.length) return "'" + scope + "' me koi active product nahi mila";
+        targets.forEach(t => t.discount = d);
         saveProducts(all); loadDashboard();
-        const sale = Math.round(p.price * (1 - p.discount / 100));
-        return '<strong>' + p.name + '</strong> — ' + p.discount + '% OFF (₹' + p.price + ' → ₹' + sale + '/day)';
+        const ex = targets[0], sale = Math.round(ex.price * (1 - d / 100));
+        const names = targets.slice(0, 3).map(t => t.name).join(', ') + (targets.length > 3 ? ' +' + (targets.length - 3) : '');
+        return '<strong>' + targets.length + ' products</strong> (' + scope + ') par <strong>' + d + '% OFF</strong> — ₹' + ex.price + ' → ₹' + sale + '/day · ' + names;
       }
       if (a.action === 'set_stock') {
         const p = findP(a.product);
@@ -1769,17 +1785,24 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           const p = qHit();
           if (p) { let all = getProducts(); all[all.findIndex(x => x.id === p.id)].stock = parseInt(qnum); saveProducts(all); loadDashboard(); aiChatReply('Set <strong>' + p.name + '</strong> stock to <strong>' + qnum + '</strong>. ✓', ['Edit another', 'Back to menu']); return; }
         }
-        if (/discount|off|chhut|offer|kam karo/.test(msg)) {
-          const p = qHit();
-          if (p) {
-            let all = getProducts();
-            const idx = all.findIndex(x => x.id === p.id);
-            const d = qnum ? Math.min(90, Math.max(0, parseInt(qnum))) : (/hatao|remove|zero|band/.test(msg) ? 0 : null);
-            if (d === null) { aiChatReply('Kitna % discount? E.g. "15% discount on ' + p.name + '" or "discount hatao".'); return; }
-            all[idx].discount = d;
+        if (/discount|off|chhut|offer|kam karo|sasta karo/.test(msg)) {
+          const raw = input.toLowerCase();
+          const allWords = /sabhi|sab |saare|saare|har |every|all |poore|poori|poora|poori|full catalog|entire|each product/.test(raw);
+          const catWord = ['evening', 'formal', 'cocktail', 'outerwear', 'accessories'].find(c => raw.includes(c));
+          let targets = null, scope = '';
+          if (catWord) { targets = getProducts().filter(p => p.active !== false && String(p.category || '').toLowerCase().includes(catWord)); scope = catWord + ' category (' + targets.length + ' products)'; }
+          else if (allWords) { targets = getProducts().filter(p => p.active !== false); scope = 'sabhi active products'; }
+          else { const p = qHit(); if (p) { targets = [p]; scope = p.name; } }
+          if (targets && targets.length) {
+            const d = qnum ? Math.min(90, Math.max(0, parseInt(qnum))) : (/hatao|remove|zero|band|nahi chahiye/.test(raw) ? 0 : null);
+            if (d === null) { aiChatReply('Kitna % discount? Bas number likh do (jaise <strong>20</strong>).'); return; }
+            const all = getProducts();
+            targets.forEach(t => { const i = all.findIndex(x => x.id === t.id); if (i >= 0) all[i].discount = d; });
             saveProducts(all); loadDashboard();
-            const sale = Math.round(all[idx].price * (1 - d / 100));
-            aiChatReply('Discount set on <strong>' + p.name + '</strong> — <strong>' + d + '% OFF</strong> (₹' + all[idx].price + ' → ₹' + sale + '/day). ✓', ['Edit another', 'Back to menu']);
+            const ex = targets[0], sale = Math.round(ex.price * (1 - d / 100));
+            const names = targets.slice(0, 3).map(t => t.name).join(', ') + (targets.length > 3 ? ' +' + (targets.length - 3) : '');
+            aiChatReply('Discount laga diya — <strong>' + targets.length + ' products</strong> (' + esc(scope) + ') par <strong>' + d + '% OFF</strong>.<br><span style="opacity:.75;">' + esc(names) + ' · e.g. ₹' + ex.price + ' → ₹' + sale + '/day</span> ✓<br><span style="opacity:.6;font-size:.8rem;">Undo: "sabhi products pe discount hatao"</span>',
+              ['Discount hatao sab pe', 'Store summary', 'Back to menu']);
             return;
           }
         }
