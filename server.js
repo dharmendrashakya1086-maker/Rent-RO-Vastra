@@ -519,6 +519,25 @@ app.get('/api/ugc', async (req, res) => {
   const rows = await q('SELECT * FROM ugc WHERE active=true ORDER BY id DESC LIMIT 60');
   res.json({ ugc: ugcRows(rows.rows) });
 });
+// One-click demo content so the gallery is never empty on a fresh store.
+const UGC_DEMO = [
+  ['Ananya Sharma', 'Jaipur', 'Demo look — Sabyasachi lehenga for her sangeet', 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=700&q=80'],
+  ['Riya Kapoor', 'Mumbai', 'Demo look — Kundan jewellery set on her reception', 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=700&q=80'],
+  ['Meera Joshi', 'Lucknow', 'Demo look — Bridal lehenga, day one', 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=700&q=80'],
+  ['Sneha Iyer', 'Chennai', 'Demo look — silk saree for the family function', 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=700&q=80'],
+  ['Aditi Verma', 'Delhi', 'Demo look — groom sherwani, baraat night', 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=700&q=80'],
+  ['Kavya Nair', 'Bengaluru', 'Demo look — cocktail gown, 40th birthday', 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=700&q=80']
+];
+app.post('/api/admin/ugc/demo', adminReq, async (req, res) => {
+  const seen = await q("SELECT count(*) AS n FROM ugc WHERE caption LIKE 'Demo look%'");
+  if (Number(seen.rows[0].n) > 0) return res.status(409).json({ error: 'Demo looks already added — delete them from the table to re-add' });
+  for (const [name, city, caption, media] of UGC_DEMO) {
+    await q('INSERT INTO ugc (name,city,caption,media,kind,item_id,active,created_at) VALUES ($1,$2,$3,$4,$5,0,true,$6)', [name, city, caption, media, UGC_KIND(media), now()]);
+  }
+  await q('INSERT INTO ugc (name,city,caption,media,kind,item_id,active,created_at) VALUES ($1,$2,$3,$4,$5,0,true,$6)',
+    ['Priya Menon', 'Kochi', 'Demo look — reel from the wedding', 'https://www.w3schools.com/html/mov_bbb.mp4', 'video', now()]);
+  res.json({ ok: true, added: UGC_DEMO.length + 1 });
+});
 app.get('/api/admin/ugc', adminReq, async (req, res) => {
   const rows = await q('SELECT * FROM ugc ORDER BY id DESC');
   res.json({ ugc: ugcRows(rows.rows) });

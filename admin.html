@@ -759,6 +759,8 @@
             </div>
           </div>
           <button class="btn-primary" id="lookSave" style="margin-top:8px;">Add to Gallery</button>
+          <button class="btn-outline" id="lookDemo" style="margin-top:8px;margin-left:10px;padding:16px 28px;">Load 7 Demo Looks</button>
+          <p style="margin-top:10px;font-size:.72rem;color:var(--text-muted);">Demo = sample data to see the design. Gallery me jaake Delete kar dena.</p>
         </div>
 
         <div class="settings-card" style="margin-top:24px;">
@@ -1453,6 +1455,20 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
         loadLooks();
       } catch (err) { alert(err.message); }
       btn.textContent = 'Add to Gallery';
+    });
+
+    document.getElementById('lookDemo').addEventListener('click', async () => {
+      if (!confirm('7 demo client looks add karein? (baad me delete kar sakte ho)')) return;
+      const btn = document.getElementById('lookDemo');
+      btn.textContent = 'Adding…';
+      try {
+        const r = await fetch('/api/admin/ugc/demo', { method: 'POST', credentials: 'same-origin' });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.error || 'failed');
+        document.getElementById('lookUpInfo').textContent = j.added + ' demo looks added ✓';
+        loadLooks();
+      } catch (err) { alert(err.message); }
+      btn.textContent = 'Load 7 Demo Looks';
     });
 
     window.editProduct = function(id) {
