@@ -250,6 +250,9 @@ app.post('/api/auth/change', authReq, async (req, res) => {
 });
 
 // ---------------- bootstrap (single load for shop pages) ----------------
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, db: process.env.DATABASE_URL ? 'postgres' : 'memory', up: Date.now() });
+});
 app.get('/api/bootstrap', async (req, res) => {
   const u = req.user;
   const products = await allProducts();
