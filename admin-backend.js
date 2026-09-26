@@ -119,15 +119,17 @@
   }
   window.ADMIN.ensureLockEmail = ensureLockEmail;
 
-  // Boot: probe the server once. Admin session cookie present -> unlock immediately.
+  // Boot: probe the server once. Server reachable -> email-login always available;
+  // admin session cookie present -> unlock immediately.
   routeStorage();
   fetch(BASE + '/bootstrap').then(r => r.json()).then(b => {
-    if (!b || !b.user) return;
-    ADMIN.server = true; ADMIN.email = b.user.email;
+    if (!b) return;
+    ADMIN.server = true;
+    ADMIN.email = (b.user && b.user.email) || null;
     ensureLockEmail();
     cache.products = b.products || []; cache.orders = b.orders || []; cache.messages = b.messages || []; cache.reviews = b.reviews || [];
     api('/admin/users').then(j => { cache.users = j.users || []; }).catch(() => {});
-    if (b.user.role === 'admin') {
+    if (b.user && b.user.role === 'admin') {
       window.dispatchEvent(new CustomEvent('admin-auth', { detail: { ok: true } }));
       window.dispatchEvent(new CustomEvent('admin-data'));
     }
