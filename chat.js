@@ -124,9 +124,7 @@
     if (open) {
       restoreLog();
       if (state.step === 'init' && el.messages.children.length === 0) {
-        const user = currentUser();
-        addBotMsg(`Rent-RO-Vastra में स्वागत है${user ? ', ' + user.first : ''}! मैं हूँ Styla, आपकी style assistant। किसी भी occasion के लिए perfect outfit ढूंढ सकती हूँ, real-time availability check कर सकती हूँ, budget के हिसाब से suggest कर सकती हूँ, या किसी भी सवाल का जवाब दे सकती हूँ।\n\nआप क्या देखना चाहेंगे?`);
-        showOptions(['wedding attire', 'under ₹5,000', "what's available", 'pricing', 'help me choose']);
+        greet();
         state.step = 'menu';
       }
     }
@@ -201,6 +199,7 @@
 
   function showProductIntro(p) {
     const pro = products.find(x => x.id === p.id) || null;
+    if (pro) rememberTaste({ lastView: pro.name, cat: pro.category });
     const name = pro ? pro.name : (p.name || 'यह piece');
     const price = eff(pro || p);
     const a = pro ? stockAvailability(pro.id) : null;
@@ -636,7 +635,89 @@
     if (!text) return;
     addUserMsg(text);
     el.input.value = '';
+    noteTaste(text);
     processFreeText(text);
+  }
+
+  // ===================================================================
+  // PERSONALISATION — Styla remembers this shopper and answers for them.
+  // Taste is derived from real data (past orders + wishlist + what they
+  // type), so there is nothing extra to store per user on the server.
+  // ===================================================================
+  const TASTE_KEY = 'luxe_taste';
+  function getTaste() { try { return JSON.parse(localStorage.getItem(TASTE_KEY) || '{}') || {}; } catch (e) { return {}; } }
+  function rememberTaste(patch) {
+    try { localStorage.setItem(TASTE_KEY, JSON.stringify(Object.assign(getTaste(), patch))); } catch (e) {}
+  }
+  function noteTaste(text) {
+    const t = ' ' + hinglish(' ' + text + ' ').toLowerCase() + ' ';
+    const patch = {};
+    const occ = OCCASIONS.find(o => t.includes(o));
+    if (occ) patch.occasion = occ;
+    if (/sangeet|mehandi|haldi/.test(t)) patch.occasion = 'sangeet';
+    const g = parseGender(t);
+    if (g) patch.gender = g;
+    const b = parseBudget(t);
+    if (b && b.max) patch.budget = 'under ' + fmt(b.max);
+    if (Object.keys(patch).length) rememberTaste(patch);
+  }
+  function topCategories() {
+    const wish = (typeof SERVER !== 'undefined' && SERVER.wishlist) || [];
+    const orders = (typeof SERVER !== 'undefined' && SERVER.orders) || [];
+    const seen = [];
+    orders.forEach(o => (o.items || []).forEach(it => seen.push(String(it.name || '').toLowerCase())));
+    const tally = {};
+    const bump = p => { if (p && p.category) tally[p.category] = (tally[p.category] || 0) + 1; };
+    products.forEach(p => { if (seen.indexOf(String(p.name).toLowerCase()) >= 0) bump(p); });
+    wish.forEach(w => bump(products.find(p => p.id === w.id) || w));
+    const t = getTaste();
+    return Object.keys(tally).sort((a, b) => tally[b] - tally[a]).slice(0, 2).concat(t.cat ? [t.cat] : []);
+  }
+  function customerCard() {
+    const u = currentUser();
+    const t = getTaste();
+    const cats = topCategories().filter(Boolean);
+    const orders = (typeof SERVER !== 'undefined' && SERVER.orders) || [];
+    const wish = (typeof SERVER !== 'undefined' && SERVER.wishlist) || [];
+    const bits = [];
+    bits.push(u ? 'name=' + (u.name || u.first) : 'guest (not logged in)');
+    if (orders.length) bits.push('previous rentals=' + orders.length);
+    if (wish.length) bits.push('wishlist=' + wish.length);
+    if (cats.length) bits.push('likes=' + cats.map(catLabel).join('/'));
+    if (t.occasion) bits.push('asking for=' + t.occasion);
+    if (t.gender) bits.push('shopping for=' + t.gender);
+    if (t.budget) bits.push('budget=' + t.budget);
+    if (t.lastView) bits.push('last viewed=' + t.lastView);
+    return bits.join(' | ') || 'brand-new shopper, no history yet';
+  }
+  function greet() {
+    const u = currentUser();
+    const cats = topCategories().filter(Boolean);
+    const t = getTaste();
+    const who = u ? (u.first || u.name) : 'there';
+    let line = 'नमस्ते ' + who + '! मैं Styla हूँ — आपकी personal style assistant।';
+    if (cats.length) line += '\nआपको ' + cats.map(catLabel).join(' और ') + ' पसंद है, इसलिए मैं उसी हिसाब से सुझाऊँगी।';
+    else line += 'बताइए occasion, budget और date — मैं उसी हिसाब से pieces चुनकर दिखाऊँगी।';
+    if (t.occasion) line += '\nपिछली बार आपने ' + t.occasion + ' ढूंढा था — फिर से देखूँ?';
+    addBotMsg(line);
+    const chips = [];
+    if (cats.length) chips.push(catLabel(cats[0]).toLowerCase() + ' for me');
+    if (t.occasion) chips.push(t.occasion + ' options');
+    chips.push(t.budget || 'under ₹5,000', "what's available", 'help me choose');
+    showOptions(chips.slice(0, 4));
+  }
+
+  // Instant, honest answers for the questions an LLM would only guess at.
+  function quickAnswer(text) {
+    const t = text.toLowerCase();
+    if (/deliver|shipping|courier|kitne din|kab tak|how long|dispatch/.test(t)) return 'Delivery: hum aapke city/venue ke hisaab se 1-3 din me arrange karte hain (delivery charge city par depend karta hai). Exact date aur amount ke liye WhatsApp/Call karo — hum confirm kar denge.';
+    if (/return|waapas|damage|wash|laundry|iron|clean/.test(t)) return 'Return: rental ke baad piece wapas hota hai, hum dry-cleaning aur ironing karte hain. Normal wear pe koi charge nahi; damage/extra stain pe repair cost lagti hai. Policy PDF me hai — exact terms ke liye team se confirm karo.';
+    if (/cancel|refund|return policy|paise wapas|deposit/.test(t)) return 'Cancellation/refund: date change aur refund rules booking ke time bataye jaate hain (usually 7+ din pehle full refund, 2-3 din ke andar non-refundable). Exact amount ke liye team se confirm kar lena.';
+    if (/payment|pay|card|upi|advance|emi|upi id/.test(t)) return 'Payment: UPI, card aur bank transfer — advance booking confirm karta hai. EMI bhi available hai 3/6 months pe. Invoice turant mil jata hai.';
+    if (/address|office|shop|located|where are you|kahan/.test(t)) return 'Hum har city me deliver karte hain. Studio visit bhi book ho sakta hai — apna city batao, exact address + slot share kar denge.';
+    if (/size|fitting|measurement|alter|height|weight/.test(t)) return 'Size: har product ke saath size chart hai, aur hum free alteration karte hain. Apni height/weight/measurements bata do, hum exact size suggest kar denge.';
+    if (/trust|safe|safety|genuine|original|authentic|scam/.test(t)) return 'Haan — hum verified designer rentals hain. Har booking pe agreement aur care instructions milte hain, payment advance hota hai, aur pieces dry-cleaned hote hain. Doubt ho to pehla order chhota rakho ya team se baat karo.';
+    return null;
   }
 
   // ---------- real AI fallback ----------
@@ -649,8 +730,10 @@
   function askLLM(text) {
     const cfg = getAI();
     if (!cfg || !cfg.enabled) return Promise.resolve(null);
-    const catalog = products.slice(0, 20).map(p => ({ name: p.name, category: p.category, price: p.price, gender: p.gender, occasion: prop(p, 'occasion'), style: prop(p, 'style') }));
-    const system = 'You are Styla, the friendly style assistant for Rent-RO-Vastra, an Indian designer rental brand. Users may write in English, Hindi, or Hinglish — always reply in the same language the user used (en-IN style). Keep answers short, friendly, under 90 words. Mention prices in ₹/day. If the user wants products, list up to 3 by name only and say they can be viewed in the catalog. Catalog: ' + JSON.stringify(catalog);
+    const cats = topCategories().filter(Boolean);
+    const pool = (cats.length ? products.filter(p => cats.indexOf(p.category) >= 0) : products).slice(0, 20);
+    const catalog = (pool.length ? pool : products.slice(0, 20)).map(p => ({ name: p.name, category: p.category, price: eff(p), gender: p.gender, occasion: prop(p, 'occasion'), style: prop(p, 'style') }));
+    const system = 'You are Styla, the friendly style assistant for Rent-RO-Vastra, an Indian designer rental brand. Users may write in English, Hindi, or Hinglish — always reply in the same language the user used (en-IN style). Keep answers short, friendly, under 90 words. Mention prices in ₹/day. If the user wants products, list up to 3 by name only and say they can be viewed in the catalog. THIS CUSTOMER: ' + customerCard() + '. Use it — greet them by name, suggest pieces matching their likes/occasion/budget, and reference their history ("jaise aapne pehle Sabyasachi liya tha"). Never invent delivery, refund or discount policies: if you do not know, say the team will confirm. Catalog: ' + JSON.stringify(catalog);
     return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: text }) })
       .then(r => r.json())
       .then(j => j.text || null)
@@ -658,6 +741,9 @@
   }
 
   function processFreeText(text) {
+    // 1) instant policy/FAQ answer (no waiting, no AI guesswork)
+    const quick = quickAnswer(text);
+    if (quick) { addBotMsg(quick); showMenu(); return; }
     // Typed/spoken Hindi (Devanagari) + real AI configured → answer straight in Hindi;
     // otherwise fall back to the offline (English-template) intent engine.
     const cfg = getAI();
