@@ -299,6 +299,14 @@ var INDEX_PRODUCTS = getProducts();
         var prod = INDEX_PRODUCTS.find(function (p) { return p.name === title; });
         window.location.href = prod ? 'detail.html?id=' + prod.id : 'detail.html';
       });
+      var priceEl = card.querySelector('.card-price strong');
+      if (prod && prod.discount > 0 && priceEl) {
+        priceEl.textContent = formatPrice(effPrice(prod));
+        var orig = document.createElement('s');
+        orig.style.cssText = 'color:var(--text-muted);font-size:0.72rem;font-weight:400;margin-left:6px;';
+        orig.textContent = formatPrice(prod.price);
+        priceEl.parentElement.insertBefore(orig, priceEl);
+      }
       var acts = card.querySelector('.card-actions');
       if (!acts) return;
       var title = card.querySelector('.card-title').textContent;

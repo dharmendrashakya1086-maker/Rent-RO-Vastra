@@ -175,7 +175,7 @@
     var urlId = parseInt(new URLSearchParams(location.search).get('id')) || 1;
     var prod = getProducts().find(function (p) { return p.id === urlId; }) || getProducts()[0];
 var PRODUCT_ID = prod.id;
-    var PRODUCT_PRICE = prod.price;
+    var PRODUCT_PRICE = effPrice(prod);
     document.querySelector('[data-review-type="item"]').setAttribute('data-item', PRODUCT_ID);
     var CAT_MAP = { evening: 'Evening Wear', formal: 'Formal', cocktail: 'Cocktail', outerwear: 'Outerwear', accessories: 'Accessories' };
 document.getElementById('detailImg').src = prod.img.replace('w=600', 'w=900');
@@ -204,9 +204,20 @@ document.getElementById('detailImg').src = prod.img.replace('w=600', 'w=900');
       });
       thumbs.appendChild(t);
     });
-    document.getElementById('detailCat').textContent = CAT_MAP[prod.category] || prod.category;
+document.getElementById('detailCat').textContent = CAT_MAP[prod.category] || prod.category;
     document.getElementById('detailTitle').textContent = prod.name;
     document.getElementById('detailPrice').textContent = '₹' + PRODUCT_PRICE.toLocaleString('en-IN');
+    if (discountPct(prod) > 0) {
+      const dEl = document.getElementById('detailPrice');
+      const orig = document.createElement('s');
+      orig.style.cssText = 'color:var(--text-muted);font-size:0.75rem;font-weight:400;margin-left:8px;';
+      orig.textContent = '₹' + prod.price.toLocaleString('en-IN');
+      dEl.appendChild(orig);
+      const off = document.createElement('span');
+      off.style.cssText = 'color:#4CAF50;font-size:0.7rem;font-weight:700;margin-left:8px;';
+      off.textContent = discountPct(prod) + '% OFF';
+      dEl.appendChild(off);
+    }
     document.getElementById('perDayPrice').textContent = '₹' + PRODUCT_PRICE.toFixed(2);
     document.getElementById('totalPrice').textContent = '₹' + PRODUCT_PRICE.toFixed(2);
 
@@ -311,7 +322,7 @@ const added = addToCart({
           '<div class="card-img-wrap"><img src="' + p.img.replace('w=400', 'w=600') + '" alt="' + pName + '" class="card-img"></div>' +
           '<div class="card-body"><div class="card-category">' + (catLabels[p.category] || p.category) + '</div>' +
           '<div class="card-title">' + pName + '</div>' +
-          '<div class="card-price"><strong>₹' + p.price.toLocaleString('en-IN') + '</strong> / day</div></div>' +
+          '<div class="card-price"><strong>₹' + effPrice(p).toLocaleString('en-IN') + '</strong>' + (discountPct(p) > 0 ? ' <s style="color:#888;font-size:0.75rem;">₹' + p.price.toLocaleString('en-IN') + '</s>' : '') + ' / day</div></div>' +
           '<div class="card-actions"><a href="detail.html?id=' + p.id + '" class="card-btn filled">View Details</a></div>';
         var actions = card.querySelector('.card-actions');
 
@@ -329,7 +340,7 @@ const added = addToCart({
         addB.textContent = 'Add to Cart';
         addB.addEventListener('click', function (e) {
           e.stopPropagation();
-          var item = { id: p.id, name: p.name, category: p.category, price: p.price, img: p.img };
+          var item = { id: p.id, name: p.name, category: p.category, price: effPrice(p), img: p.img };
           if (addToCart(item)) {
             addB.textContent = 'Added!'; addB.style.background = '#4CAF50';
             flyToCart(item, addB);
@@ -347,7 +358,7 @@ const added = addToCart({
         if (inWishlist(p.id)) { wishB.textContent = '♥'; wishB.style.color = '#e74c3c'; wishB.style.borderColor = '#e74c3c'; }
         wishB.addEventListener('click', function (e) {
           e.stopPropagation();
-          var item = { id: p.id, name: p.name, category: p.category, price: p.price, img: p.img };
+          var item = { id: p.id, name: p.name, category: p.category, price: effPrice(p), img: p.img };
           var on = toggleWishlist(item);
           wishB.textContent = on ? '♥' : '♡';
           wishB.style.color = on ? '#e74c3c' : '';

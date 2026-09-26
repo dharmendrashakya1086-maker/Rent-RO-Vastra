@@ -1,6 +1,8 @@
 // CART
 const CURRENCY = '₹';
 function formatPrice(n) { return CURRENCY + n.toLocaleString('en-IN'); }
+function discountPct(p) { return Math.min(90, Math.max(0, Number(p && p.discount) || 0)); }
+function effPrice(p) { return Math.round((Number(p && p.price) || 0) * (1 - discountPct(p) / 100)); }
 
 // ============================================================
 // SERVER-BACKED DATA LAYER (full backend). When this page is

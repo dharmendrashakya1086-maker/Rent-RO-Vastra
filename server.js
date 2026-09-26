@@ -64,7 +64,8 @@ function productRow(p) {
     occasion: Array.isArray(p.occasion) ? p.occasion.join(',') : String(p.occasion || ''),
     style: Array.isArray(p.style) ? p.style.join(',') : String(p.style || ''),
     budget: String(p.budget || ''), img: String(p.img || ''), images: JSON.stringify(p.images || [p.img].filter(Boolean)),
-    price: Math.round(Number(p.price) || 0), stock: Number(p.stock != null ? p.stock : 3),
+    price: Math.round(Number(p.price) || 0), discount: Math.min(90, Math.max(0, Math.round(Number(p.discount) || 0))),
+    stock: Number(p.stock != null ? p.stock : 3),
     active: p.active !== false
   };
 }
@@ -77,7 +78,7 @@ function productOut(r) {
     id: r.id, name: r.name, category: r.category, gender: r.gender,
     occasion: polish(r.occasion), style: polish(r.style), budget: r.budget,
     img: r.img, images: r.images || [r.img].filter(Boolean),
-    price: r.price, stock: r.stock, active: r.active !== false, link: 'detail.html'
+    price: r.price, discount: Number(r.discount) || 0, stock: r.stock, active: r.active !== false, link: 'detail.html'
   };
 }
 
@@ -94,10 +95,10 @@ async function allProducts() {
 }
 async function updateProduct(id, p) {
   const row = productRow(p);
-  await q(`INSERT INTO products (id,name,category,gender,occasion,style,budget,img,images,price,stock,active)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12)
-           ON CONFLICT (id) DO UPDATE SET name=$2,category=$3,gender=$4,occasion=$5,style=$6,budget=$7,img=$8,images=$9::jsonb,price=$10,stock=$11,active=$12`,
-    [row.id, row.name, row.category, row.gender, row.occasion, row.style, row.budget, row.img, row.images, row.price, row.stock, row.active]);
+  await q(`INSERT INTO products (id,name,category,gender,occasion,style,budget,img,images,price,discount,stock,active)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12,$13)
+           ON CONFLICT (id) DO UPDATE SET name=$2,category=$3,gender=$4,occasion=$5,style=$6,budget=$7,img=$8,images=$9::jsonb,price=$10,discount=$11,stock=$12,active=$13`,
+    [row.id, row.name, row.category, row.gender, row.occasion, row.style, row.budget, row.img, row.images, row.price, row.discount, row.stock, row.active]);
 }
 async function bookedQty(productId, startDate, endDate) {
   if (!startDate || !endDate) return 0;

@@ -46,9 +46,11 @@ async function migrate() {
     img TEXT DEFAULT '',
     images JSONB DEFAULT '[]'::jsonb,
     price INT DEFAULT 0,
+    discount INT DEFAULT 0,
     stock INT DEFAULT 1,
     active BOOLEAN DEFAULT TRUE
   )`);
+  await q(`ALTER TABLE products ADD COLUMN IF NOT EXISTS discount INT DEFAULT 0`);
   await q(`CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     user_id TEXT DEFAULT '',

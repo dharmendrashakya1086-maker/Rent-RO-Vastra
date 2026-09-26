@@ -50,6 +50,7 @@
     return map[b] || b;
   }
   function fmt(n) { return '₹' + n.toLocaleString('en-IN'); }
+  function eff(p) { const d = Math.min(90, Math.max(0, Number(p && p.discount) || 0)); return Math.round((Number(p && p.price) || 0) * (1 - d / 100)); }
 
   function availFor(p) {
     const c = state.dateCtx;
@@ -201,7 +202,7 @@
   function showProductIntro(p) {
     const pro = products.find(x => x.id === p.id) || null;
     const name = pro ? pro.name : (p.name || 'यह piece');
-    const price = pro ? pro.price : p.price;
+    const price = eff(pro || p);
     const a = pro ? stockAvailability(pro.id) : null;
     const stockLine = a ? (a.enough ? `${a.available} of ${a.total} अभी free` : `${a.total} pieces listed`) : '';
     addBotMsg(
@@ -272,7 +273,7 @@
       if (a.enough) badge = `<div class="chat-avail good">उपलब्ध · ${a.available} of ${a.total} बचे</div>`;
       else badge = `<div class="chat-avail bad">इस window में शायद booked है</div>`;
     }
-    card.innerHTML = `<img src="${esc(p.img)}" alt="${esc(p.name)}"><div class="chat-product-card-body"><h5>${esc(p.name)}</h5><div class="chat-card-price">${fmt(p.price)}/दिन — ${p.category}</div><div class="chat-card-note">3+ दिन 15% ऑफ · 7 दिन 25% ऑफ</div>${badge}<a href="${(p.link || 'detail.html')}?id=${encodeURIComponent(p.id)}">देखें और Rent करें</a></div>`;
+    card.innerHTML = `<img src="${esc(p.img)}" alt="${esc(p.name)}"><div class="chat-product-card-body"><h5>${esc(p.name)}</h5><div class="chat-card-price">${fmt(eff(p))}/दिन — ${p.category}${(p.discount > 0 ? ' <s style="opacity:.6">' + fmt(p.price) + '</s> · ' + p.discount + '% OFF' : '')}</div><div class="chat-card-note">3+ दिन 15% ऑफ · 7 दिन 25% ऑफ</div>${badge}<a href="${(p.link || 'detail.html')}?id=${encodeURIComponent(p.id)}">देखें और Rent करें</a></div>`;
     return card;
   }
 

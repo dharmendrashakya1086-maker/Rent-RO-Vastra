@@ -301,7 +301,14 @@
         card.dataset.productId = product.id;
         const total = product.stock || 1;
         const stockHtml = '<div style="margin:0 0 12px clamp(14px,2.5vw,20px);"><span style="display:inline-block;padding:4px 10px;border:1px solid ' + (total <= 1 ? 'rgba(231,76,60,0.5)' : 'rgba(76,175,80,0.4)') + ';color:' + (total <= 1 ? '#e74c3c' : '#4CAF50') + ';font-size:0.62rem;letter-spacing:1.5px;text-transform:uppercase;">' + (total <= 1 ? total + ' piece available' : total + ' pieces available') + '</span></div>';
-        actions.insertAdjacentHTML('beforebegin', stockHtml);
+actions.insertAdjacentHTML('beforebegin', stockHtml);
+      }
+      if (product && product.discount > 0) {
+        priceEl.textContent = formatPrice(effPrice(product));
+        const orig = document.createElement('s');
+        orig.style.cssText = 'color:var(--text-muted);font-size:0.72rem;font-weight:400;margin-left:6px;';
+        orig.textContent = formatPrice(product.price);
+        priceEl.parentElement.insertBefore(orig, priceEl);
       }
 const btn = document.createElement('button');
       btn.className = 'card-btn filled';
