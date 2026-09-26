@@ -56,8 +56,8 @@
     next.forEach(p => {
       if (!p || p.id === undefined || p.id === null) return;
       const before = prev.find(o => String(o.id) === String(p.id));
-      if (before && ['name', 'price', 'stock', 'active', 'img', 'category'].every(f => before[f] === p[f])) return;
-      api('/products', { method: 'PUT', body: p }).then(refresh).catch(() => {});
+      if (before && JSON.stringify(before) === JSON.stringify(p)) return;
+      api('/products/' + p.id, { method: 'PUT', body: p }).then(refresh).catch(() => {});
     });
     prev.forEach(p => { if (!nextIds.has(String(p.id))) api('/products/' + p.id, { method: 'DELETE' }).then(refresh).catch(() => {}); });
   }
