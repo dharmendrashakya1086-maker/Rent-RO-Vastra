@@ -1199,13 +1199,27 @@ renderProducts();
       if (!f) { info.textContent = ''; return; }
       info.textContent = 'Processing ' + f.name + '...';
       try {
-        const url = await fileToDataURL(f, 900);
-        document.getElementById('pImg').value = url;
+        const dataUrl = await fileToDataURL(f, 900);
+        info.textContent = 'Uploading… (img402 free host)';
+        const file = dataUrl.replace(/^data:image\/(png|jpe?g|webp|gif);base64,/, '');
+        let j;
+        if (window.ADMIN && window.ADMIN.api) {
+          j = await window.ADMIN.api('/img/upload', { method: 'POST', body: { file } });
+        } else {
+          const res = await fetch('/api/img/upload', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file })
+          });
+          j = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(j.error || 'upload failed');
+        }
+        if (!j.url) throw new Error(j.error || 'upload failed');
+        document.getElementById('pImg').value = j.url;
         const ta = document.getElementById('pImages');
-        ta.value = ta.value.trim() ? ta.value.trim() + '\n' + url : url;
+        ta.value = ta.value.trim() ? ta.value.trim() + '\n' + j.url : j.url;
         ta.dispatchEvent(new Event('input'));
-        info.textContent = 'Image ready — saved as main image.';
-      } catch (err) { info.textContent = 'Could not read image. Try another file.'; }
+        info.textContent = 'Image uploaded — link added.';
+      } catch (err) { info.textContent = 'Upload failed: ' + err.message; }
       e.target.value = '';
     });
 

@@ -7,7 +7,7 @@ const DATABASE_URL = process.env.DATABASE_URL;
 if (DATABASE_URL) {
   pool = new pg.Pool({
     connectionString: DATABASE_URL,
-    ssl: /render\.com|neon\.tech/.test(DATABASE_URL) ? { rejectUnauthorized: false } : undefined
+    ssl: /render\.com|neon\.tech|supabase\.com/.test(DATABASE_URL) ? { rejectUnauthorized: false } : undefined
   });
 } else {
   const { newDb } = require('pg-mem');
@@ -22,17 +22,17 @@ const q = async (sql, params) => pool.query(sql, params);
 
 async function migrate() {
   await q(`CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     phone TEXT DEFAULT '',
-    password_hash TEXT NOT NULL,
+    password_hash TEXT DEFAULT '',
     role TEXT DEFAULT 'user',
     created_at BIGINT DEFAULT 0
   )`);
   await q(`CREATE TABLE IF NOT EXISTS sessions (
     token TEXT PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id TEXT NOT NULL,
     expires_at BIGINT NOT NULL
   )`);
   await q(`CREATE TABLE IF NOT EXISTS products (
@@ -51,7 +51,7 @@ async function migrate() {
   )`);
   await q(`CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
-    user_id INT DEFAULT 0,
+    user_id TEXT DEFAULT '',
     user_email TEXT DEFAULT '',
     name TEXT DEFAULT '',
     email TEXT DEFAULT '',
@@ -75,7 +75,7 @@ async function migrate() {
   )`);
   await q(`CREATE TABLE IF NOT EXISTS reviews (
     id SERIAL PRIMARY KEY,
-    user_id INT DEFAULT 0,
+    user_id TEXT DEFAULT '',
     name TEXT DEFAULT '',
     email TEXT DEFAULT '',
     type TEXT DEFAULT 'site',

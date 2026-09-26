@@ -3,12 +3,21 @@
 // Local: `node server.js` (page-mem Postgres, no install). Production: DATABASE_URL -> Postgres (Render).
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 const { q, migrate } = require('./db');
 const SEED_PRODUCTS = require('./seed');
+
+// Supabase = identity authority (passwords) + Postgres provider.
+// Passwords live in Supabase Auth; the users table stores the profile + role,
+// and our own sessions table keeps the login cookie (works for OTP users too).
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const sb = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } })
+  : null;
 
 const app = express();
 app.set('trust proxy', true);
@@ -47,11 +56,6 @@ function setSession(req, res, user, remember) {
 function loginUser(req, res, user, remember) { setSession(req, res, user, remember); return safeUser(user); }
 
 const sha256 = s => crypto.createHash('sha256').update(s).digest('hex');
-function checkPass(hash, pass) {
-  if (hash.startsWith('sha256$')) return sha256(pass) === hash.slice(7);
-  if (hash.startsWith('plain$')) return hash.slice(6) === pass;
-  return bcrypt.compareSync(pass, hash);
-}
 
 // legacy localStorage product -> db row (same key names as store.js)
 function productRow(p) {
@@ -122,16 +126,11 @@ function cancelRefund(startDate) {
 // ---------------- seed on boot ----------------
 async function seed() {
   await migrate();
+  console.log('Supabase Auth: ' + (sb ? 'connected' : 'NOT configured (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing)'));
   const pcount = (await q('SELECT COUNT(*) AS c FROM products')).rows[0].c;
   if (Number(pcount) === 0) {
     for (const p of SEED_PRODUCTS) await updateProduct(p.id, p);
     console.log('Seeded ' + SEED_PRODUCTS.length + ' products.');
-  }
-  const acount = (await q("SELECT COUNT(*) AS c FROM users WHERE role='admin'")).rows[0].c;
-  if (Number(acount) === 0) {
-    await q('INSERT INTO users (email,name,password_hash,role,created_at) VALUES ($1,$2,$3,$4,$5)',
-      [ADMIN_EMAIL, 'Rent-RO-Vastra Admin', bcrypt.hashSync(ADMIN_PASS, 10), 'admin', now()]);
-    console.log('Admin created: ' + ADMIN_EMAIL + (process.env.ADMIN_PASS ? '' : '  (default password luxe123 — set ADMIN_PASS env on the server!)'));
   }
 }
 
@@ -148,23 +147,42 @@ app.use(async (req, res, next) => {
 });
 
 // ---------------- auth ----------------
+function authUnavailable(res) { return res.status(503).json({ error: 'Auth not configured (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing)' }); }
+
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, phone = '', password } = req.body || {};
   if (!email || !password || password.length < 6) return res.status(400).json({ error: 'Email and password (6+ chars) required' });
+  if (!sb) return authUnavailable(res);
   const em = String(email).trim().toLowerCase();
   const dup = await q('SELECT id FROM users WHERE email=$1', [em]);
   if (dup.rows.length) return res.status(409).json({ error: 'Email already registered' });
-  const u = (await q('INSERT INTO users (email,name,phone,password_hash,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-    [em, String(name || ''), phone, bcrypt.hashSync(password, 10), 'user', now()])).rows[0];
-  res.json({ user: loginUser(req, res, u, false) });
+  const { data, error } = await sb.auth.admin.createUser({ email: em, password, email_confirm: true });
+  if (error) {
+    const msg = /already|exists/i.test(error.message || '') ? 'Email already registered' : error.message;
+    return res.status(409).json({ error: msg });
+  }
+  const uid = data.user.id;
+  const role = em === ADMIN_EMAIL ? 'admin' : 'user';
+  await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6)',
+    [uid, em, String(name || ''), phone, role, now()]);
+  res.json({ user: loginUser(req, res, { id: uid, email: em, name: String(name || ''), phone, role }, false) });
 });
 
 app.post('/api/auth/login', async (req, res) => {
   const { email, password, remember } = req.body || {};
-  const u = (await q('SELECT * FROM users WHERE email=$1', [String(email || '').trim().toLowerCase()])).rows[0];
-  if (!u || !checkPass(u.password_hash, password || '')) return res.status(401).json({ error: 'Invalid email or password' });
-  if (u.password_hash.startsWith('sha256$') || u.password_hash.startsWith('plain$')) {
-    await q('UPDATE users SET password_hash=$1 WHERE id=$2', [bcrypt.hashSync(password, 10), u.id]);
+  if (!sb) return authUnavailable(res);
+  const em = String(email || '').trim().toLowerCase();
+  const { data, error } = await sb.auth.signInWithPassword({ email: em, password: String(password || '') });
+  if (error) return res.status(401).json({ error: 'Invalid email or password' });
+  const uid = data.user.id;
+  let u = (await q('SELECT * FROM users WHERE id=$1', [uid])).rows[0];
+  if (!u) {
+    const full = (data.user.user_metadata && data.user.user_metadata.full_name) || '';
+    u = (await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      [uid, em, String(full), '', em === ADMIN_EMAIL ? 'admin' : 'user', now()])).rows[0];
+  } else if (u.role !== 'admin' && em === ADMIN_EMAIL) {
+    await q('UPDATE users SET role=$1 WHERE id=$2', ['admin', uid]);
+    u.role = 'admin';
   }
   res.json({ user: loginUser(req, res, u, !!remember) });
 });
@@ -207,8 +225,9 @@ app.post('/api/auth/otp/verify', async (req, res) => {
   otps.delete(email);
   let u = (await q('SELECT * FROM users WHERE email=$1', [email])).rows[0];
   if (!u) {
-    u = (await q('INSERT INTO users (email,name,phone,password_hash,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      [email, email.split('@')[0], '', '', 'user', now()])).rows[0];
+    // ponytail: OTP-only user has no Supabase password (they use codes to get in).
+    u = (await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      ['otp-' + sha256(email).slice(0, 24), email, email.split('@')[0], '', 'user', now()])).rows[0];
   }
   res.json({ user: loginUser(req, res, u, true) });
 });
@@ -235,7 +254,9 @@ app.patch('/api/me', authReq, async (req, res) => {
 });
 
 app.delete('/api/me', authReq, async (req, res) => {
+  await q('DELETE FROM sessions WHERE user_id=$1', [req.user.id]);
   await q('DELETE FROM users WHERE id=$1', [req.user.id]);
+  if (sb && !req.user.id.startsWith('otp-')) sb.auth.admin.deleteUser(req.user.id).catch(() => {});
   res.clearCookie(SESSION_COOKIE);
   res.json({ ok: true });
 });
@@ -243,9 +264,24 @@ app.delete('/api/me', authReq, async (req, res) => {
 app.post('/api/auth/change', authReq, async (req, res) => {
   const { oldPass, newPass } = req.body || {};
   if (!newPass || newPass.length < 6) return res.status(400).json({ error: 'Password must be 6+ chars' });
+  if (!sb) return authUnavailable(res);
   const u = (await q('SELECT * FROM users WHERE id=$1', [req.user.id])).rows[0];
-  if (u.role !== 'admin' && !checkPass(u.password_hash, oldPass || '')) return res.status(403).json({ error: 'Current password is wrong' });
-  await q('UPDATE users SET password_hash=$1 WHERE id=$2', [bcrypt.hashSync(newPass, 10), req.user.id]);
+  if (u.role !== 'admin') {
+    const { error: verr } = await sb.auth.signInWithPassword({ email: u.email, password: String(oldPass || '') });
+    if (verr) return res.status(403).json({ error: 'Current password is wrong' });
+  }
+  // OTP-only profiles (id 'otp-*') have no Supabase password; give them one now.
+  if (u.id.startsWith('otp-')) {
+    const { error: uerr } = await sb.auth.admin.updateUserById(u.id, { password: newPass });
+    // if the user doesn't exist in Supabase yet, create it so password login works
+    if (uerr) {
+      const { error: cerr } = await sb.auth.admin.createUser({ email: u.email, password: newPass, email_confirm: true });
+      if (cerr) return res.status(500).json({ error: 'Could not set password' });
+    }
+  } else {
+    const { error: uerr } = await sb.auth.admin.updateUserById(u.id, { password: newPass });
+    if (uerr) return res.status(500).json({ error: 'Could not update password' });
+  }
   res.json({ ok: true });
 });
 
@@ -378,7 +414,10 @@ app.get('/api/admin/users', adminReq, async (req, res) => {
   res.json({ users: rows });
 });
 app.delete('/api/admin/users/:id', adminReq, async (req, res) => {
-  await q('DELETE FROM users WHERE id=$1 AND role=$2', [Number(req.params.id), 'user']);
+  const target = req.params.id;
+  await q('DELETE FROM sessions WHERE user_id=$1', [target]);
+  await q('DELETE FROM users WHERE id=$1 AND role=$2', [target, 'user']);
+  if (sb && !String(target).startsWith('otp-')) sb.auth.admin.deleteUser(String(target)).catch(() => {});
   res.json({ ok: true });
 });
 
@@ -454,13 +493,13 @@ app.post('/api/migrate', adminReq, async (req, res) => {
   const { users = [], products = [], orders = [], reviews = [], messages = [] } = req.body || {};
   let u = 0, p = 0, o = 0, r = 0, m = 0;
   for (const usr of users) {
-    if (!usr.email || !usr.pass) continue;
+    if (!usr.email) continue;
     const em = String(usr.email).toLowerCase();
     const dup = await q('SELECT id FROM users WHERE email=$1', [em]);
     if (dup.rows.length) continue;
-    const hash = /^[0-9a-f]{64}$/i.test(usr.pass) ? 'sha256$' + usr.pass : (usr.pass.length === 64 ? 'sha256$' + usr.pass : 'plain$' + usr.pass);
-    await q('INSERT INTO users (email,name,phone,password_hash,role,created_at) VALUES ($1,$2,$3,$4,$5,$6)',
-      [em, String(usr.first ? usr.first + ' ' + (usr.last || '') : (usr.name || em)), String(usr.phone || ''), hash, 'user', Number(usr.created) || now()]);
+    await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6)',
+      ['lg-' + String(usr.id == null ? Date.now() : usr.id), em,
+        String(usr.first ? usr.first + ' ' + (usr.last || '') : (usr.name || em)), String(usr.phone || ''), 'user', Number(usr.created) || now()]);
     u++;
   }
   for (const prod of products) {
@@ -488,6 +527,25 @@ app.post('/api/migrate', adminReq, async (req, res) => {
     m++;
   }
   res.json({ ok: true, imported: { users: u, products: p, orders: o, reviews: r, messages: m } });
+});
+
+// ---------------- image upload (img402 free, no keys) ----------------
+// ponytail: img402.dev free tier keeps images ≤1MB forever, 1–10MB for 30 days.
+// Our admin uploads are downscaled to ~900px JPEG (~100-200KB) → permanent.
+app.post('/api/img/upload', async (req, res) => {
+  const file = (req.body || {}).file;
+  if (!file || typeof file !== 'string' || file.length > 3e6) return res.status(400).json({ error: 'No image data' });
+  try {
+    const r = await fetch('https://img402.dev/api/free', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file })
+    });
+    const j = await r.json().catch(() => ({}));
+    const url = j.url || (j.data && j.data.url);
+    if (!r.ok || !url) return res.status(502).json({ error: j.error || 'Image upload failed' });
+    res.json({ url });
+  } catch (e) { res.status(502).json({ error: 'Image upload failed: ' + e.message }); }
 });
 
 // ---------------- AI proxy (key stays server-side) ----------------
