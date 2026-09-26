@@ -745,8 +745,16 @@
           <input type="number" id="pPrice" placeholder="7499" min="1">
         </div>
 <div class="form-group">
-          <label>Image URL</label>
+          <label>Image URL (ya apne device se upload karo)</label>
           <input type="url" id="pImg" placeholder="https://images.unsplash.com/...">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;">
+            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(120deg,#E8D5B0,#C9A96E 45%,#a88956);color:#000;cursor:pointer;font-size:.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:10px;box-shadow:0 6px 18px rgba(201,169,110,.3);">
+              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+              Upload Image
+              <input type="file" id="pImgFile" accept="image/*" style="display:none">
+            </label>
+            <span id="pImgFileInfo" style="font-size:.72rem;color:var(--text-muted);"></span>
+          </div>
         </div>
         <div class="form-group">
           <label>Stock (pieces owned)</label>
@@ -760,9 +768,13 @@ https://images.unsplash.com/photo-2?w=600&q=80"></textarea>
         <div id="pImagesPreview" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div class="form-group">
+<div class="form-group">
           <label>Styles (comma separated)</label>
           <input type="text" id="pStyle" placeholder="elegant, glamorous">
+        </div>
+        <div class="form-group">
+          <label>Occasions (comma separated)</label>
+          <input type="text" id="pOccasion" placeholder="wedding, cocktail">
         </div>
         <div class="form-group">
           <label>Budget Tier</label>
@@ -1153,6 +1165,43 @@ renderProducts();
     document.getElementById('pImages').addEventListener('input', () => {
       const urls = document.getElementById('pImages').value.split('\n').map(s => s.trim()).filter(Boolean);
       document.getElementById('pImagesPreview').innerHTML = urls.map(u => '<img src="' + u + '" style="width:56px;height:70px;object-fit:cover;border-radius:6px;border:1px solid rgba(201,169,110,0.2);" onerror="this.style.opacity=0.2">').join('');
+    });
+
+    // Device image upload -> downscale -> base64 (saved into pImg + gallery)
+    function fileToDataURL(file, maxW) {
+      return new Promise((ok, fail) => {
+        const fr = new FileReader();
+        fr.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const scale = Math.min(1, maxW / img.width);
+            const c = document.createElement('canvas');
+            c.width = Math.max(1, Math.round(img.width * scale));
+            c.height = Math.max(1, Math.round(img.height * scale));
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            ok(c.toDataURL('image/jpeg', 0.82));
+          };
+          img.onerror = () => fail(new Error('Invalid image'));
+          img.src = fr.result;
+        };
+        fr.onerror = fail;
+        fr.readAsDataURL(file);
+      });
+    }
+    document.getElementById('pImgFile').addEventListener('change', async e => {
+      const f = e.target.files && e.target.files[0];
+      const info = document.getElementById('pImgFileInfo');
+      if (!f) { info.textContent = ''; return; }
+      info.textContent = 'Processing ' + f.name + '...';
+      try {
+        const url = await fileToDataURL(f, 900);
+        document.getElementById('pImg').value = url;
+        const ta = document.getElementById('pImages');
+        ta.value = ta.value.trim() ? ta.value.trim() + '\n' + url : url;
+        ta.dispatchEvent(new Event('input'));
+        info.textContent = 'Image ready — saved as main image.';
+      } catch (err) { info.textContent = 'Could not read image. Try another file.'; }
+      e.target.value = '';
     });
 
     document.getElementById('modalSave').addEventListener('click', () => {
