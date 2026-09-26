@@ -1039,3 +1039,100 @@ body#auth-body .auth-page { min-height: 100dvh; padding: 24px 16px; }
 .look-tile .look-meta { padding: 12px 14px 14px; }
 @media (max-width: 768px) { .look-tile { width: 190px; flex-basis: 190px; } .looks-marquee { gap: 12px; } }
 @media (prefers-reduced-motion: reduce) { .looks-marquee { animation: none; } }
+
+/* ============================================================================
+   COLOUR SYSTEM — jewel tones over the gold base.
+   The whole site recolours from --a1..--a5 + the per-card --h hue below.
+   Want it calmer again? Lower the alphas, or delete this block.
+   ========================================================================== */
+:root {
+  --a1: #E8A0C0;  /* rose   */
+  --a2: #7FD6C4;  /* teal   */
+  --a3: #A9B8F0;  /* periwinkle */
+  --a4: #F0A868;  /* amber  */
+  --a5: #C9A0F0;  /* orchid */
+  --grad-pop: linear-gradient(120deg, #C9A96E 0%, #E8A0C0 45%, #A9B8F0 100%);
+}
+
+/* soft colour wash behind everything — the biggest "colourful" win for free */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(46% 34% at 12% 8%,  rgba(232,160,192,0.16), transparent 70%),
+    radial-gradient(42% 30% at 88% 14%, rgba(169,184,240,0.15), transparent 70%),
+    radial-gradient(50% 36% at 78% 62%, rgba(127,214,196,0.12), transparent 72%),
+    radial-gradient(44% 32% at 18% 88%, rgba(201,160,240,0.13), transparent 72%);
+}
+
+/* gradient headlines + labels */
+.hero-content h1 em, .section-title em {
+  background: var(--grad-pop); -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.section-tag { color: var(--a1); }
+.hero-tag { color: var(--a2); }
+.hero-tag::before { background: var(--a2); }
+.section-title { color: var(--white); }
+.vip-crown, .vip-hero .section-tag { color: var(--a3); }
+
+/* buttons get a colour wash */
+.btn-primary, .card-btn.filled, .nav-cta {
+  background: var(--grad-pop); background-size: 200% 100%; color: #16110a;
+  transition: var(--transition), background-position .6s ease;
+}
+.btn-primary:hover, .card-btn.filled:hover { background-position: 100% 0; box-shadow: 0 10px 34px rgba(232,160,192,0.32); }
+.btn-outline { border-color: rgba(232,160,192,0.5); color: var(--a1); }
+.btn-outline:hover { background: var(--a1); border-color: var(--a1); color: #16110a; }
+.card-btn { border-color: rgba(169,184,240,0.35); color: var(--a3); }
+.card-btn:hover { background: var(--a3); border-color: var(--a3); color: #0d1020; }
+.cat-strip a { border-color: rgba(232,160,192,0.22); }
+.cat-strip a:hover, .cat-strip a.active { border-color: var(--a1); color: var(--a1); background: rgba(232,160,192,0.08); }
+.cat-ico svg, .header-icon svg { transition: fill .3s ease; }
+
+/* every card/chip rotates its own hue → the grid looks jewel-toned, not monochrome */
+.card, .step, .look { --h: 42; }
+.card-grid > .card:nth-child(6n+1), .steps-grid > .step:nth-child(3n+1) { --h: 42; }   /* gold   */
+.card-grid > .card:nth-child(6n+2), .steps-grid > .step:nth-child(3n+2) { --h: 340; }  /* rose   */
+.card-grid > .card:nth-child(6n+3), .steps-grid > .step:nth-child(3n+3) { --h: 168; }  /* emerald*/
+.card-grid > .card:nth-child(6n+4) { --h: 226; }  /* sapphire */
+.card-grid > .card:nth-child(6n+5) { --h: 22; }   /* coral  */
+.card-grid > .card:nth-child(6n+6) { --h: 282; }  /* orchid */
+.card { border-color: hsl(var(--h) 60% 60% / 0.16); }
+.card:hover { border-color: hsl(var(--h) 70% 62% / 0.55); box-shadow: 0 18px 46px hsl(var(--h) 70% 50% / 0.24); }
+.card-badge { background: hsl(var(--h) 70% 62%); color: #120f0a; }
+.card-category { color: hsl(var(--h) 60% 70%); }
+.card-price strong { color: hsl(var(--h) 55% 72%); }
+.step-num { color: hsl(var(--h) 55% 66%); opacity: 0.45; }
+.step:hover { border-color: hsl(var(--h) 70% 62% / 0.5); }
+.look { --h: 42; border-color: hsl(var(--h) 60% 60% / 0.16); }
+.look:hover { border-color: hsl(var(--h) 70% 62% / 0.55); box-shadow: 0 22px 50px hsl(var(--h) 70% 50% / 0.28); }
+.look-tile { --h: 42; }
+.look-tile:nth-child(6n+1) { --h: 340; } .look-tile:nth-child(6n+2) { --h: 226; }
+.look-tile:nth-child(6n+3) { --h: 168; } .look-tile:nth-child(6n+4) { --h: 22; }
+.look-tile:nth-child(6n+5) { --h: 282; } .look-tile:nth-child(6n+6) { --h: 190; }
+.look-city { color: hsl(var(--h) 55% 70%); }
+.look-badge { color: #7fd6a6; border-color: rgba(127,214,166,0.4); background: rgba(127,214,166,0.08); }
+
+/* chrome picks up the palette too */
+.main-header { border-bottom-color: rgba(232,160,192,0.18); }
+.header-logo { background: var(--grad-pop); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-links a.active, .nav-links a:hover { color: var(--a1); }
+.h-badge { background: var(--a1); }
+.loader-spinner { border-top-color: var(--a1); border-right-color: var(--a2); border-bottom-color: var(--a3); }
+.toast { border-left: 3px solid var(--a2); }
+.faq-q:hover, .faq-chev { color: var(--a2); }
+.look-light-frame { border-color: rgba(232,160,192,0.35); }
+
+/* hero slides get a jewel-tone film over the photo (keeps text contrast) */
+.slide::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  mix-blend-mode: soft-light; opacity: .9;
+  background: linear-gradient(115deg, rgba(232,160,192,0.55) 0%, rgba(201,169,110,0.25) 38%, rgba(169,184,240,0.55) 72%, rgba(127,214,196,0.35) 100%);
+}
+.slide:nth-child(2)::after { background: linear-gradient(115deg, rgba(127,214,196,0.5), rgba(169,184,240,0.5) 50%, rgba(232,160,192,0.5)); }
+.slide:nth-child(3)::after { background: linear-gradient(115deg, rgba(201,160,240,0.5), rgba(232,160,192,0.45) 55%, rgba(240,168,104,0.45)); }
+.slide > .container { position: relative; z-index: 1; }
+
+/* dark banner sections get a colour edge so they don't read as flat grey */
+section[style*="var(--dark)"] { background-image: linear-gradient(180deg, rgba(232,160,192,0.07), rgba(169,184,240,0.06)) !important; }
+:root { --grad-pop: linear-gradient(120deg, #C9A96E 0%, #E8A0C0 42%, #A9B8F0 72%, #7FD6C4 100%); }

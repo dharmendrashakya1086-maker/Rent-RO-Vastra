@@ -9,17 +9,22 @@
   <style>
     /* VIP showroom: black velvet, gold hairlines, slow light sweep */
     .vip-hero { position: relative; padding: 190px 0 90px; text-align: center; overflow: hidden;
-      background: radial-gradient(120% 90% at 50% 0%, #1c1613 0%, #0b0b0d 60%); }
+      background:
+        radial-gradient(60% 70% at 18% 10%, rgba(232,160,192,0.22), transparent 70%),
+        radial-gradient(55% 65% at 85% 20%, rgba(169,184,240,0.20), transparent 70%),
+        radial-gradient(70% 60% at 50% 100%, rgba(127,214,196,0.14), transparent 72%),
+        radial-gradient(120% 90% at 50% 0%, #1c1613 0%, #0b0b0d 60%); }
     .vip-hero::after { content: ''; position: absolute; inset: 0; pointer-events: none;
-      background: linear-gradient(105deg, transparent 38%, rgba(201,169,110,0.10) 50%, transparent 62%);
+      background: linear-gradient(105deg, transparent 38%, rgba(232,160,192,0.14) 50%, rgba(169,184,240,0.12) 58%, transparent 68%);
       transform: translateX(-100%); animation: sweep 7s ease-in-out infinite; }
+    .vip-hero .container { position: relative; z-index: 1; }
     @keyframes sweep { 0%, 65% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
     .vip-crown { font-size: 0.66rem; letter-spacing: 6px; text-transform: uppercase; color: var(--gold); }
     .vip-hero h1 { font-family: var(--serif); font-size: clamp(2.2rem, 6vw, 4.2rem); color: var(--white);
       line-height: 1.05; margin: 18px 0 14px; }
     .vip-hero h1 em { font-style: italic;
-      background: linear-gradient(120deg, #F0DFBA, #C9A96E 55%, #8a6d3b); -webkit-background-clip: text;
-      background-clip: text; -webkit-text-fill-color: transparent; }
+      background: linear-gradient(120deg, #F0DFBA, #C9A96E 30%, #E8A0C0 62%, #A9B8F0 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
     .vip-hero p { color: var(--text-muted); max-width: 620px; margin: 0 auto; font-weight: 300; }
     .vip-stats { display: flex; justify-content: center; gap: clamp(24px, 6vw, 70px); margin-top: 46px; flex-wrap: wrap; }
     .vip-stats b { display: block; font-family: var(--serif); font-size: 1.9rem; color: var(--gold); }
