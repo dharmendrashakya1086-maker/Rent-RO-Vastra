@@ -464,6 +464,10 @@
           <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
           Reviews
         </a>
+        <a href="#" data-section="looks">
+          <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          Client Looks
+        </a>
         <a href="migrate.html">
           <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
           Migrate Data
@@ -649,6 +653,45 @@
               <tbody id="reviewsItemBody"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- CLIENT LOOKS (customer photos/videos) -->
+      <div class="dash-section" id="sec-looks">
+        <div class="dash-top">
+          <h2>Client Looks</h2>
+          <span class="dash-welcome">Customers wearing our outfits — photos &amp; videos</span>
+        </div>
+
+        <div class="settings-card">
+          <h3>Add a Client Look</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group"><label>Client name</label><input type="text" id="lookName" placeholder="Ananya Sharma"></div>
+            <div class="form-group"><label>City</label><input type="text" id="lookCity" placeholder="Jaipur"></div>
+            <div class="form-group" style="grid-column:1/-1;"><label>Caption</label><input type="text" id="lookCaption" placeholder="Wore the Sabyasachi lehenga for her sangeet — looked stunning!"></div>
+            <div class="form-group" style="grid-column:1/-1;">
+              <label>Photo (upload) or Video link</label>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <input type="file" id="lookFile" accept="image/*" style="display:none">
+                <button class="btn-outline" id="lookUploadBtn" style="padding:12px 22px;">Upload Photo</button>
+                <input type="text" id="lookUrl" placeholder="…or paste video / YouTube link (https://…)" style="flex:1;min-width:240px;padding:14px 18px;background:var(--dark2);border:1px solid rgba(201,169,110,0.2);color:var(--text);font-family:var(--sans);font-size:0.9rem;border-radius:8px;">
+              </div>
+              <span id="lookUpInfo" style="display:block;margin-top:8px;font-size:.72rem;color:var(--text-muted);"></span>
+              <div id="lookPreview" style="margin-top:12px;display:none;max-width:220px;border:1px solid rgba(201,169,110,0.25);"><img id="lookPreviewImg" style="width:100%;display:block;"></div>
+            </div>
+          </div>
+          <button class="btn-primary" id="lookSave" style="margin-top:8px;">Add to Gallery</button>
+        </div>
+
+        <div class="settings-card" style="margin-top:24px;">
+          <h3>Live Gallery</h3>
+          <div class="dash-table-wrap">
+            <table class="dash-table">
+              <thead><tr><th>Look</th><th>Client</th><th>Caption</th><th>Status</th><th></th></tr></thead>
+              <tbody id="looksBody"></tbody>
+            </table>
+          </div>
+          <p style="margin-top:14px;font-size:.75rem;color:var(--text-muted);">Live on <a href="ugc.html" target="_blank" style="color:var(--gold)">ugc.html</a> and the homepage marquee. Hidden looks stay private.</p>
         </div>
       </div>
 
@@ -973,6 +1016,7 @@ function tryLogin() {
         a.classList.add('active');
         document.querySelectorAll('.dash-section').forEach(x => x.classList.remove('active'));
         document.getElementById('sec-' + sec).classList.add('active');
+        if (sec === 'looks' && window.loadLooks) loadLooks();
         // Close mobile sidebar
         document.getElementById('dashSidebar').classList.remove('open');
         document.getElementById('dashOverlay').classList.remove('active');
@@ -1259,6 +1303,78 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
       closeModal();
       renderProducts();
       loadDashboard();
+    });
+
+    // ---------------- CLIENT LOOKS (customer photos / videos) ----------------
+    let LOOKS = [];
+    async function loadLooks() {
+      try {
+        if (window.ADMIN && window.ADMIN.api) LOOKS = (await window.ADMIN.api('/admin/ugc')).ugc || [];
+        else LOOKS = (await (await fetch('/api/admin/ugc', { credentials: 'same-origin' })).json()).ugc || [];
+      } catch (e) { LOOKS = []; }
+      const body = document.getElementById('looksBody');
+      if (!body) return;
+      body.innerHTML = LOOKS.length ? LOOKS.map(u => '<tr>' +
+        '<td style="width:70px"><div style="width:56px;height:70px;overflow:hidden;border:1px solid rgba(201,169,110,.25);background:#000;">' +
+          (u.kind === 'video' || u.kind === 'youtube'
+            ? '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:1.1rem;">▶</div>'
+            : '<img src="' + esc(u.media) + '" style="width:100%;height:100%;object-fit:cover;">') +
+        '</div></td>' +
+        '<td><strong style="color:var(--white)">' + esc(u.name || '—') + '</strong>' + (u.city ? '<br><span style="font-size:.7rem;color:var(--gold);letter-spacing:1px;">' + esc(u.city) + '</span>' : '') + '</td>' +
+        '<td style="font-size:.78rem;color:var(--text-muted);max-width:260px;">' + esc(u.caption || '—') + '</td>' +
+        '<td><span style="font-size:.68rem;letter-spacing:1px;color:' + (u.active ? '#7fd6a6' : '#ff8a80') + ';">' + (u.active ? '● LIVE' : '○ HIDDEN') + '</span></td>' +
+        '<td style="white-space:nowrap;">' +
+          '<button class="btn-outline" style="padding:6px 12px;font-size:.68rem;" onclick="toggleLook(' + u.id + ')">' + (u.active ? 'Hide' : 'Publish') + '</button> ' +
+          '<button class="btn-outline" style="padding:6px 12px;font-size:.68rem;border-color:rgba(255,138,128,.4);color:#ff8a80;" onclick="deleteLook(' + u.id + ')">Delete</button>' +
+        '</td></tr>').join('')
+        : '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">No looks yet — upload your first client photo above.</td></tr>';
+    }
+    window.toggleLook = async function(id) {
+      const u = LOOKS.find(x => x.id === id); if (!u) return;
+      const r = await fetch('/api/admin/ugc/' + id, { method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: !u.active }) });
+      if (r.ok) loadLooks();
+    };
+    window.deleteLook = async function(id) {
+      if (!confirm('Ye look permanently delete karein?')) return;
+      const r = await fetch('/api/admin/ugc/' + id, { method: 'DELETE', credentials: 'same-origin' });
+      if (r.ok) loadLooks();
+    };
+    document.getElementById('lookUploadBtn').addEventListener('click', () => document.getElementById('lookFile').click());
+    document.getElementById('lookFile').addEventListener('change', async e => {
+      const f = e.target.files && e.target.files[0]; if (!f) return;
+      const info = document.getElementById('lookUpInfo');
+      try {
+        info.textContent = 'Uploading…';
+        const dataUrl = await fileToDataURL(f, 1100);
+        const file = dataUrl.replace(/^data:image\/(png|jpe?g|webp|gif);base64,/, '');
+        const r = await fetch('/api/img/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.url) throw new Error(j.error || 'upload failed');
+        document.getElementById('lookUrl').value = j.url;
+        document.getElementById('lookPreview').style.display = 'block';
+        document.getElementById('lookPreviewImg').src = j.url;
+        info.textContent = 'Photo uploaded ✓ ab "Add to Gallery" dabao';
+      } catch (err) { info.textContent = 'Upload failed: ' + err.message; }
+      e.target.value = '';
+    });
+    document.getElementById('lookSave').addEventListener('click', async () => {
+      const btn = document.getElementById('lookSave');
+      const media = document.getElementById('lookUrl').value.trim();
+      if (!/^https:\/\//i.test(media)) { alert('Photo upload karo ya video/YouTube link paste karo.'); return; }
+      btn.textContent = 'Saving…';
+      try {
+        const r = await fetch('/api/admin/ugc', {
+          method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: document.getElementById('lookName').value, city: document.getElementById('lookCity').value, caption: document.getElementById('lookCaption').value, media })
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.error || 'save failed');
+        ['lookName', 'lookCity', 'lookCaption', 'lookUrl'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('lookPreview').style.display = 'none';
+        document.getElementById('lookUpInfo').textContent = 'Added to gallery ✓';
+        loadLooks();
+      } catch (err) { alert(err.message); }
+      btn.textContent = 'Add to Gallery';
     });
 
     window.editProduct = function(id) {

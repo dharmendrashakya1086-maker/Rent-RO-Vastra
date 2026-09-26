@@ -187,6 +187,18 @@
     </div>
   </section>
 
+  <section id="homeLooksSection" style="padding: 0 0 10px; overflow: hidden;">
+    <div class="container" style="padding-top: 70px; text-align: center;">
+      <div class="section-tag">Real Women · Real Events</div>
+      <h2 class="section-title">Seen on <em style="color:var(--gold);font-style:italic">Our Clients</em></h2>
+      <p class="section-sub">Photos &amp; videos from real Rent-RO-Vastra weddings, sangeets and birthdays</p>
+    </div>
+    <div id="homeLooks" style="margin-top: 34px;"></div>
+    <div style="text-align:center;padding: 30px 0 70px">
+      <a href="ugc.html" class="btn-outline">See Full Gallery</a>
+    </div>
+  </section>
+
   <section>
     <div class="container">
       <div class="section-tag">Simple Process</div>
@@ -285,7 +297,8 @@
     document.querySelector('.s-arrow.next').addEventListener('click', function () { goTo(cur + 1); resetTimer(); });
     dots.forEach(function (d, i) { d.addEventListener('click', function () { goTo(i); resetTimer(); }); });
     function resetTimer() { clearInterval(timer); timer = setInterval(function () { goTo(cur + 1); }, 5000); }
-var INDEX_PRODUCTS = getProducts();
+    var INDEX_PRODUCTS = getProducts();
+    renderLooks('homeLooks', 'strip');
     document.getElementById('statPieces').textContent = INDEX_PRODUCTS.length;
     (function () {
       const rs = getReviews('site');

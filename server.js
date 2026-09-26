@@ -509,6 +509,43 @@ app.delete('/api/reviews/:id', adminReq, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ---------------- customer looks (UGC: photos + videos of real clients) ----------------
+// YouTube links render as an embedded player (thumbnail in grids), raw files as <video>
+const UGC_KIND = (url) => (/\.(mp4|webm|mov)(\?|$)/i.test(url) || /(?:youtu\.be\/|youtube\.com\/(watch\?|shorts\/|embed\/))/i.test(url)) ? 'video' : 'image';
+function ugcRows(rows) {
+  return rows.map(r => ({ id: Number(r.id), name: r.name, city: r.city, caption: r.caption, media: r.media, kind: r.kind, itemId: Number(r.item_id), active: !!r.active }));
+}
+app.get('/api/ugc', async (req, res) => {
+  const rows = await q('SELECT * FROM ugc WHERE active=true ORDER BY id DESC LIMIT 60');
+  res.json({ ugc: ugcRows(rows.rows) });
+});
+app.get('/api/admin/ugc', adminReq, async (req, res) => {
+  const rows = await q('SELECT * FROM ugc ORDER BY id DESC');
+  res.json({ ugc: ugcRows(rows.rows) });
+});
+app.post('/api/admin/ugc', adminReq, async (req, res) => {  const b = req.body || {};
+  const media = String(b.media || '').trim();
+  if (!/^https:\/\//i.test(media)) return res.status(400).json({ error: 'Media URL (https://...) required' });
+  const ins = await q('INSERT INTO ugc (name,city,caption,media,kind,item_id,active,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
+    [String(b.name || '').trim().slice(0, 60), String(b.city || '').trim().slice(0, 40), String(b.caption || '').trim().slice(0, 160),
+     media, b.kind === 'video' || b.kind === 'youtube' ? b.kind : UGC_KIND(media), Number(b.itemId || 0), b.active === false ? false : true, now()]);
+  res.json({ id: ins.rows[0].id });
+});
+app.put('/api/admin/ugc/:id', adminReq, async (req, res) => {
+  const b = req.body || {};
+  if (b.media !== undefined) {
+    const media = String(b.media).trim();
+    if (!/^https:\/\//i.test(media)) return res.status(400).json({ error: 'Media URL (https://...) required' });
+    await q('UPDATE ugc SET media=$2, kind=$3 WHERE id=$1', [Number(req.params.id), media, b.kind || UGC_KIND(media)]);
+  }
+  if (b.active !== undefined) await q('UPDATE ugc SET active=$2 WHERE id=$1', [Number(req.params.id), !!b.active]);
+  res.json({ ok: true });
+});
+app.delete('/api/admin/ugc/:id', adminReq, async (req, res) => {
+  await q('DELETE FROM ugc WHERE id=$1', [Number(req.params.id)]);
+  res.json({ ok: true });
+});
+
 // ---------------- cart / wishlist ----------------
 app.get('/api/me/cart', authReq, async (req, res) => res.json({ cart: await board('cart:' + req.user.id, '[]') }));
 app.put('/api/me/cart', authReq, async (req, res) => { await setBoard('cart:' + req.user.id, req.body || []); res.json({ ok: true }); });

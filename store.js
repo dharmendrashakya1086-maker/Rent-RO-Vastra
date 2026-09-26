@@ -4,6 +4,51 @@ function formatPrice(n) { return CURRENCY + n.toLocaleString('en-IN'); }
 function discountPct(p) { return Math.min(90, Math.max(0, Number(p && p.discount) || 0)); }
 function effPrice(p) { return Math.round((Number(p && p.price) || 0) * (1 - discountPct(p) / 100)); }
 
+// ---------------- CLIENT LOOKS (real customers in our outfits) ----------------
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+let _looks;
+function getLooks() {
+  if (!_looks) _looks = api('/api/ugc').then(d => d.ugc || []).catch(() => []);
+  return _looks;
+}
+function ytId(url) {
+  const m = /(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/.exec(String(url || ''));
+  return m ? m[1] : '';
+}
+function looksMedia(u, mode) {
+  const url = u.media, yt = ytId(url);
+  if (u.kind === 'youtube' || yt) {
+    if (mode === 'light') return '<iframe src="https://www.youtube.com/embed/' + (yt || ytId(url)) + '?autoplay=1" allow="autoplay" allowfullscreen style="width:100%;height:100%;border:0"></iframe>';
+    return '<img src="https://i.ytimg.com/vi/' + yt + '/hqdefault.jpg" alt="" loading="lazy">';
+  }
+  if (u.kind === 'video' || /\.(mp4|webm|mov)(\?|$)/i.test(url)) {
+    if (mode === 'light') return '<video src="' + esc(url) + '" controls autoplay loop playsinline style="width:100%;height:100%;object-fit:contain;background:#000"></video>';
+    return '<video src="' + esc(url) + '" muted loop autoplay playsinline preload="metadata"></video>';
+  }
+  return '<img src="' + esc(url) + '" alt="" loading="lazy">';
+}
+function looksCard(u, mode) {
+  return '<article class="look' + (mode === 'tile' ? ' look-tile' : '') + '" data-look="' + u.id + '">' +
+    '<div class="look-media">' + looksMedia(u, mode) + '<span class="look-play">' + (u.kind === 'video' || u.kind === 'youtube' ? '▶' : '') + '</span></div>' +
+    '<div class="look-meta"><strong>' + esc(u.name || 'Client') + '</strong>' +
+      (u.city ? '<span class="look-city">' + esc(u.city) + '</span>' : '') +
+      (u.caption ? '<p>' + esc(u.caption) + '</p>' : '') +
+    '<span class="look-badge">✓ Verified Client</span></div></article>';
+}
+function renderLooks(elId, mode) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  getLooks().then(list => {
+    if (!list.length) { const sec = el.closest('section'); if (sec) sec.style.display = 'none'; return; }
+    if (mode === 'strip') {
+      const strip = list.concat(list); // duplicate = seamless marquee loop
+      el.innerHTML = '<div class="looks-marquee">' + strip.map(u => looksCard(u, 'tile')).join('') + '</div>';
+    } else {
+      el.innerHTML = list.map(u => looksCard(u, 'grid')).join('');
+    }
+  });
+}
+
 // ============================================================
 // SERVER-BACKED DATA LAYER (full backend). When this page is
 // served by the Node/Render backend, everything lives in

@@ -94,6 +94,17 @@ async function migrate() {
     time BIGINT DEFAULT 0,
     read_by JSONB DEFAULT '[]'::jsonb
   )`);
+  await q(`CREATE TABLE IF NOT EXISTS ugc (
+    id SERIAL PRIMARY KEY,
+    name TEXT DEFAULT '',
+    city TEXT DEFAULT '',
+    caption TEXT DEFAULT '',
+    media TEXT NOT NULL,
+    kind TEXT DEFAULT 'image',
+    item_id INT DEFAULT 0,
+    active BOOLEAN DEFAULT true,
+    created_at BIGINT DEFAULT 0
+  )`);
   await q(`CREATE TABLE IF NOT EXISTS boards (key TEXT PRIMARY KEY, value JSONB)`);
 }
 

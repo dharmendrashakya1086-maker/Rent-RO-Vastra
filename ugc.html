@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Looks — Rent-RO-Vastra</title>
+  <meta name="description" content="Real Rent-RO-Vastra clients wearing our designer outfits. Photos & videos from weddings, sangeet and birthdays.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* VIP showroom: black velvet, gold hairlines, slow light sweep */
+    .vip-hero { position: relative; padding: 190px 0 90px; text-align: center; overflow: hidden;
+      background: radial-gradient(120% 90% at 50% 0%, #1c1613 0%, #0b0b0d 60%); }
+    .vip-hero::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(105deg, transparent 38%, rgba(201,169,110,0.10) 50%, transparent 62%);
+      transform: translateX(-100%); animation: sweep 7s ease-in-out infinite; }
+    @keyframes sweep { 0%, 65% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    .vip-crown { font-size: 0.66rem; letter-spacing: 6px; text-transform: uppercase; color: var(--gold); }
+    .vip-hero h1 { font-family: var(--serif); font-size: clamp(2.2rem, 6vw, 4.2rem); color: var(--white);
+      line-height: 1.05; margin: 18px 0 14px; }
+    .vip-hero h1 em { font-style: italic;
+      background: linear-gradient(120deg, #F0DFBA, #C9A96E 55%, #8a6d3b); -webkit-background-clip: text;
+      background-clip: text; -webkit-text-fill-color: transparent; }
+    .vip-hero p { color: var(--text-muted); max-width: 620px; margin: 0 auto; font-weight: 300; }
+    .vip-stats { display: flex; justify-content: center; gap: clamp(24px, 6vw, 70px); margin-top: 46px; flex-wrap: wrap; }
+    .vip-stats b { display: block; font-family: var(--serif); font-size: 1.9rem; color: var(--gold); }
+    .vip-stats span { font-size: 0.66rem; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); }
+
+    .looks-head { text-align: center; padding: 70px 0 30px; }
+    .looks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 22px; padding-bottom: 90px; }
+    .look { position: relative; border: 1px solid rgba(201,169,110,0.16); background: #0e0e10; cursor: pointer;
+      transition: transform .45s cubic-bezier(.2,.7,.2,1), border-color .45s, box-shadow .45s; }
+    .look:hover { transform: translateY(-6px); border-color: rgba(201,169,110,0.55);
+      box-shadow: 0 22px 50px rgba(0,0,0,0.65), 0 0 0 1px rgba(201,169,110,0.18) inset; }
+    .look-media { position: relative; aspect-ratio: 3/4; overflow: hidden; background: #000; }
+    .look-media img, .look-media video { width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+    .look:hover .look-media img, .look:hover .look-media video { transform: scale(1.07); }
+    .look-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; color: var(--gold); text-shadow: 0 0 24px rgba(201,169,110,0.6);
+      background: radial-gradient(circle at 50% 50%, rgba(201,169,110,0.12), transparent 60%); opacity: 0; transition: opacity .35s; }
+    .look:hover .look-play { opacity: 1; }
+    .look-meta { padding: 16px 18px 18px; }
+    .look-meta strong { font-family: var(--serif); color: var(--white); font-size: 1.02rem; }
+    .look-city { font-size: 0.66rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-left: 8px; }
+    .look-meta p { color: var(--text-muted); font-size: 0.85rem; margin: 8px 0 10px; font-style: italic; }
+    .look-badge { display: inline-block; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase;
+      color: #7fd6a6; border: 1px solid rgba(127,214,166,0.35); padding: 3px 9px; }
+
+    /* lightbox */
+    .look-light { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center;
+      padding: 4vh 4vw; background: rgba(4,4,5,0.94); backdrop-filter: blur(6px); }
+    .look-light.on { display: flex; }
+    .look-light-frame { position: relative; width: min(920px, 92vw); height: min(82vh, 82vw); background: #000;
+      border: 1px solid rgba(201,169,110,0.35); box-shadow: 0 40px 90px rgba(0,0,0,0.8); }
+    .look-light-cap { position: absolute; left: 0; right: 0; bottom: -76px; text-align: center; }
+    .look-light-cap b { font-family: var(--serif); color: var(--gold); font-size: 1.05rem; }
+    .look-light-cap p { color: var(--text-muted); font-size: 0.82rem; margin-top: 4px; }
+    .look-light-x { position: absolute; top: -46px; right: 0; color: var(--gold); font-size: 1.6rem; cursor: pointer; }
+    .look-empty { text-align: center; padding: 100px 20px; color: var(--text-muted); }
+    @media (max-width: 640px) { .vip-hero { padding: 140px 0 60px; } .looks-grid { gap: 14px; } }
+  </style>
+</head>
+<body>
+  <div class="page-loader" id="pageLoader"><div class="loader-spinner"></div></div>
+
+  <header class="main-header">
+    <a href="index.html" class="header-logo">Rent-RO-Vastra</a>
+    <div class="header-search">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+      <input type="text" id="headerSearch" placeholder="Search designer pieces...">
+    </div>
+    <div class="header-icons">
+      <a href="wishlist.html" class="header-icon" title="Wishlist">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <span class="h-badge" id="wishBadge" style="display:none">0</span>
+      </a>
+      <a href="cart.html" class="header-icon" title="Cart">
+        <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2z"/></svg>
+        <span class="h-badge" id="cartCount">0</span>
+      </a>
+      <a href="messages.html" class="header-icon header-msg" title="Messages"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg><span class="h-badge" id="msgBadge" style="display:none">0</span></a>
+      <a href="auth.html" class="header-icon header-account" title="Account">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </a>
+    </div>
+  </header><nav>
+    <div class="nav-inner">
+      <div class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="catalog.html">Collection</a>
+        <a href="ugc.html" class="active">Client Looks</a>
+        <a href="how-it-works.html">How It Works</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <button class="hamburger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+</nav>
+
+  <section class="vip-hero">
+    <div class="container">
+      <div class="vip-crown">Real Women · Real Events</div>
+      <h1>Seen on <em>Our Clients</em></h1>
+      <p>Not models. Our own clients — brides, grooms' families and guests — wearing the same pieces you can rent, shot on their biggest nights. Tag <strong style="color:var(--gold)">#RentROVastra</strong> to be featured.</p>
+      <div class="vip-stats">
+        <div><b id="lookCount">0</b><span>Client Looks</span></div>
+        <div><b>4.9★</b><span>Avg Rating</span></div>
+        <div><b>1200+</b><span>Happy Rentals</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="looks-head">
+        <div class="section-tag">The Showroom</div>
+        <h2 class="section-title">Gallery</h2>
+        <p class="section-sub">Tap any look to view full screen</p>
+      </div>
+      <div class="looks-grid" id="looksGrid"></div>
+      <div class="look-empty" id="lookEmpty" style="display:none">
+        <p>Looks aa rahe hain…</p>
+      </div>
+      <div style="text-align:center;padding-bottom:80px">
+        <a href="catalog.html" class="btn-primary">Rent This Look</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="look-light" id="lookLight">
+    <div class="look-light-frame">
+      <div class="look-light-x" id="lookX">✕</div>
+      <div id="lookLightMedia" style="width:100%;height:100%"></div>
+      <div class="look-light-cap"><b id="lookLightName"></b><p id="lookLightCap"></p></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="store.js"></script>
+  <script>
+    renderLooks('looksGrid', 'grid');
+    getLooks().then(list => {
+      document.getElementById('lookCount').textContent = list.length;
+      document.getElementById('lookEmpty').style.display = list.length ? 'none' : 'block';
+    });
+    const light = document.getElementById('lookLight');
+    document.getElementById('looksGrid').addEventListener('click', e => {
+      const card = e.target.closest('.look');
+      if (!card) return;
+      getLooks().then(list => {
+        const u = list.find(x => x.id === card.dataset.look);
+        if (!u) return;
+        document.getElementById('lookLightMedia').innerHTML = looksMedia(u, 'light');
+        document.getElementById('lookLightName').textContent = (u.name || 'Client') + (u.city ? ' · ' + u.city : '');
+        document.getElementById('lookLightCap').textContent = u.caption || '';
+        light.classList.add('on');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+    const close = () => { light.classList.remove('on'); document.getElementById('lookLightMedia').innerHTML = ''; document.body.style.overflow = ''; };
+    document.getElementById('lookX').onclick = close;
+    light.onclick = e => { if (e.target === light) close(); };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  </script>
+  <script src="chat.js"></script>
+</body>
+</html>
