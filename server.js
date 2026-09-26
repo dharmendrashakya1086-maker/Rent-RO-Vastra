@@ -23,6 +23,7 @@ const app = express();
 app.set('trust proxy', true);
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
+app.set('trust proxy', 1); // Render sits behind a proxy: real client IP for rate limits + secure cookies
 
 const PORT = process.env.PORT || 3010;
 const SESSION_COOKIE = 'rv_sid';
@@ -56,6 +57,19 @@ function setSession(req, res, user, remember) {
 function loginUser(req, res, user, remember) { setSession(req, res, user, remember); return safeUser(user); }
 
 const sha256 = s => crypto.createHash('sha256').update(s).digest('hex');
+
+// ---------------- brute-force / spam guards ----------------
+// ponytail: in-memory is fine for one Render instance; move to Postgres if you ever scale to 2+ instances.
+const hits = new Map();
+function throttle(key, max, windowMs) {
+  const t = now();
+  if (hits.size > 5000) for (const [k, v] of hits) if (t > v.reset) hits.delete(k);
+  let rec = hits.get(key);
+  if (!rec || t > rec.reset) { rec = { n: 0, reset: t + windowMs }; hits.set(key, rec); }
+  rec.n++;
+  return { blocked: rec.n > max, mins: Math.max(1, Math.ceil((rec.reset - t) / 60000)) };
+}
+const unthrottle = key => hits.delete(key);
 
 // legacy localStorage product -> db row (same key names as store.js)
 function productRow(p) {
@@ -152,11 +166,17 @@ function authUnavailable(res) { return res.status(503).json({ error: 'Auth not c
 
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, phone = '', password } = req.body || {};
-  if (!email || !password || password.length < 6) return res.status(400).json({ error: 'Email and password (6+ chars) required' });
+  if (!email || !password || password.length < 8) return res.status(400).json({ error: 'Email and password (8+ chars) required' });
   if (!sb) return authUnavailable(res);
   const em = String(email).trim().toLowerCase();
-  const dup = await q('SELECT id FROM users WHERE email=$1', [em]);
-  if (dup.rows.length) return res.status(409).json({ error: 'Email already registered' });
+  const ip = throttle('reg:' + req.ip, 10, 3600 * 1000);
+  if (ip.blocked) return res.status(429).json({ error: 'Too many sign-ups from this device. 1 ghanta baad try karo.' });
+  const dup = await q('SELECT id,password_hash FROM users WHERE email=$1', [em]);
+  if (dup.rows.length) {
+    // A profile created via email-OTP already proved inbox ownership: never let someone else claim it.
+    if (!dup.rows[0].password_hash) return res.status(409).json({ error: 'Ye email pehle se account hai — login karein ya OTP se OTP login karein' });
+    return res.status(409).json({ error: 'Email already registered' });
+  }
   const { data, error } = await sb.auth.admin.createUser({ email: em, password, email_confirm: true });
   if (error) {
     const msg = /already|exists/i.test(error.message || '') ? 'Email already registered' : error.message;
@@ -173,8 +193,12 @@ app.post('/api/auth/login', async (req, res) => {
   const { email, password, remember } = req.body || {};
   if (!sb) return authUnavailable(res);
   const em = String(email || '').trim().toLowerCase();
+  const key = 'li:' + em + ':' + req.ip;
+  const guard = throttle(key, 6, 15 * 60 * 1000);
+  if (guard.blocked) return res.status(429).json({ error: 'Too many failed attempts. ' + guard.mins + ' minute baad try karo.' });
   const { data, error } = await sb.auth.signInWithPassword({ email: em, password: String(password || '') });
   if (error) return res.status(401).json({ error: 'Invalid email or password' });
+  unthrottle(key);
   const uid = data.user.id;
   let u = (await q('SELECT * FROM users WHERE id=$1', [uid])).rows[0];
   if (!u) {
@@ -195,6 +219,8 @@ app.post('/api/auth/otp/send', async (req, res) => {
   const email = String((req.body || {}).email || '').trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email' });
   const code = String(crypto.randomInt(100000, 1000000));
+  const otpGuard = throttle('otp:' + email, 5, 3600 * 1000);
+  if (otpGuard.blocked) return res.status(429).json({ error: 'Is email pe OTP limit ho gaya. 1 ghanta baad try karo.' });
   otps.set(email, { code, exp: Date.now() + 5 * 60000 });
   const key = process.env.RESEND_KEY;
   if (!key) { otps.delete(email); return res.status(500).json({ error: 'Email service not configured (RESEND_KEY missing)' }); }
