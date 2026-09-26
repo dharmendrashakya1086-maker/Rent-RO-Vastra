@@ -7,7 +7,7 @@ const DATABASE_URL = process.env.DATABASE_URL;
 if (DATABASE_URL) {
   pool = new pg.Pool({
     connectionString: DATABASE_URL,
-    ssl: /render\.com/.test(DATABASE_URL) ? { rejectUnauthorized: false } : undefined
+    ssl: /render\.com|neon\.tech/.test(DATABASE_URL) ? { rejectUnauthorized: false } : undefined
   });
 } else {
   const { newDb } = require('pg-mem');
