@@ -939,6 +939,11 @@ function tryLogin() {
             lockPass.value = '';
             lockPass.focus();
           }
+        }).catch(err => {
+          lockBtn.disabled = false;
+          lockError.textContent = (err && err.message) || 'Sign-in failed. Please try again.';
+          lockPass.value = '';
+          lockPass.focus();
         });
         return;
       }
