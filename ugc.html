@@ -55,6 +55,16 @@
     .look-badge { display: inline-block; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase;
       color: #7fd6a6; border: 1px solid rgba(127,214,166,0.35); padding: 3px 9px; }
 
+    /* the grid renders as one batch from a fetch, so let it assemble itself
+       instead of popping in flat. Four nth-child groups give the stagger, so
+       this needs no JS. :not(.reveal) keeps it from fighting the site's own
+       scroll-reveal if that ever reaches these cards. */
+    @keyframes lookIn { from { opacity: 0; transform: translateY(26px) scale(.97); } to { opacity: 1; transform: none; } }
+    .looks-grid .look:not(.reveal) { animation: lookIn .7s cubic-bezier(.2,.7,.2,1) backwards; }
+    .looks-grid .look:nth-child(4n+2):not(.reveal) { animation-delay: .07s; }
+    .looks-grid .look:nth-child(4n+3):not(.reveal) { animation-delay: .14s; }
+    .looks-grid .look:nth-child(4n+4):not(.reveal) { animation-delay: .21s; }
+
     /* lightbox: the caption and the close button used to sit outside the frame
        (bottom:-76px / top:-46px), so short screens clipped both of them */
     .look-light { position: fixed; inset: 0; z-index: 9999; display: none; flex-direction: column;
@@ -197,15 +207,36 @@
   <script src="app.js"></script>
   <script src="store.js"></script>
   <script>
+    // the lightbox flies out of the card you tapped instead of just appearing
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     renderLooks('looksGrid', 'grid');
     getLooks().then(list => {
       document.getElementById('lookCount').textContent = list.length;
       document.getElementById('lookEmpty').style.display = list.length ? 'none' : 'block';
     });
     const light = document.getElementById('lookLight');
+    const frame = document.querySelector('.look-light-frame');
+    const cap = document.querySelector('.look-light-cap');
+    let closing = false;
+
+    const close = () => {
+      if (closing || !light.classList.contains('on')) return;
+      const done = () => {
+        closing = false;
+        light.classList.remove('on');
+        document.getElementById('lookLightMedia').innerHTML = '';
+        document.body.style.overflow = '';
+      };
+      // no WAAPI (or reduced motion): hide straight away rather than waiting
+      if (reduced || !light.animate) return done();
+      closing = true;
+      light.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'ease-in' }).onfinish = done;
+    };
+
     document.getElementById('looksGrid').addEventListener('click', e => {
       const card = e.target.closest('.look');
       if (!card) return;
+      const from = card.querySelector('.look-media').getBoundingClientRect();
       getLooks().then(list => {
         const u = list.find(x => x.id === card.dataset.look);
         if (!u) return;
@@ -214,9 +245,21 @@
         document.getElementById('lookLightCap').textContent = u.caption || '';
         light.classList.add('on');
         document.body.style.overflow = 'hidden';
+        if (reduced || !frame.animate) return;
+        // measure only after .on, otherwise the frame is display:none and reads 0x0
+        const to = frame.getBoundingClientRect();
+        light.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: 'ease-out' });
+        frame.animate([{
+          transform: 'translate(' + (from.left + from.width / 2 - to.left - to.width / 2) + 'px,'
+            + (from.top + from.height / 2 - to.top - to.height / 2) + 'px) scale('
+            + (from.width / to.width) + ',' + (from.height / to.height) + ')',
+          opacity: .3
+        }, { transform: 'none', opacity: 1 }],
+          { duration: 480, easing: 'cubic-bezier(.2,.7,.2,1)' });
+        cap.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }],
+          { duration: 420, delay: 200, easing: 'ease-out', fill: 'backwards' });
       });
     });
-    const close = () => { light.classList.remove('on'); document.getElementById('lookLightMedia').innerHTML = ''; document.body.style.overflow = ''; };
     document.getElementById('lookX').onclick = close;
     light.onclick = e => { if (e.target === light) close(); };
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });

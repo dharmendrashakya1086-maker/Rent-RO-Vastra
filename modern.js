@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var GLOW = '.card, .cat-card, .ugc-card, .look-card';
+  var GLOW = '.card, .cat-card, .ugc-card, .look-card, .look';
   var REVEAL = GLOW + ', .stat, .faq-item, .step, .feature, section h2, .section-title';
 
   // 1. reveal only what starts below the fold (above-fold stays instant, no flash)

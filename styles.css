@@ -1266,13 +1266,13 @@ html { scroll-behavior: smooth; scroll-padding-top: 130px; }
   box-shadow: 0 12px 38px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(232,160,192,0.18);
 }
 
-.card, .cat-card, .ugc-card, .look-card { position: relative; transition: transform .38s cubic-bezier(.2,.7,.2,1), border-color .38s, box-shadow .38s; }
-.card::after, .cat-card::after, .ugc-card::after, .look-card::after {
+.card, .cat-card, .ugc-card, .look-card, .look { position: relative; transition: transform .38s cubic-bezier(.2,.7,.2,1), border-color .38s, box-shadow .38s; }
+.card::after, .cat-card::after, .ugc-card::after, .look-card::after, .look::after {
   content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .38s;
   background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(232,160,192,0.16), transparent 70%);
 }
-.card:hover::after, .cat-card:hover::after, .ugc-card:hover::after, .look-card:hover::after { opacity: 1; }
-.card:hover, .cat-card:hover, .ugc-card:hover, .look-card:hover { transform: translateY(-7px); }
+.card:hover::after, .cat-card:hover::after, .ugc-card:hover::after, .look-card:hover::after, .look:hover::after { opacity: 1; }
+.card:hover, .cat-card:hover, .ugc-card:hover, .look-card:hover, .look:hover { transform: translateY(-7px); }
 .card-img { transition: transform .65s cubic-bezier(.2,.7,.2,1); }
 .card:hover .card-img { transform: scale(1.07); }
 
