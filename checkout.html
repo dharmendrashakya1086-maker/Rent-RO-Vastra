@@ -103,6 +103,14 @@ const singleItem = (new URLSearchParams(location.search).get('item') || '').toSt
       if (singleItem && orderingOne.length) cart = orderingOne;
       const user = currentUser();
       const el = document.getElementById('checkoutContent');
+      // checkout is members-only: the order API needs a signed-in user anyway
+      if (!user && cart.length) {
+        el.innerHTML = '<div style="text-align:center;padding:60px 0;"><h2 style="font-family:var(--serif);color:var(--white);margin-bottom:12px;">Log in to check out</h2>' +
+          '<p style="color:var(--text-muted);margin-bottom:8px;">Checkout is open to members only.</p>' +
+          '<p style="color:var(--text-muted);margin-bottom:24px;">Members also get an extra 10% off every rental.</p>' +
+          '<a href="/login" class="btn-primary">Log in / Sign up</a></div>';
+        return;
+      }
       document.getElementById('cartCount').textContent = cart.length;
 
       if (cart.length === 0) {
