@@ -15,7 +15,7 @@ function ytId(url) {
   const m = /(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/.exec(String(url || ''));
   return m ? m[1] : '';
 }
-function looksMedia(u, mode) {
+function looksMedia(u, mode, play) {
   const url = u.media, yt = ytId(url);
   // alt describes the photo for screen readers and image search; the caption already carries the story
   const alt = (u.caption ? u.caption + ' ' : '') + (u.name ? '— worn by ' + u.name : '') + (u.city ? ', ' + u.city : '') + ', client look on rent at Rent-RO-Vastra';
@@ -25,13 +25,15 @@ function looksMedia(u, mode) {
   }
   if (u.kind === 'video' || /\.(mp4|webm|mov)(\?|$)/i.test(url)) {
     if (mode === 'light') return '<video src="' + esc(url) + '" aria-label="' + esc(alt) + '" controls autoplay loop playsinline style="width:100%;height:100%;object-fit:contain;background:#000"></video>';
-    return '<video src="' + esc(url) + '" muted loop autoplay playsinline preload="metadata" aria-label="' + esc(alt) + '"></video>';
+    // play:false keeps a card off the video's autoplay path, so a wall of
+    // thumbnails doesn't decode a dozen clips at once
+    return '<video src="' + esc(url) + '" muted loop playsinline preload="metadata"' + (play === false ? '' : ' autoplay') + ' aria-label="' + esc(alt) + '"></video>';
   }
   return '<img src="' + esc(url) + '" alt="' + esc(alt) + '" loading="lazy">';
 }
-function looksCard(u, mode) {
+function looksCard(u, mode, play) {
   return '<article class="look' + (mode === 'tile' ? ' look-tile' : '') + '" data-look="' + u.id + '">' +
-    '<div class="look-media">' + looksMedia(u, mode) + '<span class="look-play">' + (u.kind === 'video' || u.kind === 'youtube' ? '▶' : '') + '</span></div>' +
+    '<div class="look-media">' + looksMedia(u, mode, play) + '<span class="look-play">' + (u.kind === 'video' || u.kind === 'youtube' ? '▶' : '') + '</span></div>' +
     '<div class="look-meta"><strong>' + esc(u.name || 'Client') + '</strong>' +
       (u.city ? '<span class="look-city">' + esc(u.city) + '</span>' : '') +
       (u.caption ? '<p>' + esc(u.caption) + '</p>' : '') +
