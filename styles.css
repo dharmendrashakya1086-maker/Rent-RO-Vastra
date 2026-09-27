@@ -1274,11 +1274,3 @@ html { scroll-behavior: smooth; scroll-padding-top: 130px; }
 
 /* ---- SEO / a11y helpers ---- */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.breadcrumbs { padding: 0; margin: 0 0 22px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .72rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); }
-.breadcrumbs a { color: var(--text-muted); text-decoration: none; transition: var(--transition); }
-.breadcrumbs a:hover { color: var(--gold); }
-.breadcrumbs li { list-style: none; display: flex; align-items: center; gap: 8px; }
-.breadcrumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0; }
-.breadcrumbs .sep { opacity: .5; }
-.breadcrumbs [aria-current="page"] { color: var(--gold); }
-@media (max-width: 640px) { .breadcrumbs { font-size: .66rem; gap: 6px; } }
