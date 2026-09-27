@@ -313,6 +313,9 @@
     const dots = $('#featDots');
     const rail = $('#railTrack');
     const active = new Set();
+    // how far a card starts out sideways, as a percentage of its own width.
+    // raise it to leave the screen entirely, lower it to stay inside the column
+    const SIDE = 120;
     let all = [], flipState = null, closing = false, gridTriggers = [], featTimer = null, featIdx = 0;
 
     const passes = u => {
@@ -371,21 +374,25 @@
         if (m) m.setAttribute('data-flip-id', 'look');
       });
       if (!motion) return;
-      ScrollTrigger.batch(cards, {
-        start: 'top 92%', once: true,
-        onEnter: b => G.fromTo(b, { y: 34, opacity: 0, scale: .97 },
-          { y: 0, opacity: 1, scale: 1, duration: .8, ease: 'power3.out', stagger: .07, overwrite: true })
-      }).forEach(t => gridTriggers.push(t));
-      // the photo drifts against the scroll, which reads as depth
-      cards.forEach(card => {
+      // One scrubbed timeline per card: it slides in from one side, holds while
+      // it is centred, then travels on toward the other side. Scrub ties the
+      // animation to scroll position, so scrolling back up reverses it for free
+      // and the cards retreat to the sides they came from.
+      cards.forEach((card, i) => {
+        const dir = i % 2 ? 1 : -1;
         const m = card.querySelector('.look-media img, .look-media video');
-        if (!m) return;
-        G.set(m, { scale: 1.12 });
-        const tw = G.fromTo(m, { yPercent: -6 }, {
-          yPercent: 6, ease: 'none',
-          scrollTrigger: { trigger: card, start: 'top bottom', end: 'bottom top', scrub: true }
+        const tl = G.timeline({
+          scrollTrigger: { trigger: card, start: 'top bottom', end: 'bottom top', scrub: true, invalidateOnRefresh: true }
         });
-        if (tw.scrollTrigger) gridTriggers.push(tw.scrollTrigger);
+        tl.fromTo(card, { xPercent: dir * SIDE, opacity: 0 },
+          { xPercent: 0, opacity: 1, duration: .3, ease: 'none' }, 0)
+          .to(card, { xPercent: -dir * SIDE, opacity: 0, duration: .3, ease: 'none' }, .7);
+        // the photo drifts against the scroll, which reads as depth
+        if (m) {
+          G.set(m, { scale: 1.12 });
+          tl.fromTo(m, { yPercent: -6 }, { yPercent: 6, ease: 'none' }, 0);
+        }
+        gridTriggers.push(tl.scrollTrigger);
       });
       tiltCards(cards);
       ScrollTrigger.refresh();
