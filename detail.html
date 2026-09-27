@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- this page is served from the nested url /piece/<id>, so relative assets
+       would resolve to /piece/styles.css and 404. pin the base to the root. -->
+  <base href="/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
@@ -426,9 +429,12 @@ refreshAvailability();
         (occ ? ' for ' + occ.replace(/_/g, ' ') : '') + '. Professionally cleaned, free next-day delivery in Mainpuri & Etawah.';
       var stock = Number(prod.stock) || 0;
       document.title = prod.name + ' on Rent | Rent-RO-Vastra';
-      var set = function (sel, val, attr) {
-        var el = document.head.querySelector(sel);
-        if (!el) { el = document.createElement('meta'); el.setAttribute(attr || 'name', sel.replace(/^[a-z:]+\s*/, '')); document.head.appendChild(el); }
+      // takes 'name="description"' / 'property="og:title"' and writes the content
+      var set = function (sel, val) {
+        var m = sel.match(/^([a-z:]+)="([^"]+)"$/);
+        var attr = m ? m[1] : 'name', key = m ? m[2] : sel;
+        var el = document.head.querySelector('meta[' + attr + '="' + key + '"]');
+        if (!el) { el = document.createElement('meta'); el.setAttribute(attr, key); document.head.appendChild(el); }
         el.setAttribute('content', val);
       };
       set('name="description"', desc);
