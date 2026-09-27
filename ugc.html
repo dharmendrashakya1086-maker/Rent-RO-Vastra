@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Flip.min.js"></script>
   <style>
     /* VIP showroom: black velvet, gold hairlines, slow light sweep */
     .vip-hero { position: relative; padding: 190px 0 90px; text-align: center; overflow: hidden;
@@ -64,6 +67,18 @@
     .looks-grid .look:nth-child(4n+2):not(.reveal) { animation-delay: .07s; }
     .looks-grid .look:nth-child(4n+3):not(.reveal) { animation-delay: .14s; }
     .looks-grid .look:nth-child(4n+4):not(.reveal) { animation-delay: .21s; }
+
+    /* GSAP took over: the cascade above is the no-JS/no-CDN fallback, so stand
+       it down and hand the transforms to GSAP. perspective is what makes the
+       hover tilt read as 3D instead of a flat skew. */
+    html.gsap .looks-grid { perspective: 1200px; }
+    html.gsap .looks-grid .look { animation: none; }
+    html.gsap .look-media img, html.gsap .look-media video { will-change: transform; }
+    @media (hover: hover) and (pointer: fine) {
+      /* GSAP owns these transforms now; leaving the CSS rules in would fight it
+         and snap on the first hover. Touch keeps its :active tap below. */
+      html.gsap .look:hover, html.gsap .look:hover .look-media img, html.gsap .look:hover .look-media video { transform: none; }
+    }
 
     /* lightbox: the caption and the close button used to sit outside the frame
        (bottom:-76px / top:-46px), so short screens clipped both of them */
@@ -197,7 +212,7 @@
   </section>
 
   <div class="look-light" id="lookLight">
-    <div class="look-light-frame">
+    <div class="look-light-frame" data-flip-id="look">
       <div class="look-light-x" id="lookX">✕</div>
       <div id="lookLightMedia" style="width:100%;height:100%"></div>
       <div class="look-light-cap"><b id="lookLightName"></b><p id="lookLightCap"></p></div>
@@ -207,17 +222,92 @@
   <script src="app.js"></script>
   <script src="store.js"></script>
   <script>
-    // the lightbox flies out of the card you tapped instead of just appearing
+    // Motion runs on GSAP. If the CDN is blocked or the visitor asked for less
+    // motion, `motion` stays false and the CSS cascade above is the fallback.
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const G = typeof gsap !== 'undefined' ? gsap : null;
+    if (G) {
+      if (window.ScrollTrigger) G.registerPlugin(ScrollTrigger);
+      if (window.Flip) G.registerPlugin(Flip);
+    }
+    const motion = !!(G && !reduced);
+    if (motion) document.documentElement.classList.add('gsap');
+
+    const light = document.getElementById('lookLight');
+    const cap = document.querySelector('.look-light-cap');
+    const grid = document.getElementById('looksGrid');
+    let flipState = null, closing = false;
+
+    function heroIntro() {
+      G.timeline({ defaults: { ease: 'power3.out' } })
+        .from('.vip-crown', { y: 14, opacity: 0, duration: .6 })
+        .from('.vip-hero h1', { y: 26, opacity: 0, duration: .8 }, '-=.35')
+        .from('.vip-hero p', { y: 18, opacity: 0, duration: .7 }, '-=.5')
+        .from('.vip-stats > div', { y: 16, opacity: 0, duration: .6, stagger: .12 }, '-=.45');
+    }
+
+    function gallery() {
+      const cards = G.utils.toArray('#looksGrid .look');
+      if (!cards.length) return;
+      // Flip needs a stable id to match the thumbnail against the lightbox frame
+      cards.forEach(c => {
+        const m = c.querySelector('.look-media');
+        if (m) m.setAttribute('data-flip-id', 'look');
+      });
+
+      // batched so a long gallery costs a handful of triggers, not one per card
+      ScrollTrigger.batch(cards, {
+        start: 'top 88%', once: true,
+        onEnter: b => G.fromTo(b, { y: 34, opacity: 0, scale: .97 },
+          { y: 0, opacity: 1, scale: 1, duration: .8, ease: 'power3.out', stagger: .07, overwrite: true })
+      });
+
+      // the photo drifts against the scroll, which reads as depth
+      cards.forEach(card => {
+        const m = card.querySelector('.look-media img, .look-media video');
+        if (!m) return;
+        G.set(m, { scale: 1.12 });
+        G.fromTo(m, { yPercent: -6 }, {
+          yPercent: 6, ease: 'none',
+          scrollTrigger: { trigger: card, start: 'top bottom', end: 'bottom top', scrub: true }
+        });
+      });
+
+      if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      cards.forEach(card => {
+        const m = card.querySelector('.look-media img, .look-media video');
+        const y = G.quickTo(card, 'y', { duration: .5, ease: 'power3.out' });
+        const rx = G.quickTo(card, 'rotationX', { duration: .5, ease: 'power3.out' });
+        const ry = G.quickTo(card, 'rotationY', { duration: .5, ease: 'power3.out' });
+        const mz = m ? G.quickTo(m, 'scale', { duration: .6, ease: 'power3.out' }) : null;
+        card.addEventListener('pointermove', e => {
+          const r = card.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width - .5;
+          const py = (e.clientY - r.top) / r.height - .5;
+          y(-8); rx(-py * 7); ry(px * 9);
+          if (mz) mz(1.2);
+        });
+        card.addEventListener('pointerleave', () => { y(0); rx(0); ry(0); if (mz) mz(1.12); });
+      });
+    }
+
+    function countTo(n) {
+      const el = document.getElementById('lookCount');
+      if (!motion) { el.textContent = n; return; }
+      const o = { v: 0 };
+      G.to(o, { v: n, duration: 1.1, ease: 'power1.out', onUpdate: () => { el.textContent = Math.round(o.v); } });
+    }
+
     renderLooks('looksGrid', 'grid');
     getLooks().then(list => {
-      document.getElementById('lookCount').textContent = list.length;
       document.getElementById('lookEmpty').style.display = list.length ? 'none' : 'block';
+      countTo(list.length);
+      if (motion) gallery();
     });
-    const light = document.getElementById('lookLight');
-    const frame = document.querySelector('.look-light-frame');
-    const cap = document.querySelector('.look-light-cap');
-    let closing = false;
+    if (motion) {
+      if (document.readyState === 'loading') addEventListener('DOMContentLoaded', heroIntro);
+      else heroIntro();
+    }
 
     const close = () => {
       if (closing || !light.classList.contains('on')) return;
@@ -226,17 +316,20 @@
         light.classList.remove('on');
         document.getElementById('lookLightMedia').innerHTML = '';
         document.body.style.overflow = '';
+        flipState = null;
       };
-      // no WAAPI (or reduced motion): hide straight away rather than waiting
-      if (reduced || !light.animate) return done();
+      if (!motion) return done();
       closing = true;
-      light.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'ease-in' }).onfinish = done;
+      G.to(light, { opacity: 0, duration: .26, ease: 'power2.in',
+        onComplete: () => { G.set(light, { opacity: 1 }); done(); } });
     };
 
-    document.getElementById('looksGrid').addEventListener('click', e => {
+    grid.addEventListener('click', e => {
       const card = e.target.closest('.look');
       if (!card) return;
-      const from = card.querySelector('.look-media').getBoundingClientRect();
+      const src = card.querySelector('.look-media');
+      // capture before the DOM changes, then let Flip fly the frame out of it
+      flipState = (motion && window.Flip) ? Flip.getState(src) : null;
       getLooks().then(list => {
         const u = list.find(x => x.id === card.dataset.look);
         if (!u) return;
@@ -245,19 +338,14 @@
         document.getElementById('lookLightCap').textContent = u.caption || '';
         light.classList.add('on');
         document.body.style.overflow = 'hidden';
-        if (reduced || !frame.animate) return;
-        // measure only after .on, otherwise the frame is display:none and reads 0x0
-        const to = frame.getBoundingClientRect();
-        light.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: 'ease-out' });
-        frame.animate([{
-          transform: 'translate(' + (from.left + from.width / 2 - to.left - to.width / 2) + 'px,'
-            + (from.top + from.height / 2 - to.top - to.height / 2) + 'px) scale('
-            + (from.width / to.width) + ',' + (from.height / to.height) + ')',
-          opacity: .3
-        }, { transform: 'none', opacity: 1 }],
-          { duration: 480, easing: 'cubic-bezier(.2,.7,.2,1)' });
-        cap.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }],
-          { duration: 420, delay: 200, easing: 'ease-out', fill: 'backwards' });
+        if (!flipState) return;
+        G.set(light, { opacity: 0 });
+        Flip.from(flipState, {
+          duration: .65, ease: 'power3.inOut', scale: true, absolute: true,
+          onEnter: els => G.fromTo(els, { opacity: 0 }, { opacity: 1, duration: .3 })
+        });
+        G.to(light, { opacity: 1, duration: .3, ease: 'power2.out' });
+        G.from(cap, { y: 16, opacity: 0, duration: .5, delay: .18, ease: 'power2.out' });
       });
     });
     document.getElementById('lookX').onclick = close;
