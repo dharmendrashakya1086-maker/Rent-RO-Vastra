@@ -268,6 +268,9 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
   .bottom-nav .h-badge { position: absolute; top: 2px; right: 4px; }
   /* cart + wishlist live in the bottom bar on phones, so drop the header duplicates */
   .header-icons a[href="/cart"], .header-icons a[href="/wishlist"] { display: none; }
+  /* the consent notice and toasts used to land on top of the dock and swallow every tap */
+  #consentBanner { bottom: 70px; }
+  .toast { bottom: 88px; }
   body { padding-bottom: 70px; }
   .chat-bubble { bottom: 88px; }
 }

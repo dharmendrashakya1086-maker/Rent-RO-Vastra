@@ -60,12 +60,12 @@ if (location.search.toLowerCase().includes('author')) {
 
 // Header icon pill — matches current page (cart on cart/checkout, heart on wishlist, account on account/auth)
 (function () {
-  const page = location.pathname.split('/').pop();
+  const seg = location.pathname.split('/').filter(Boolean).pop() || '';
   let sel = null;
-  if (page === '/cart' || page === '/checkout') sel = 'a[href="/cart"]';
-  else if (page === '/wishlist') sel = 'a[href="/wishlist"]';
-  else if (page === '/messages') sel = 'a[href="/messages"]';
-  else if (page === '/account' || page === '/login') sel = 'a.header-account';
+  if (seg === 'cart' || seg === 'checkout') sel = 'a[href="/cart"]';
+  else if (seg === 'wishlist') sel = 'a[href="/wishlist"]';
+  else if (seg === 'messages') sel = 'a[href="/messages"]';
+  else if (seg === 'account' || seg === 'login') sel = 'a.header-account';
   if (!sel) return;
   const icon = document.querySelector('.header-icons ' + sel);
   if (icon) icon.classList.add('active');
@@ -131,7 +131,8 @@ function flyToWishlist(item, originEl) { flyToIcon(item, 'a[href="/wishlist"]', 
 
 // Mobile bottom nav (app-style icon bar) — injected once, shows only on small screens.
 (function () {
-  const page = location.pathname.split('/').pop();
+  const parts = location.pathname.split('/').filter(Boolean);
+  const seg = parts[parts.length - 1] || '';
   const svg = {
     home: '<svg viewBox="0 0 24 24"><path d="M12 3l10 8h-3v9h-5v-6h-4v6H5v-9H2z"/></svg>',
     shop: '<svg viewBox="0 0 24 24"><path d="M4 3h6v6H4zM14 3h6v6h-6zM4 13h6v6H4zM14 13h6v6h-6z"/></svg>',
@@ -146,11 +147,13 @@ function flyToWishlist(item, originEl) { flyToIcon(item, 'a[href="/wishlist"]', 
     ['/cart', 'Cart', svg.cart, 'cartCount'],
     ['/account', 'Me', svg.me]
   ];
-  let active = '/';
-  if (page === '/collection') active = '/collection';
-  else if (page === '/wishlist') active = '/wishlist';
-  else if (page === '/cart' || page === '/checkout') active = '/cart';
-  else if (page === '/account' || page === '/login') active = '/account';
+  // '' leaves every tab unlit - a page like /faq has no dock tab of its own
+  let active = '';
+  if (seg === 'collection' || parts[0] === 'piece') active = '/collection';
+  else if (seg === 'wishlist') active = '/wishlist';
+  else if (seg === 'cart' || seg === 'checkout') active = '/cart';
+  else if (seg === 'account' || seg === 'login' || seg === 'messages') active = '/account';
+  else if (!seg || seg === 'index') active = '/';
   const nav = document.createElement('nav');
   nav.className = 'bottom-nav';
   nav.setAttribute('aria-label', 'Mobile navigation');
