@@ -100,10 +100,14 @@ function productOut(r) {
   };
 }
 
+// Pricing. Order totals are computed HERE, never taken from the request body.
+// dayDiscount: 3+ days = 15% off, 7+ days = 25% off.
+// memberDiscount: an extra 10% off for members, applied on top of the day discount (they stack).
 const dayDiscount = d => d >= 7 ? 0.25 : d >= 3 ? 0.15 : 0;
-const rentalTotal = (price, days, qty) => {
+const memberDiscount = () => 0.10;
+const rentalTotal = (price, days, qty, member) => {
   const d = Math.max(days || 1, 1), q = Math.max(qty || 1, 1);
-  return price * d * (1 - dayDiscount(d)) * q;
+  return price * d * (1 - dayDiscount(d)) * (member ? 1 - memberDiscount() : 1) * q;
 };
 
 // ---------------- data access ----------------
@@ -385,18 +389,25 @@ app.post('/api/orders', authReq, async (req, res) => {
   if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'Empty order' });
   if (!email || !/.*@.*/.test(String(email))) return res.status(400).json({ error: 'A valid email is required' });
   const u = req.user;
-  // availability check per product (batch same-product items)
+  // availability check per product (batch same-product items) + authoritative price for the total
+  const dbPrice = {};
   for (const productId of [...new Set(items.map(i => Number(i.productId)))]) {
     const batch = items.filter(i => Number(i.productId) === productId);
     const need = batch.reduce((s, i) => s + Math.max(Number(i.qty) || 1, 1), 0);
     const av = await bookedQty(productId, batch[0].startDate, batch[0].endDate);
+    const p = (await q('SELECT name,price FROM products WHERE id=$1', [productId])).rows[0];
+    if (!p) return res.status(400).json({ error: 'Unknown product in order' });
+    dbPrice[productId] = Number(p.price) || 0;
     if (!av.enough || av.available < need) {
-      const p = (await q('SELECT name FROM products WHERE id=$1', [productId])).rows[0];
-      return res.status(409).json({ error: (p ? p.name : 'Item') + ' is no longer available for the selected dates' });
+      return res.status(409).json({ error: p.name + ' is no longer available for the selected dates' });
     }
   }
+  // member = signed in. Every order passes authReq, so members always get the 10%.
+  const isMember = true;
   const created = [];
   for (const it of items) {
+    const days = Math.max(Math.round((new Date(it.endDate) - new Date(it.startDate)) / 86400000) + 1 || Number(it.days) || 1, 1);
+    const total = rentalTotal(dbPrice[Number(it.productId)], days, Number(it.qty) || 1, isMember);
     const r = await q(`INSERT INTO orders (user_id,user_email,name,email,phone,addr,city,zip,item,img,product_id,
                        start_date,end_date,qty,size,occasion,dates,total,status,created_at)
                        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING id`,
@@ -404,7 +415,7 @@ app.post('/api/orders', authReq, async (req, res) => {
         String(zip || ''), String(it.name || ''), String(it.img || ''), Number(it.productId),
         String(it.startDate || ''), String(it.endDate || ''), Math.max(Number(it.qty) || 1, 1),
         String(it.size || ''), String(it.occasion || ''), String((it.startDate || 'TBD') + ' — ' + (it.endDate || 'TBD')),
-        Math.round(Number(it.total) || rentalTotal(Number(it.price), Number(it.days) || 1, Number(it.qty) || 1)), 'Pending', now()]);
+        Math.round(total), 'Pending', now()]);
     created.push(r.rows[0].id);
   }
   res.json({ ids: created });

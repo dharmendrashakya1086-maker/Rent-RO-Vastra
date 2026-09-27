@@ -26,7 +26,7 @@
   if (!products.length) products = defaultProducts;
 
   const KB = {
-    pricing: "Pricing ₹3,899/din se start. Multi-day discount bhi hai — 3 din = 15% off, 7+ din = 25% off. Mainpuri aur Etawah me delivery hamesha free.",
+    pricing: "Pricing ₹3,899/din se start. Multi-day discount bhi hai — 3 din = 15% off, 7+ din = 25% off. Login (member) karne par uske upar 10% member discount bhi milta hai. Mainpuri aur Etawah me delivery hamesha free.",
     delivery: "Mainpuri aur Etawah me next-day delivery free. Tumhare event se 1-2 din pehle hi piece pahunch jata hai.",
     returns: "Dry cleaning ki tension mat lo — wapas dete waqt bas bag me daal do, pickup set kar do, baaki hum sambhal lenge.",
     damage: "Normal halka wear chalega. Real damage ya stain hua to repair/replacement charge lagega — woh renter ki jimmedari hai.",
@@ -34,7 +34,7 @@
     booking: "Best availability ke liye 1-2 hafte pehle book kar lo. Wedding aur festive season me popular pieces jaldi khatam ho jaate hain.",
     cancellation: "Delivery se 48 ghante pehle tak free cancellation. 48 ghante ke andar 50% charge lagta hai.",
     cleaning: "Har rental ke baad sab kuch professional cleaning + ironing hota hai. Tumhe kuch nahi karna.",
-    members: "Rent-RO-Vastra members ko new arrivals ki early access, har rental pe 10% off aur free priority delivery milti hai.",
+    members: "Rent-RO-Vastra members ko new arrivals ki early access aur har rental pe 10% off milta hai. Ye multi-day discount ke upar stack hota hai - 7 din = 25% off + 10% member off. Login karne par apply ho jata hai.",
     brands: "Sath chalte hain Sabyasachi, Manish Malhotra, Tarun Tahiliani, Anita Dongre, Rahul Mishra, Ritu Kumar, Neeta Lulla, Masaba Gupta, Anamika Khanna aur 200+ aur brands."
   };
 

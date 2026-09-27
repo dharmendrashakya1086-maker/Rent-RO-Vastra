@@ -393,10 +393,13 @@ function getOrders() {
 function saveOrders(o) { if (!SERVER.on) localStorage.setItem('luxe_orders', JSON.stringify(o)); }
 
 // Multi-day pricing: 3+ days = 15% off, 7+ days = 25% off (single source of truth used by cart, checkout, detail calc)
+// Members get an extra 10% off on top of the day discount - they stack. Keep in sync with server.js.
 function dayDiscount(days) { return days >= 7 ? 0.25 : days >= 3 ? 0.15 : 0; }
+function memberDiscount() { return 0.10; }
+function isMember() { return !!currentUser(); }
 function rentalTotal(price, days, qty) {
   const d = Math.max(days || 1, 1), q = Math.max(qty || 1, 1);
-  return price * d * (1 - dayDiscount(d)) * q;
+  return price * d * (1 - dayDiscount(d)) * (isMember() ? 1 - memberDiscount() : 1) * q;
 }
 // Cancellation: full refund if cancelled 48+ hours before the rental starts, else 50% (see FAQ)
 function cancelRefund(o) {

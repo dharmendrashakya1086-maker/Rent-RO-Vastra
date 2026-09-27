@@ -121,8 +121,9 @@ let subtotal = 0;
         const save = item.price * days * qty - total;
         subtotal += total;
         savings += save;
+        const offPct = Math.round((1 - total / (item.price * days * qty)) * 100);
         const sizeSel = '<div class="checkout-item-opts"><select data-opt="size" data-o="' + i + '" aria-label="Size"><option value="">Size — optional</option>' + SIZE_OPTS.map(s => '<option>' + s + '</option>').join('') + '</select><select data-opt="occasion" data-o="' + i + '" aria-label="Occasion"><option value="">Occasion — optional</option>' + OCC_OPTS.map(s => '<option>' + s + '</option>').join('') + '</select></div>';
-        return '<div class="order-item"><img src="' + item.img + '" alt=""><div style="flex:1;"><div class="order-item-name">' + item.name + '</div><div class="order-item-price">₹' + item.price + '/day x ' + days + ' days x ' + qty + ' pc = <strong>₹' + total.toFixed(2) + '</strong>' + (save > 0 ? ' <span style="color:#4CAF50;font-size:0.75rem;">(' + (days >= 7 ? '25' : '15') + '% off)</span>' : '') + '</div>' + sizeSel + '</div><button class="order-item-remove" data-idx="' + i + '">Remove</button></div>';
+        return '<div class="order-item"><img src="' + item.img + '" alt=""><div style="flex:1;"><div class="order-item-name">' + item.name + '</div><div class="order-item-price">₹' + item.price + '/day x ' + days + ' days x ' + qty + ' pc = <strong>₹' + total.toFixed(2) + '</strong>' + (save > 0 ? ' <span style="color:#4CAF50;font-size:0.75rem;">(' + offPct + '% off)</span>' : '') + '</div>' + sizeSel + '</div><button class="order-item-remove" data-idx="' + i + '">Remove</button></div>';
       }).join('');
 
       const total = subtotal;
@@ -143,7 +144,7 @@ el.innerHTML = '<div class="checkout-grid"><div>' +
         '</form></div>' +
 '<div class="order-summary"><h3>Order Summary</h3>' + itemsHtml +
         '<div style="margin-top:16px;"><div class="cart-summary-row"><span>Subtotal</span><span>₹' + subtotal.toFixed(2) + '</span></div>' +
-        (savings > 0 ? '<div class="cart-summary-row"><span>You save (multi-day)</span><span style="color:#4CAF50">₹' + savings.toFixed(2) + '</span></div>' : '') +
+        (savings > 0 ? '<div class="cart-summary-row"><span>You save' + (isMember() ? ' (multi-day + member 10%)' : ' (multi-day)') + '</span><span style="color:#4CAF50">−₹' + savings.toFixed(2) + '</span></div>' : '') +
         '<div class="cart-summary-row"><span>Delivery</span><span style="color:#4CAF50">Free</span></div>' +
         '<div class="cart-summary-row total"><span>Total</span><span>₹' + total.toFixed(2) + '</span></div></div>' +
         '<div class="secure-badge"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg><span>Secure Checkout</span></div></div></div>';
