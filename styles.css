@@ -874,18 +874,43 @@ footer {
 .skeleton-card .skeleton-img { aspect-ratio: 3/4; }
 .skeleton-card-body { padding: 20px; }
 
+/* Page loading state. The skeleton is drawn from background layers on a
+   pseudo-element so none of the 19 pages needs extra markup. Shimmer reuses
+   the existing @keyframes shimmer, and the global prefers-reduced-motion rule
+   already neutralises it. ponytail: still hidden on window load + 300ms, not
+   on per-page data-ready; wire that if pages flash empty after load.
+   Decorative only (no announcement) - the detail skeleton is the one that
+   announces, via role=status. */
 .page-loader {
   position: fixed; inset: 0; z-index: 99999; background: var(--black);
-  display: flex; align-items: center; justify-content: center;
+  padding: 132px 24px 48px; overflow: hidden;
   transition: opacity 0.4s ease;
 }
 .page-loader.hide { opacity: 0; pointer-events: none; }
-.loader-spinner {
-  width: 40px; height: 40px; border: 2px solid rgba(201,169,110,0.15);
-  border-top-color: var(--gold); border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.page-loader::before {
+  content: ''; display: block; width: min(1160px, 100%); height: 100%;
+  --cols: 3; --gap: 28px;
+  --cardw: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
+  --card: #14151a;
+  background:
+    linear-gradient(var(--dark2) 0 0) 0 0/46% 34px no-repeat,
+    linear-gradient(var(--dark2) 0 0) 0 58px/70% 14px no-repeat,
+    linear-gradient(var(--dark2) 0 0) 0 82px/52% 14px no-repeat,
+    linear-gradient(var(--card) 0 0) 0 140px/var(--cardw) 340px no-repeat,
+    linear-gradient(var(--card) 0 0) calc(var(--cardw) + var(--gap)) 140px/var(--cardw) 340px no-repeat,
+    linear-gradient(var(--card) 0 0) calc(var(--cardw) * 2 + var(--gap) * 2) 140px/var(--cardw) 340px no-repeat;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+.page-loader::after {
+  content: ''; position: absolute; top: 132px; bottom: 48px; left: 0; right: 0;
+  width: min(1160px, 100%); margin: 0 auto;
+  background: linear-gradient(90deg, transparent, rgba(201,169,110,0.06), transparent);
+  animation: shimmer 1.5s infinite;
+}
+@media (max-width: 768px) {
+  .page-loader { padding: 104px 18px 36px; }
+  .page-loader::before { --cols: 1; --gap: 16px; }
+  .page-loader::after { top: 104px; bottom: 36px; }
+}
 
 /* CART PAGE */
 .cart-grid { display: grid; grid-template-columns: 1fr 380px; gap: 40px; align-items: start; }
@@ -1144,7 +1169,6 @@ body::before {
 .main-header { border-bottom-color: rgba(232,160,192,0.18); }
 .header-logo { background: var(--grad-pop); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .nav-links a.active, .nav-links a:hover { color: var(--a1); }
-.loader-spinner { border-top-color: var(--a1); border-right-color: var(--a2); border-bottom-color: var(--a3); }
 .toast { border-left: 3px solid var(--a2); }
 .faq-q:hover, .faq-chev { color: var(--a2); }
 .look-light-frame { border-color: rgba(232,160,192,0.35); }
