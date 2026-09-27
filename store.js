@@ -138,9 +138,15 @@ function removeFromCart(idx) {
   cart.splice(idx, 1);
   saveCart(cart);
 }
-function cartCount() { return getCart().length; }
+// a cart line can hold qty > 1 (the cart page has steppers and the total multiplies by it),
+// so the badge counts units, not rows
+function cartCount() { return getCart().reduce((n, c) => n + (c.qty || 1), 0); }
 function updateCartCount() {
-  document.querySelectorAll('#cartCount').forEach(el => { el.textContent = cartCount(); });
+  document.querySelectorAll('#cartCount').forEach(el => {
+    const n = cartCount();
+    el.textContent = n;
+    el.style.display = n > 0 ? '' : 'none';
+  });
 }
 
 // WISHLIST

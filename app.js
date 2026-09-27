@@ -158,7 +158,7 @@ function flyToWishlist(item, originEl) { flyToIcon(item, 'a[href="/wishlist"]', 
   nav.className = 'bottom-nav';
   nav.setAttribute('aria-label', 'Mobile navigation');
   nav.innerHTML = items.map(it => {
-    const badge = it[3] ? '<span class="h-badge" id="' + it[3] + '"' + (it[3] === 'cartCount' ? '' : ' style="display:none"') + '>0</span>' : '';
+    const badge = it[3] ? '<span class="h-badge" id="' + it[3] + '" style="display:none">0</span>' : '';
     return '<a href="' + it[0] + '"' + (active === it[0] ? ' class="active"' : '') + '>' + it[2] + '<span>' + it[1] + '</span>' + badge + '</a>';
   }).join('');
   document.body.appendChild(nav);
