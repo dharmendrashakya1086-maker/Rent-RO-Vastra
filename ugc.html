@@ -296,14 +296,14 @@
   <script>
     // Motion runs on GSAP. If the CDN is blocked or the visitor asked for less
     // motion, `motion` stays false and the CSS fallbacks are what you get.
+    //
+    // The three GSAP tags in <head> are defer, so per spec they execute only
+    // after parsing finishes. This script is a classic inline tag, so it runs
+    // during parsing, while `gsap` is still undefined. Resolving it here would
+    // hand the whole page a dead motion layer, so G and motion are filled in by
+    // boot() below, on DOMContentLoaded, which fires after the deferred tags.
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const G = typeof gsap !== 'undefined' ? gsap : null;
-    if (G) {
-      if (window.ScrollTrigger) G.registerPlugin(ScrollTrigger);
-      if (window.Flip) G.registerPlugin(Flip);
-    }
-    const motion = !!(G && !reduced);
-    if (motion) document.documentElement.classList.add('gsap');
+    let G = null, motion = false;
     const $ = s => document.querySelector(s);
     const light = $('#lookLight');
     const cap = $('.look-light-cap');
@@ -529,21 +529,32 @@
     light.onclick = e => { if (e.target === light) close(); };
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
-    renderGrid();
-    getLooks().then(list => {
-      all = list || [];
-      countTo(all.length);
-      if (!all.length) { $('#galSec').style.display = 'none'; return; }
-      buildChips();
-      buildFeat();
-      buildRail();
+    // Runs once GSAP is actually present. The cards are rendered from here too,
+    // so the html.gsap class is already set before the CSS fallback cascade ever
+    // has an element to animate, and there is no flash at handoff.
+    function boot() {
+      G = typeof gsap !== 'undefined' ? gsap : null;
+      if (G) {
+        if (window.ScrollTrigger) G.registerPlugin(ScrollTrigger);
+        if (window.Flip) G.registerPlugin(Flip);
+      }
+      motion = !!(G && !reduced);
+      if (motion) document.documentElement.classList.add('gsap');
       renderGrid();
-      if (motion) ScrollTrigger.refresh();
-    });
-    if (motion) {
-      if (document.readyState === 'loading') addEventListener('DOMContentLoaded', heroIntro);
-      else heroIntro();
+      getLooks().then(list => {
+        all = list || [];
+        countTo(all.length);
+        if (!all.length) { $('#galSec').style.display = 'none'; return; }
+        buildChips();
+        buildFeat();
+        buildRail();
+        renderGrid();
+        if (motion && window.ScrollTrigger) ScrollTrigger.refresh();
+      });
+      if (motion) heroIntro();
     }
+    if (document.readyState === 'loading') addEventListener('DOMContentLoaded', boot);
+    else boot();
   </script>
   <script src="chat.js"></script>
 <script src="modern.js"></script>
