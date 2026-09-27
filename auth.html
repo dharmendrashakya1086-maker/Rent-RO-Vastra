@@ -176,6 +176,9 @@ const err = document.getElementById('authError');
           err.style.color = '#ff8a80';
           err.textContent = 'Invalid email or password';
         }
+      }).catch(e => {
+        err.style.color = '#ff8a80';
+        err.textContent = e.message || 'Login failed. Please try again.';
       });
     });
 
@@ -203,6 +206,9 @@ if (!document.getElementById('regConsent').checked) { err.style.color = '#ff8a80
           err.style.color = '#ff8a80';
           err.textContent = 'Email already registered';
         }
+      }).catch(e => {
+        err.style.color = '#ff8a80';
+        err.textContent = e.message || 'Could not create account. Please try again.';
       });
     });
 

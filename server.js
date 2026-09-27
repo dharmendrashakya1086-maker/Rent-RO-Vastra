@@ -170,7 +170,7 @@ app.use(async (req, res, next) => {
 });
 
 // ---------------- auth ----------------
-function authUnavailable(res) { return res.status(503).json({ error: 'Auth not configured (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing)' }); }
+function authUnavailable(res) { return res.status(503).json({ error: 'Signup/login is temporarily unavailable. Please try again shortly.' }); }
 
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, phone = '', password } = req.body || {};

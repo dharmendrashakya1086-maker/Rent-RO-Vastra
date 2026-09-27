@@ -64,9 +64,11 @@ let booted = false; const pending = [];
 
 function storeReady(fn) { if (booted) fn(); else pending.push(fn); }
 
-async function api(path, opts) {
-  opts = opts || {};
-  const res = await fetch(path, {
+  // call sites use both api('POST', path, opts) and api(path) / api(path, opts) — accept either
+  async function api(a, b, c) {
+    let path = a, opts = b || {};
+    if (/^(GET|POST|PUT|PATCH|DELETE)$/i.test(a)) { path = b; opts = Object.assign({ method: a }, c); }
+    const res = await fetch(path, {
     method: opts.method || 'GET',
     credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
@@ -210,12 +212,10 @@ function hashPass(pass) {
 }
 async function login(email, pass) {
   if (SERVER.on) {
-    try {
-      const r = await api('POST', '/api/auth/login', { body: { email, password: pass } });
-      SERVER.user = norm(r.user);
-      await adoptGuestData();
-      return SERVER.user;
-    } catch (e) { return null; }
+    const r = await api('POST', '/api/auth/login', { body: { email, password: pass } });
+    SERVER.user = norm(r.user);
+    await adoptGuestData();
+    return SERVER.user;
   }
   const h = await hashPass(pass);
   const users = getUsers();
@@ -230,14 +230,12 @@ async function login(email, pass) {
 }
 async function register(data) {
   if (SERVER.on) {
-    try {
-      const r = await api('POST', '/api/auth/register', {
-        body: { name: (data.first || '') + ' ' + (data.last || ''), email: data.email, phone: data.phone || '', password: data.pass }
-      });
-      SERVER.user = norm(r.user);
-      await adoptGuestData();
-      return SERVER.user;
-    } catch (e) { return null; }
+    const r = await api('POST', '/api/auth/register', {
+      body: { name: (data.first || '') + ' ' + (data.last || ''), email: data.email, phone: data.phone || '', password: data.pass }
+    });
+    SERVER.user = norm(r.user);
+    await adoptGuestData();
+    return SERVER.user;
   }
   const users = getUsers();
   if (users.find(u => u.email === data.email)) return null;
