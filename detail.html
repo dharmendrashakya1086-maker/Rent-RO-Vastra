@@ -81,7 +81,7 @@
           <h1 id="detailTitle">Sabyasachi Silk Lehenga</h1>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
             <div class="detail-price" style="margin-bottom:0;"><span id="detailPrice">₹7,499</span> <span>/ day</span></div>
-            <span id="stockBadge" style="padding:6px 14px;border:1px solid rgba(76,175,80,0.4);color:#4CAF50;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">Loading stock...</span>
+            <span id="stockBadge" aria-live="polite" style="padding:6px 14px;border:1px solid rgba(76,175,80,0.4);color:#4CAF50;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;">Loading stock...</span>
           </div>
           <p class="detail-desc">
             A masterpiece of Indian couture. This hand-embroidered silk lehenga features intricate zardozi work, 
@@ -89,7 +89,7 @@
           </p>
 
           <div class="detail-specs">
-            <h3>Details</h3>
+            <h2>Details</h2>
             <div class="spec-row"><span>Brand</span><span>Sabyasachi</span></div>
             <div class="spec-row"><span>Material</span><span>Pure Silk</span></div>
             <div class="spec-row"><span>Color</span><span>Ivory & Gold</span></div>
@@ -99,12 +99,12 @@
           </div>
 
           <div class="detail-specs">
-            <h3>Select Rental Period</h3>
+            <h2>Select Rental Period</h2>
             <div class="rent-section">
-              <input type="date" id="rentStart" placeholder="Start Date">
-              <input type="date" id="rentEnd" placeholder="End Date">
+              <input type="date" id="rentStart" aria-label="Rental start date">
+              <input type="date" id="rentEnd" aria-label="Rental end date">
             </div>
-            <div id="availMsg" style="margin-top:12px;color:var(--text-muted);font-size:0.85rem;"></div>
+            <div id="availMsg" aria-live="polite" style="margin-top:12px;color:var(--text-muted);font-size:0.85rem;"></div>
           </div>
 
           <div style="margin-top: 12px; padding: 16px; background: var(--dark2); border: 1px solid rgba(201,169,110,0.15);">
@@ -121,7 +121,7 @@
               <span style="color: var(--gold); font-family: var(--serif); font-size: 1.3rem;" id="totalPrice">₹7,499.00</span>
             </div>
           </div>
-          <div id="discountHint" style="margin-top:10px;color:var(--text-muted);font-size:0.8rem;"></div>
+          <div id="discountHint" aria-live="polite" style="margin-top:10px;color:var(--text-muted);font-size:0.8rem;"></div>
 
 <div style="margin-top: 14px;">
             <button class="card-btn" id="askStylaBtn" style="width: 100%;">&#128172; Ask Styla &mdash; availability, size &amp; similar looks</button>
@@ -129,7 +129,7 @@
 
 <div style="display: flex; gap: 12px; margin-top: 24px;">
             <button class="btn-primary" id="addToCartBtn" style="flex: 1; text-align: center;">Add to Cart</button>
-            <button class="btn-outline" id="wishBtn" style="flex: 0 0 auto; padding: 16px 24px;">&#9825;</button>
+            <button class="btn-outline" id="wishBtn" aria-label="Add to wishlist" aria-pressed="false" style="flex: 0 0 auto; padding: 16px 24px;">&#9825;</button>
           </div>
         </div>
       </div>
@@ -219,7 +219,7 @@ document.getElementById('detailImg').src = prod.img.replace('w=600', 'w=900');
       t.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
       t.addEventListener('click', () => {
         document.getElementById('detailImg').src = images[i].replace('w=600', 'w=900');
-        thumbs.querySelectorAll('.gallery-thumb').forEach(x => x.classList.remove('active'));
+        thumbs.querySelectorAll('.gallery-thumb').forEach(x => { x.classList.remove('active'); x.setAttribute('aria-pressed', 'false'); });
         t.classList.add('active');
         t.setAttribute('aria-pressed', 'true');
       });
@@ -257,13 +257,13 @@ const badge = document.getElementById('stockBadge');
       wishBtn.innerHTML = on ? '&#9829;' : '&#9825;';
       wishBtn.style.color = on ? '#e74c3c' : '';
       wishBtn.style.borderColor = on ? '#e74c3c' : '';
+      wishBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      wishBtn.setAttribute('aria-label', on ? 'Remove from wishlist' : 'Add to wishlist');
     }
     wishBtn.addEventListener('click', () => {
       const wItem = { id: PRODUCT_ID, name: prod.name, category: prod.category, price: PRODUCT_PRICE, img: prod.img };
       const on = toggleWishlist(wItem);
-      wishBtn.innerHTML = on ? '&#9829;' : '&#9825;';
-      wishBtn.style.color = on ? '#e74c3c' : '';
-      wishBtn.style.borderColor = on ? '#e74c3c' : '';
+      refreshWish();
       if (on) {
         wishBtn.classList.remove('pop'); void wishBtn.offsetWidth; wishBtn.classList.add('pop');
         flyToWishlist(wItem, wishBtn);
@@ -490,7 +490,7 @@ refreshAvailability();
     </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-input-bar">
-      <input type="text" id="chatInput" placeholder="Ask me anything...">
+      <input type="text" id="chatInput" aria-label="Message Styla" placeholder="Ask me anything...">
       <button id="chatSend">Send</button>
     </div>
   </div>

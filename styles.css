@@ -490,16 +490,16 @@ section { padding: clamp(60px, 10vw, 100px) 0; }
 .detail-price span { font-size: 0.9rem; color: var(--text-muted); font-family: var(--sans); }
 .detail-desc { color: var(--text-muted); margin-bottom: 32px; line-height: 1.8; font-size: clamp(0.85rem, 1.6vw, 0.95rem); }
 .detail-specs { margin-bottom: 32px; }
-.detail-specs h3 { font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+.detail-specs h2 { font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
 .spec-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(201,169,110,0.1); }
 .spec-row span:first-child { color: var(--text-muted); font-size: clamp(0.8rem, 1.5vw, 0.85rem); }
 .spec-row span:last-child { color: var(--text); font-size: clamp(0.8rem, 1.5vw, 0.85rem); }
 .rent-section { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .rent-section input {
   padding: 14px 20px; background: var(--dark2); border: 1px solid rgba(201,169,110,0.2);
-  color: var(--text); font-size: 0.9rem; width: clamp(130px, 25vw, 160px); flex: 1 1 auto;
+  color: var(--text); font-size: 1rem; width: clamp(130px, 25vw, 160px); flex: 1 1 auto;
 }
-.rent-section input:focus { outline: none; border-color: var(--gold); }
+.rent-section input:focus { border-color: var(--gold); }
 
 /* FOOTER */
 footer {
