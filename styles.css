@@ -70,11 +70,13 @@ ul { list-style: none; }
   text-shadow: 0 0 14px rgba(201,169,110,0.45);
 }
 .header-icon svg { width: 19px; height: 19px; fill: currentColor; }
-.header-icon .h-badge {
-  position: absolute; top: 0; right: 0; min-width: 16px; height: 16px; padding: 0 4px;
-  border-radius: 999px; background: var(--gold); color: var(--black);
-  font-size: 0.6rem; font-weight: 700; line-height: 16px; text-align: center;
-  font-family: var(--sans);
+/* just the number - no pill, no fill, so it reads the same on every page theme */
+.h-badge {
+  position: absolute; top: 0; right: 0; min-width: 12px; padding: 0 2px;
+  background: none; border: 0; border-radius: 0;
+  color: var(--white); font-size: 0.72rem; font-weight: 700; line-height: 1;
+  text-align: center; font-family: var(--sans);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.9);
 }
 .header-account { color: var(--gold); }
 @media (max-width: 640px) { .header-search { margin: 0 12px; } }
@@ -1122,7 +1124,6 @@ body::before {
 .main-header { border-bottom-color: rgba(232,160,192,0.18); }
 .header-logo { background: var(--grad-pop); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .nav-links a.active, .nav-links a:hover { color: var(--a1); }
-.h-badge { background: var(--a1); }
 .loader-spinner { border-top-color: var(--a1); border-right-color: var(--a2); border-bottom-color: var(--a3); }
 .toast { border-left: 3px solid var(--a2); }
 .faq-q:hover, .faq-chev { color: var(--a2); }
