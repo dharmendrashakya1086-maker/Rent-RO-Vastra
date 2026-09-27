@@ -1202,3 +1202,42 @@ section[style*="var(--dark)"] { background-image: linear-gradient(180deg, rgba(2
 /* "start over" / footer hint */
 .chat-panel .chat-input, .chat-panel input[type="text"] { border-color: rgba(232,160,192,0.25) !important; }
 .chat-panel .chat-input:focus { border-color: var(--a1) !important; box-shadow: 0 0 0 3px rgba(232,160,192,0.12) !important; }
+
+/* ---------- MODERN FEEL (modern.js) ---------- */
+html { scroll-behavior: smooth; scroll-padding-top: 130px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .reveal { opacity: 1 !important; transform: none !important; } }
+
+.reveal { opacity: 0; transform: translateY(28px); }
+.reveal.in { opacity: 1; transform: none; transition: opacity .75s cubic-bezier(.2,.7,.2,1), transform .75s cubic-bezier(.2,.7,.2,1); }
+
+.main-header.solid {
+  background: rgba(8,8,8,0.94);
+  border-bottom-color: rgba(201,169,110,0.3);
+  box-shadow: 0 12px 38px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(232,160,192,0.18);
+}
+
+.card, .cat-card, .ugc-card, .look-card { position: relative; transition: transform .38s cubic-bezier(.2,.7,.2,1), border-color .38s, box-shadow .38s; }
+.card::after, .cat-card::after, .ugc-card::after, .look-card::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .38s;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(232,160,192,0.16), transparent 70%);
+}
+.card:hover::after, .cat-card:hover::after, .ugc-card:hover::after, .look-card:hover::after { opacity: 1; }
+.card:hover, .cat-card:hover, .ugc-card:hover, .look-card:hover { transform: translateY(-7px); }
+.card-img { transition: transform .65s cubic-bezier(.2,.7,.2,1); }
+.card:hover .card-img { transform: scale(1.07); }
+
+.stat-num {
+  background: linear-gradient(120deg, #F0DFBA, #E8A0C0 55%, #A9B8F0);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.to-top {
+  position: fixed; right: 28px; bottom: 104px; z-index: 9997; width: 44px; height: 44px;
+  border-radius: 50%; border: 1px solid rgba(201,169,110,0.35); background: rgba(18,16,14,0.9);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: var(--gold);
+  display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none;
+  transform: translateY(14px); transition: var(--transition);
+}
+.to-top.show { opacity: 1; pointer-events: auto; transform: none; }
+.to-top:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 26px rgba(201,169,110,0.5); }
+.to-top svg { width: 22px; height: 22px; fill: currentColor; }
