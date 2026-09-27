@@ -482,10 +482,24 @@ section { padding: clamp(60px, 10vw, 100px) 0; }
 .rev-card p { font-size: 0.88rem; line-height: 1.7; color: var(--text-muted); margin: 0; }
 
 /* DETAIL PAGE */
-/* the piece is fetched after load, so never paint the placeholder product */
-.detail-loading { display: none; padding: 90px 0; text-align: center; color: var(--text-muted); font-size: .72rem; letter-spacing: 2px; text-transform: uppercase; }
-body.detail-pending .detail-loading { display: block; }
-body.detail-pending .detail-grid { visibility: hidden; min-height: 55vh; }
+/* the piece is fetched after load, so show its shape instead of the placeholder product */
+.detail-skeleton { display: none; grid-template-columns: 1fr 1fr; gap: clamp(30px, 6vw, 60px); align-items: start; }
+body.detail-pending .detail-skeleton { display: grid; }
+body.detail-pending .detail-grid { display: none; }
+.sk { background: linear-gradient(100deg, #16171b 30%, #24262c 48%, #16171b 66%); background-size: 300% 100%; animation: skShimmer 1.3s linear infinite; border-radius: 5px; }
+@keyframes skShimmer { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+.sk-img { aspect-ratio: 3 / 4; border-radius: 8px; }
+.sk-thumbs { display: flex; gap: 8px; margin-top: 10px; }
+.sk-thumb { width: 64px; height: 78px; }
+.sk-cat { width: 30%; height: 10px; margin-bottom: 14px; }
+.sk-title { width: 72%; height: 26px; margin-bottom: 18px; }
+.sk-row { display: flex; align-items: center; gap: 12px; margin: 18px 0; }
+.sk-price { width: 150px; height: 30px; }
+.sk-stock { width: 130px; height: 28px; border-radius: 999px; }
+.sk-line { height: 11px; margin-bottom: 9px; }
+.sk-block { height: 150px; margin: 18px 0; }
+.sk-total { height: 74px; margin: 14px 0; }
+.sk-btn { height: 46px; }
 
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px, 6vw, 60px); align-items: start; }
 .detail-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; }
@@ -770,6 +784,7 @@ footer {
   .stat:nth-child(2) { border-right: none; }
   .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid rgba(201,169,110,0.15); }
   .detail-grid { grid-template-columns: 1fr; gap: 32px; }
+  .detail-skeleton { grid-template-columns: 1fr; gap: 32px; }
   .about-content { grid-template-columns: 1fr; gap: 32px; }
   .contact-grid { grid-template-columns: 1fr; gap: 32px; }
   .footer-grid { grid-template-columns: 1fr 1fr; }

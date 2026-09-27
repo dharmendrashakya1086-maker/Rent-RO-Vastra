@@ -72,7 +72,32 @@
 
   <section style="padding-top: 120px; padding-bottom: 60px;">
     <div class="container">
-      <p class="detail-loading" id="detailLoading">Loading piece…</p>
+      <div class="detail-skeleton" id="detailLoading" role="status" aria-busy="true">
+        <span class="sr-only">Loading piece details and availability…</span>
+        <div>
+          <div class="sk sk-img"></div>
+          <div class="sk-thumbs">
+            <div class="sk sk-thumb"></div>
+            <div class="sk sk-thumb"></div>
+            <div class="sk sk-thumb"></div>
+            <div class="sk sk-thumb"></div>
+          </div>
+        </div>
+        <div>
+          <div class="sk sk-cat"></div>
+          <div class="sk sk-title"></div>
+          <div class="sk-row">
+            <div class="sk sk-price"></div>
+            <div class="sk sk-stock"></div>
+          </div>
+          <div class="sk sk-line" style="width:100%"></div>
+          <div class="sk sk-line" style="width:94%"></div>
+          <div class="sk sk-line" style="width:62%"></div>
+          <div class="sk sk-block"></div>
+          <div class="sk sk-total"></div>
+          <div class="sk sk-btn"></div>
+        </div>
+      </div>
       <div class="detail-grid">
 <div>
           <div class="gallery">
