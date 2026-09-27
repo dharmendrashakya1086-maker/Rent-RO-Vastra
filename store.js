@@ -17,15 +17,17 @@ function ytId(url) {
 }
 function looksMedia(u, mode) {
   const url = u.media, yt = ytId(url);
+  // alt describes the photo for screen readers and image search; the caption already carries the story
+  const alt = (u.caption ? u.caption + ' ' : '') + (u.name ? '— worn by ' + u.name : '') + (u.city ? ', ' + u.city : '') + ', client look on rent at Rent-RO-Vastra';
   if (u.kind === 'youtube' || yt) {
-    if (mode === 'light') return '<iframe src="https://www.youtube.com/embed/' + (yt || ytId(url)) + '?autoplay=1" allow="autoplay" allowfullscreen style="width:100%;height:100%;border:0"></iframe>';
-    return '<img src="https://i.ytimg.com/vi/' + yt + '/hqdefault.jpg" alt="" loading="lazy">';
+    if (mode === 'light') return '<iframe src="https://www.youtube.com/embed/' + (yt || ytId(url)) + '?autoplay=1" title="' + esc(alt) + '" allow="autoplay" allowfullscreen style="width:100%;height:100%;border:0"></iframe>';
+    return '<img src="https://i.ytimg.com/vi/' + yt + '/hqdefault.jpg" alt="' + esc(alt) + '" loading="lazy">';
   }
   if (u.kind === 'video' || /\.(mp4|webm|mov)(\?|$)/i.test(url)) {
-    if (mode === 'light') return '<video src="' + esc(url) + '" controls autoplay loop playsinline style="width:100%;height:100%;object-fit:contain;background:#000"></video>';
-    return '<video src="' + esc(url) + '" muted loop autoplay playsinline preload="metadata"></video>';
+    if (mode === 'light') return '<video src="' + esc(url) + '" aria-label="' + esc(alt) + '" controls autoplay loop playsinline style="width:100%;height:100%;object-fit:contain;background:#000"></video>';
+    return '<video src="' + esc(url) + '" muted loop autoplay playsinline preload="metadata" aria-label="' + esc(alt) + '"></video>';
   }
-  return '<img src="' + esc(url) + '" alt="" loading="lazy">';
+  return '<img src="' + esc(url) + '" alt="' + esc(alt) + '" loading="lazy">';
 }
 function looksCard(u, mode) {
   return '<article class="look' + (mode === 'tile' ? ' look-tile' : '') + '" data-look="' + u.id + '">' +
@@ -552,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (hs) hs.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
       const q = hs.value.trim();
-      window.location.href = 'catalog.html' + (q ? '#q=' + encodeURIComponent(q) : '');
+      window.location.href = '/collection' + (q ? '#q=' + encodeURIComponent(q) : '');
     }
   });
 });

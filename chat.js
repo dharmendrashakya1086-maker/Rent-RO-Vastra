@@ -1,18 +1,18 @@
 ﻿(function() {
   // Immutable default seed; real source of truth is luxe_products (admin).
   const defaultProducts = [
-    { id: 1, name: 'Sabyasachi Silk Lehenga', category: 'evening', occasion: ['gala', 'wedding', 'reception', 'sangeet'], style: ['elegant', 'classic', 'glamorous'], budget: 'premium', price: 7499, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', link: 'detail.html', gender: 'women' },
-    { id: 2, name: 'Tarun Tahiliani Sherwani', category: 'formal', occasion: ['wedding', 'engagement', 'reception', 'formal'], style: ['classic', 'royal', 'sharp'], budget: 'mid', price: 5499, img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', link: 'detail.html', gender: 'men' },
-    { id: 3, name: 'Manish Malhotra Cocktail Gown', category: 'cocktail', occasion: ['party', 'cocktail', 'reception', 'date night'], style: ['glamorous', 'chic', 'feminine'], budget: 'premium', price: 6099, img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', link: 'detail.html', gender: 'women' },
-    { id: 4, name: 'Anita Dongre Anarkali Suit', category: 'outerwear', occasion: ['festival', 'puja', 'family function', 'diwali'], style: ['classic', 'elegant', 'traditional'], budget: 'mid', price: 4699, img: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80', link: 'detail.html', gender: 'women' },
-    { id: 5, name: 'Ritu Kumar Bridal Lehenga', category: 'evening', occasion: ['wedding', 'sangeet', 'mehendi', 'reception'], style: ['glamorous', 'bridal', 'ornate'], budget: 'premium', price: 7999, img: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', link: 'detail.html', gender: 'women' },
-    { id: 6, name: 'Rahul Mishra Tuxedo', category: 'formal', occasion: ['gala', 'wedding', 'cocktail', 'formal event'], style: ['glamorous', 'bold', 'luxurious'], budget: 'luxury', price: 9299, img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', link: 'detail.html', gender: 'men' },
-    { id: 7, name: 'Kundan Bridal Set', category: 'accessories', occasion: ['wedding', 'engagement', 'reception', 'sangeet'], style: ['elegant', 'classic', 'glamorous'], budget: 'mid', price: 3899, img: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80', link: 'detail.html', gender: 'women' },
-    { id: 8, name: 'Anamika Khrama Cocktail Dress', category: 'cocktail', occasion: ['party', 'cocktail', 'night out', 'birthday'], style: ['chic', 'trendy', 'feminine'], budget: 'premium', price: 6599, img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', link: 'detail.html', gender: 'women' },
-    { id: 9, name: 'Masaba Gupta Printed Jacket', category: 'outerwear', occasion: ['casual', 'brunch', 'college', 'travel'], style: ['edgy', 'bold', 'trendy'], budget: 'mid', price: 4099, img: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', link: 'detail.html', gender: 'unisex' },
-    { id: 10, name: 'Sabyasachi Heritage Saree', category: 'accessories', occasion: ['wedding', 'festival', 'diwali', 'pooja'], style: ['classic', 'luxurious', 'traditional'], budget: 'luxury', price: 10099, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80', link: 'detail.html', gender: 'women' },
-    { id: 11, name: 'Neeta Lulla Evening Gown', category: 'evening', occasion: ['gala', 'black-tie', 'red carpet', 'cocktail'], style: ['glamorous', 'luxurious', 'elegant'], budget: 'luxury', price: 8899, img: 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80', link: 'detail.html', gender: 'women' },
-    { id: 12, name: 'Shantanu & Nikhil Blazer', category: 'formal', occasion: ['interview', 'business', 'dinner', 'wedding'], style: ['sharp', 'trendy', 'professional'], budget: 'mid', price: 4999, img: 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80', link: 'detail.html', gender: 'men' }
+    { id: 1, name: 'Sabyasachi Silk Lehenga', category: 'evening', occasion: ['gala', 'wedding', 'reception', 'sangeet'], style: ['elegant', 'classic', 'glamorous'], budget: 'premium', price: 7499, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', link: '/piece/' + id, gender: 'women' },
+    { id: 2, name: 'Tarun Tahiliani Sherwani', category: 'formal', occasion: ['wedding', 'engagement', 'reception', 'formal'], style: ['classic', 'royal', 'sharp'], budget: 'mid', price: 5499, img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', link: '/piece/' + id, gender: 'men' },
+    { id: 3, name: 'Manish Malhotra Cocktail Gown', category: 'cocktail', occasion: ['party', 'cocktail', 'reception', 'date night'], style: ['glamorous', 'chic', 'feminine'], budget: 'premium', price: 6099, img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', link: '/piece/' + id, gender: 'women' },
+    { id: 4, name: 'Anita Dongre Anarkali Suit', category: 'outerwear', occasion: ['festival', 'puja', 'family function', 'diwali'], style: ['classic', 'elegant', 'traditional'], budget: 'mid', price: 4699, img: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80', link: '/piece/' + id, gender: 'women' },
+    { id: 5, name: 'Ritu Kumar Bridal Lehenga', category: 'evening', occasion: ['wedding', 'sangeet', 'mehendi', 'reception'], style: ['glamorous', 'bridal', 'ornate'], budget: 'premium', price: 7999, img: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', link: '/piece/' + id, gender: 'women' },
+    { id: 6, name: 'Rahul Mishra Tuxedo', category: 'formal', occasion: ['gala', 'wedding', 'cocktail', 'formal event'], style: ['glamorous', 'bold', 'luxurious'], budget: 'luxury', price: 9299, img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', link: '/piece/' + id, gender: 'men' },
+    { id: 7, name: 'Kundan Bridal Set', category: 'accessories', occasion: ['wedding', 'engagement', 'reception', 'sangeet'], style: ['elegant', 'classic', 'glamorous'], budget: 'mid', price: 3899, img: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80', link: '/piece/' + id, gender: 'women' },
+    { id: 8, name: 'Anamika Khrama Cocktail Dress', category: 'cocktail', occasion: ['party', 'cocktail', 'night out', 'birthday'], style: ['chic', 'trendy', 'feminine'], budget: 'premium', price: 6599, img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', link: '/piece/' + id, gender: 'women' },
+    { id: 9, name: 'Masaba Gupta Printed Jacket', category: 'outerwear', occasion: ['casual', 'brunch', 'college', 'travel'], style: ['edgy', 'bold', 'trendy'], budget: 'mid', price: 4099, img: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', link: '/piece/' + id, gender: 'unisex' },
+    { id: 10, name: 'Sabyasachi Heritage Saree', category: 'accessories', occasion: ['wedding', 'festival', 'diwali', 'pooja'], style: ['classic', 'luxurious', 'traditional'], budget: 'luxury', price: 10099, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80', link: '/piece/' + id, gender: 'women' },
+    { id: 11, name: 'Neeta Lulla Evening Gown', category: 'evening', occasion: ['gala', 'black-tie', 'red carpet', 'cocktail'], style: ['glamorous', 'luxurious', 'elegant'], budget: 'luxury', price: 8899, img: 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80', link: '/piece/' + id, gender: 'women' },
+    { id: 12, name: 'Shantanu & Nikhil Blazer', category: 'formal', occasion: ['interview', 'business', 'dinner', 'wedding'], style: ['sharp', 'trendy', 'professional'], budget: 'mid', price: 4999, img: 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80', link: '/piece/' + id, gender: 'men' }
   ];
 
   const LOG_KEY = 'luxe_chat_log';
@@ -26,8 +26,8 @@
   if (!products.length) products = defaultProducts;
 
   const KB = {
-    pricing: "Pricing ₹3,899/din se start. Multi-day discount bhi hai — 3 din = 15% off, 7 din = 25% off. Manipur aur Itawa me delivery free.",
-    delivery: "Manipur aur Itawa me next-day delivery free. Tumhare event se 1-2 din pehle hi piece pahunch jata hai.",
+    pricing: "Pricing ₹3,899/din se start. Multi-day discount bhi hai — 3 din = 15% off, 7+ din = 25% off. Mainpuri aur Etawah me delivery hamesha free.",
+    delivery: "Mainpuri aur Etawah me next-day delivery free. Tumhare event se 1-2 din pehle hi piece pahunch jata hai.",
     returns: "Dry cleaning ki tension mat lo — wapas dete waqt bas bag me daal do, pickup set kar do, baaki hum sambhal lenge.",
     damage: "Normal halka wear chalega. Real damage ya stain hua to repair/replacement charge lagega — woh renter ki jimmedari hai.",
     sizing: "Sizes: ladies XS-XXL, gents S-3XL. Fit na lage to 24 ghante ke andar free exchange ho jata hai.",
@@ -272,7 +272,7 @@
       if (a.enough) badge = `<div class="chat-avail good">Available · ${a.available} of ${a.total} bache hain</div>`;
       else badge = `<div class="chat-avail bad">Is window me shayad booked hai</div>`;
     }
-    card.innerHTML = `<img src="${esc(p.img)}" alt="${esc(p.name)}"><div class="chat-product-card-body"><h5>${esc(p.name)}</h5><div class="chat-card-price">${fmt(eff(p))}/din — ${p.category}${(p.discount > 0 ? ' <s style="opacity:.6">' + fmt(p.price) + '</s> · ' + p.discount + '% OFF' : '')}</div><div class="chat-card-note">3+ din 15% off · 7 din 25% off</div>${badge}<a href="${(p.link || 'detail.html')}?id=${encodeURIComponent(p.id)}">Dekho aur rent karo</a></div>`;
+    card.innerHTML = `<img src="${esc(p.img)}" alt="${esc(p.name)}"><div class="chat-product-card-body"><h5>${esc(p.name)}</h5><div class="chat-card-price">${fmt(eff(p))}/din — ${p.category}${(p.discount > 0 ? ' <s style="opacity:.6">' + fmt(p.price) + '</s> · ' + p.discount + '% OFF' : '')}</div><div class="chat-card-note">3+ din 15% off · 7 din 25% off</div>${badge}<a href="${p.link || '/piece/' + encodeURIComponent(p.id)}">Dekho aur rent karo</a></div>`;
     return card;
   }
 
@@ -470,7 +470,7 @@
       if (list.length) {
         addBotMsg(`Badhiya — **${evtDate.label}** ki real bookings check kar rahi hoon. Ye rahe actually free pieces:`);
         showCards(list, '');
-        addBotMsg("Yehi date rakhu? Har suggestion pe live availability tag kar dungi.", createLink('catalog.html', 'Poora collection dekho'));
+        addBotMsg("Yehi date rakhu? Har suggestion pe live availability tag kar dungi.", createLink('/collection', 'Poora collection dekho'));
       } else {
         addBotMsg(`${evtDate.label} ke liye abhi sab booked hai — koi aur date try karo ya poora collection dekho.`);
       }
@@ -518,7 +518,7 @@
         addBotMsg('', cards);
       } else {
         addBotMsg("Wo piece mujhe nahi mila — poore list ke liye catalog dekho. " + (name ? `"${name}" se kuch milta-julta nahi.` : ''));
-        addBotMsg('Saare pieces yahin milenge:', createLink('catalog.html', 'Poora collection dekho'));
+        addBotMsg('Saare pieces yahin milenge:', createLink('/collection', 'Poora collection dekho'));
       }
       showOptions(['browse all', 'start over']);
       return true;
@@ -553,7 +553,7 @@
         addBotMsg("Exact match nahi mila — ye raha alternatives:");
         const fallback = products.filter(p => matchesOccasion(p, state.filters.occasion)).slice(0, 2);
         if (fallback.length) showCards(fallback, '');
-        else addBotMsg("Koi aur occasion, style ya budget try karo — ya poora collection dekho.", createLink('catalog.html', 'Poora collection dekho'));
+        else addBotMsg("Koi aur occasion, style ya budget try karo — ya poora collection dekho.", createLink('/collection', 'Poora collection dekho'));
       }
       showOptions(['show more', 'under ₹5,000', 'browse all', 'start over']);
       return true;
@@ -614,7 +614,7 @@
     } else if (v === 'pricing') {
       runIntent('pricing');
     } else if (v === 'browse all' || v === 'browse') {
-      window.location.href = 'catalog.html';
+      window.location.href = '/collection';
     } else if (v === 'start over' || v === "let's start fresh" || v === 'reset') {
       runIntent('start over');
     } else if (v === 'pick a different date') {

@@ -3,8 +3,10 @@
 // Local: `node server.js` (page-mem Postgres, no install). Production: DATABASE_URL -> Postgres (Render).
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 const crypto = require('crypto');
 const path = require('path');
+const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 
 const { q, migrate } = require('./db');
@@ -20,6 +22,8 @@ const sb = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
   : null;
 
 const app = express();
+app.disable('x-powered-by');              // do not advertise the stack
+app.use(compression({ threshold: 512 })); // css/js was going over the wire uncompressed
 app.set('trust proxy', true);
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
@@ -92,7 +96,7 @@ function productOut(r) {
     id: r.id, name: r.name, category: r.category, gender: r.gender,
     occasion: polish(r.occasion), style: polish(r.style), budget: r.budget,
     img: r.img, images: r.images || [r.img].filter(Boolean),
-    price: r.price, discount: Number(r.discount) || 0, stock: r.stock, active: r.active !== false, link: 'detail.html'
+    price: r.price, discount: Number(r.discount) || 0, stock: r.stock, active: r.active !== false, link: '/piece/' + r.id
   };
 }
 
@@ -667,15 +671,161 @@ app.post('/api/ai', async (req, res) => {
   res.json({ text: t });
 });
 
-// ---------------- static site ----------------
-app.use(express.static(__dirname, { index: 'index.html' }));
+// ---------------- SEO: clean slugs, sitemap, robots, llms, favicon ----------------
+const SITE = 'https://rent-rovastra.onrender.com';
+// Canonical slug -> file. One source of truth for routes, 301s, sitemap and llms.txt.
+const SLUGS = {
+  '/': 'index.html',
+  '/collection': 'catalog.html',
+  '/how-it-works': 'how-it-works.html',
+  '/about': 'about.html',
+  '/client-looks': 'ugc.html',
+  '/faq': 'faq.html',
+  '/contact': 'contact.html',
+  '/wishlist': 'wishlist.html',
+  '/cart': 'cart.html',
+  '/checkout': 'checkout.html',
+  '/account': 'account.html',
+  '/messages': 'messages.html',
+  '/login': 'auth.html',
+  '/privacy': 'privacy.html',
+  '/terms': 'terms.html',
+  '/cookies': 'cookies.html',
+  '/refunds': 'refunds.html'
+};
+const ALIASES = { '/catalog': '/collection', '/ugc': '/client-looks', '/auth': '/login', '/how_it_works': '/how-it-works', '/shop': '/collection' };
+const PRIVATE_SLUGS = ['/admin', '/admin.html', '/migrate.html'];
 
-// ---------- actually start ----------
-seed()
-  .then(() => app.listen(PORT, () => console.log('Rent-RO-Vastra live at http://localhost:' + PORT)))
-  .catch(e => { console.error('Boot failed:', e.message); process.exit(1); });
+// /piece/<id> is the real product URL; detail.html is only the template behind it.
+// The canonical is injected per request so crawlers get it without running JS, and an
+// unknown or retired id gets a real 404 instead of silently showing another piece.
+let detailTpl = null, productIds = null;
+async function activeIds() {
+  if (productIds && Date.now() - productIds.at < 6 * 3600e3) return productIds.set;
+  try {
+    const rows = (await q('SELECT id FROM products WHERE active ORDER BY id')).rows;
+    productIds = { at: Date.now(), set: new Set(rows.map(r => String(r.id))) };
+  } catch (e) { return null; } // DB hiccup: fail open rather than hide real products
+  return productIds.set;
+}
+app.get('/piece/:id', async (req, res) => {
+  const id = String(req.params.id);
+  if (!/^\d+$/.test(id)) return res.status(404).type('txt').send('Not found');
+  const ids = await activeIds();
+  if (ids && !ids.has(id)) return res.status(404).type('txt').send('Not found');
+  if (!detailTpl) detailTpl = fs.readFileSync(path.join(__dirname, 'detail.html'), 'utf8');
+  res.set('Cache-Control', 'no-cache');
+  res.type('html').send(detailTpl.replace('</head>',
+    '  <link rel="canonical" href="' + SITE + '/piece/' + encodeURIComponent(id) + '">\n  <!-- /piece canonical injected by server -->\n</head>'));
+});
+
+// every old .html link and short alias gets one 301 to its canonical URL (no duplicate content)
+const TO_CANON = { '/index.html': '/' };
+Object.keys(SLUGS).forEach(slug => { if (slug !== '/') TO_CANON['/' + SLUGS[slug]] = slug; });
+Object.assign(TO_CANON, ALIASES);
+app.use((req, res, next) => {
+  const clean = req.path.replace(/\/+$/, '') || '/';
+  const to = TO_CANON[clean];
+  if (to && to !== clean) return res.redirect(301, to + (req.url.includes('?') ? '?' + req.url.split('?')[1] : ''));
+  next();
+});
+Object.keys(SLUGS).forEach(slug => {
+  if (slug === '/') return;
+  app.get(slug, (req, res) => res.sendFile(path.join(__dirname, SLUGS[slug])));
+});
+
+const lastmod = file => {
+  const f = file && path.join(__dirname, file);
+  return f && fs.existsSync(f) ? fs.statSync(f).mtime.toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+};
+let sitemapCache = { at: 0, xml: '' };
+app.get('/sitemap.xml', async (req, res) => {
+  if (Date.now() - sitemapCache.at < 6 * 3600e3) return res.type('application/xml').send(sitemapCache.xml);
+  const urls = Object.keys(SLUGS).map(p => ({ loc: SITE + p, file: SLUGS[p], pri: p === '/' ? '1.0' : '0.7' }));
+  const ids = await activeIds();
+  if (ids) [...ids].forEach(id => urls.push({ loc: SITE + '/piece/' + encodeURIComponent(id), file: 'detail.html', pri: '0.8' }));
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    urls.map(u => `  <url><loc>${u.loc}</loc><lastmod>${lastmod(u.file)}</lastmod><changefreq>${u.pri === '1.0' ? 'daily' : 'weekly'}</changefreq><priority>${u.pri}</priority></url>`).join('\n') +
+    '\n</urlset>\n';
+  sitemapCache = { at: Date.now(), xml };
+  res.type('application/xml').send(xml);
+});
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send('User-agent: *\nAllow: /\n' +
+    PRIVATE_SLUGS.concat(['/api/', '/cart', '/checkout', '/account', '/messages', '/wishlist', '/login']).map(p => 'Disallow: ' + p + '\n').join('') +
+    '\nSitemap: ' + SITE + '/sitemap.xml\n');
+});
+
+app.get('/llms.txt', (req, res) => res.type('text/plain').send(`# Rent-RO-Vastra
+
+> Premium Indian designer fashion rental. Lehengas, sherwanis, gowns, sarees and accessories rented by the day, delivered in Mainpuri and Etawah, Uttar Pradesh.
+
+## What we do
+Customers browse a curated catalogue, pick an event date, and rent a piece for a few days. Longer rentals cost less per day (3+ days and 7-day rates are shown on every product). Every piece is professionally cleaned and inspected between rentals. Free next-day delivery in the service districts.
+
+## Main pages
+- [Home](${SITE}/): hero, categories, featured pieces, client looks
+- [Collection](${SITE}/collection): full catalogue with occasion, budget and availability filters
+- [How it works](${SITE}/how-it-works): booking, delivery, wear and return
+- [Client Looks](${SITE}/client-looks): real customers wearing rented pieces (photos and video)
+- [FAQ](${SITE}/faq): delivery, sizing, returns, damage, booking
+- [Contact](${SITE}/contact): enquiries and support
+- [About](${SITE}/about): the company
+
+## Policies
+- [Refund Policy](${SITE}/refunds)
+- [Terms & Conditions](${SITE}/terms)
+- [Privacy Policy](${SITE}/privacy)
+- [Cookie & Storage Policy](${SITE}/cookies)
+
+## Product pages
+Every piece has a permanent URL: ${SITE}/piece/<id>
+
+## Notes for AI assistants
+- Prices are per day in Indian Rupees (INR). Payment is on delivery by cash or UPI after the customer tries the piece on.
+- Stock shown on a product page is per-day availability; a piece can be free on one date and booked on another.
+- Never state a delivery, refund, damage or discount rule that is not written on this site: the linked policy pages are authoritative.
+`));
+
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, 'favicon.svg')));
+
+// ---------------- static site ----------------
+// Server-side files must never be downloadable: block source, deps, maps and dotfiles.
+const BLOCKED = /^(server|db|seed|admin-backend|test-api|test-admin-ai|test-chat-logic)\.(js|cjs|mjs)$/i;
+app.use((req, res, next) => {
+  const base = path.basename(req.path);
+  if (req.path.includes('/node_modules/') || BLOCKED.test(base) || /\.(map|log)$/i.test(base) ||
+      /^(package(-lock)?\.json|render\.yaml|AGENTS\.md)$/i.test(base) || base.startsWith('.')) {
+    return res.status(404).type('txt').send('Not found');
+  }
+  next();
+});
+app.use(express.static(__dirname, {
+  index: 'index.html',
+  dotfiles: 'ignore',
+  etag: true,
+  lastModified: true,
+  setHeaders(res, file) {
+    // HTML must revalidate so a deploy is never stale; everything else is safe to cache + compress.
+    res.setHeader('Cache-Control', file.endsWith('.html') ? 'no-cache' : 'public, max-age=0, must-revalidate');
+  }
+}));
+
+// custom 404 with a real 404 status (API paths stay JSON)
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' });
+  res.status(404).sendFile(path.join(__dirname, '404.html'), err => {
+    if (err) res.status(404).type('txt').send('404 Not Found');
+  });
+});
 
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: 'Server error' });
 });
+
+// ---------- actually start ----------
+seed()
+  .then(() => app.listen(PORT, () => console.log('Rent-RO-Vastra live at http://localhost:' + PORT)))
+  .catch(e => { console.error('Boot failed:', e.message); process.exit(1); });

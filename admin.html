@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Rent-RO-Vastra</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -478,6 +477,30 @@
     ::-webkit-scrollbar-thumb { background: linear-gradient(var(--a1), var(--a3)); }
     .loader-spinner { border-top-color: var(--a1); border-right-color: var(--a2); border-bottom-color: var(--a3); }
   </style>
+
+<!-- seo-head -->
+  <title>Admin | Rent-RO-Vastra</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Internal admin.">
+  <link rel="canonical" href="https://rent-rovastra.onrender.com/admin.html">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#100D0B">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Rent-RO-Vastra">
+  <meta property="og:locale" content="en_IN">
+  <meta property="og:title" content="Admin | Rent-RO-Vastra">
+  <meta property="og:description" content="Internal admin.">
+  <meta property="og:url" content="https://rent-rovastra.onrender.com/admin.html">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1200&h=630&q=70">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Admin | Rent-RO-Vastra">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Admin | Rent-RO-Vastra">
+  <meta name="twitter:description" content="Internal admin.">
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1200&h=630&q=70">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://rent-rovastra.onrender.com/#organization","name":"Rent-RO-Vastra","url":"https://rent-rovastra.onrender.com/","logo":{"@type":"ImageObject","url":"https://rent-rovastra.onrender.com/favicon.svg"},"description":"Premium Indian designer fashion rental. Lehengas, sherwanis, gowns, sarees and accessories rented by the day, delivered in Mainpuri and Etawah, Uttar Pradesh."},{"@type":"WebSite","@id":"https://rent-rovastra.onrender.com/#website","url":"https://rent-rovastra.onrender.com/","name":"Rent-RO-Vastra","description":"Premium Indian designer fashion rental. Lehengas, sherwanis, gowns, sarees and accessories rented by the day, delivered in Mainpuri and Etawah, Uttar Pradesh.","inLanguage":"en-IN","publisher":{"@id":"https://rent-rovastra.onrender.com/#organization"}},{"@type":"WebPage","@id":"https://rent-rovastra.onrender.com/admin.html#webpage","url":"https://rent-rovastra.onrender.com/admin.html","name":"Admin | Rent-RO-Vastra","description":"Internal admin.","inLanguage":"en-IN","isPartOf":{"@id":"https://rent-rovastra.onrender.com/#website"},"breadcrumb":{"@id":"https://rent-rovastra.onrender.com/admin.html#breadcrumb"},"primaryImageOfPage":{"@type":"ImageObject","url":"https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1200&h=630&q=70"}},{"@type":"BreadcrumbList","@id":"https://rent-rovastra.onrender.com/admin.html#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://rent-rovastra.onrender.com/"}]}]}</script>
+  <!-- /seo-head -->
 </head>
 <body>
 
@@ -510,7 +533,7 @@
 
     <aside class="dash-sidebar" id="dashSidebar">
       <div class="dash-sidebar-header">
-        <a href="index.html" class="logo">Rent-RO-Vastra</a>
+        <a href="/" class="logo">Rent-RO-Vastra</a>
         <p>Admin Panel</p>
       </div>
       <nav class="dash-nav">
@@ -755,7 +778,7 @@
                 <input type="text" id="lookUrl" placeholder="…or paste video / YouTube link (https://…)" style="flex:1;min-width:240px;padding:14px 18px;background:var(--dark2);border:1px solid rgba(201,169,110,0.2);color:var(--text);font-family:var(--sans);font-size:0.9rem;border-radius:8px;">
               </div>
               <span id="lookUpInfo" style="display:block;margin-top:8px;font-size:.72rem;color:var(--text-muted);"></span>
-              <div id="lookPreview" style="margin-top:12px;display:none;max-width:220px;border:1px solid rgba(201,169,110,0.25);"><img id="lookPreviewImg" style="width:100%;display:block;"></div>
+              <div id="lookPreview" style="margin-top:12px;display:none;max-width:220px;border:1px solid rgba(201,169,110,0.25);"><img id="lookPreviewImg" alt="Client look preview" style="width:100%;display:block;"></div>
             </div>
           </div>
           <button class="btn-primary" id="lookSave" style="margin-top:8px;">Add to Gallery</button>
@@ -771,7 +794,7 @@
               <tbody id="looksBody"></tbody>
             </table>
           </div>
-          <p style="margin-top:14px;font-size:.75rem;color:var(--text-muted);">Live on <a href="ugc.html" target="_blank" style="color:var(--gold)">ugc.html</a> and the homepage marquee. Hidden looks stay private.</p>
+          <p style="margin-top:14px;font-size:.75rem;color:var(--text-muted);">Live on <a href="/client-looks" target="_blank" style="color:var(--gold)">/client-looks</a> and the homepage marquee. Hidden looks stay private.</p>
         </div>
       </div>
 
@@ -936,18 +959,18 @@ https://images.unsplash.com/photo-2?w=600&q=80"></textarea>
     const LS_ORDERS = 'luxe_orders';
 
     const defaultProducts = [
-      { id: 1, name: 'Sabyasachi Silk Lehenga', category: 'evening', occasion: ['gala','wedding','reception','sangeet'], style: ['elegant','classic','glamorous'], budget: 'premium', price: 7499, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
-      { id: 2, name: 'Tarun Tahiliani Sherwani', category: 'formal', occasion: ['wedding','engagement','reception','formal'], style: ['classic','royal','sharp'], budget: 'mid', price: 5499, img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', link: 'detail.html', gender: 'men', active: true },
-      { id: 3, name: 'Manish Malhotra Cocktail Gown', category: 'cocktail', occasion: ['party','cocktail','reception','date night'], style: ['glamorous','chic','feminine'], budget: 'premium', price: 6099, img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
-      { id: 4, name: 'Anita Dongre Anarkali Suit', category: 'outerwear', occasion: ['festival','puja','family function','diwali'], style: ['classic','elegant','traditional'], budget: 'mid', price: 4699, img: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
-      { id: 5, name: 'Ritu Kumar Bridal Lehenga', category: 'evening', occasion: ['wedding','sangeet','mehendi','reception'], style: ['glamorous','bridal','ornate'], budget: 'premium', price: 7999, img: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
-      { id: 6, name: 'Rahul Mishra Tuxedo', category: 'formal', occasion: ['gala','wedding','cocktail','formal event'], style: ['glamorous','bold','luxurious'], budget: 'luxury', price: 9299, img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', link: 'detail.html', gender: 'men', active: true },
-      { id: 7, name: 'Kundan Bridal Set', category: 'accessories', occasion: ['wedding','engagement','reception','sangeet'], style: ['elegant','classic','glamorous'], budget: 'mid', price: 3899, img: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
-      { id: 8, name: 'Anamika Khrama Cocktail Dress', category: 'cocktail', occasion: ['party','cocktail','night out','birthday'], style: ['chic','trendy','feminine'], budget: 'premium', price: 6599, img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
-      { id: 9, name: 'Masaba Gupta Printed Jacket', category: 'outerwear', occasion: ['casual','brunch','college','travel'], style: ['edgy','bold','trendy'], budget: 'mid', price: 4099, img: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', link: 'detail.html', gender: 'unisex', active: true },
-      { id: 10, name: 'Sabyasachi Heritage Saree', category: 'accessories', occasion: ['wedding','festival','diwali','pooja'], style: ['classic','luxurious','traditional'], budget: 'luxury', price: 10099, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
-      { id: 11, name: 'Neeta Lulla Evening Gown', category: 'evening', occasion: ['gala','black-tie','red carpet','cocktail'], style: ['glamorous','luxurious','elegant'], budget: 'luxury', price: 8899, img: 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80', link: 'detail.html', gender: 'women', active: true },
-      { id: 12, name: 'Shantanu & Nikhil Blazer', category: 'formal', occasion: ['interview','business','dinner','wedding'], style: ['sharp','trendy','professional'], budget: 'mid', price: 4999, img: 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80', link: 'detail.html', gender: 'men', active: true }
+      { id: 1, name: 'Sabyasachi Silk Lehenga', category: 'evening', occasion: ['gala','wedding','reception','sangeet'], style: ['elegant','classic','glamorous'], budget: 'premium', price: 7499, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
+      { id: 2, name: 'Tarun Tahiliani Sherwani', category: 'formal', occasion: ['wedding','engagement','reception','formal'], style: ['classic','royal','sharp'], budget: 'mid', price: 5499, img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', link: '/piece/' + id, gender: 'men', active: true },
+      { id: 3, name: 'Manish Malhotra Cocktail Gown', category: 'cocktail', occasion: ['party','cocktail','reception','date night'], style: ['glamorous','chic','feminine'], budget: 'premium', price: 6099, img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
+      { id: 4, name: 'Anita Dongre Anarkali Suit', category: 'outerwear', occasion: ['festival','puja','family function','diwali'], style: ['classic','elegant','traditional'], budget: 'mid', price: 4699, img: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
+      { id: 5, name: 'Ritu Kumar Bridal Lehenga', category: 'evening', occasion: ['wedding','sangeet','mehendi','reception'], style: ['glamorous','bridal','ornate'], budget: 'premium', price: 7999, img: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
+      { id: 6, name: 'Rahul Mishra Tuxedo', category: 'formal', occasion: ['gala','wedding','cocktail','formal event'], style: ['glamorous','bold','luxurious'], budget: 'luxury', price: 9299, img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', link: '/piece/' + id, gender: 'men', active: true },
+      { id: 7, name: 'Kundan Bridal Set', category: 'accessories', occasion: ['wedding','engagement','reception','sangeet'], style: ['elegant','classic','glamorous'], budget: 'mid', price: 3899, img: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
+      { id: 8, name: 'Anamika Khrama Cocktail Dress', category: 'cocktail', occasion: ['party','cocktail','night out','birthday'], style: ['chic','trendy','feminine'], budget: 'premium', price: 6599, img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
+      { id: 9, name: 'Masaba Gupta Printed Jacket', category: 'outerwear', occasion: ['casual','brunch','college','travel'], style: ['edgy','bold','trendy'], budget: 'mid', price: 4099, img: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', link: '/piece/' + id, gender: 'unisex', active: true },
+      { id: 10, name: 'Sabyasachi Heritage Saree', category: 'accessories', occasion: ['wedding','festival','diwali','pooja'], style: ['classic','luxurious','traditional'], budget: 'luxury', price: 10099, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
+      { id: 11, name: 'Neeta Lulla Evening Gown', category: 'evening', occasion: ['gala','black-tie','red carpet','cocktail'], style: ['glamorous','luxurious','elegant'], budget: 'luxury', price: 8899, img: 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
+      { id: 12, name: 'Shantanu & Nikhil Blazer', category: 'formal', occasion: ['interview','business','dinner','wedding'], style: ['sharp','trendy','professional'], budget: 'mid', price: 4999, img: 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80', link: '/piece/' + id, gender: 'men', active: true }
     ];
 
     const defaultOrders = [];
@@ -1236,7 +1259,7 @@ renderProducts();
         const low = free <= 1;
         return `
         <tr>
-          <td><img src="${esc(p.img)}" class="thumb" alt=""></td>
+          <td><img src="${esc(p.img)}" class="thumb" alt="${esc(p.name)}"></td>
           <td>${esc(p.name)}</td>
           <td>${esc(p.category)}</td>
           <td><strong style="color:var(--gold)">₹${p.price}</strong>${p.discount > 0 ? '<br><span style="color:#4CAF50;font-size:0.72rem;">' + p.discount + '% OFF → ₹' + Math.round(p.price * (1 - p.discount / 100)) + '</span>' : ''}</td>
@@ -1297,7 +1320,7 @@ renderProducts();
 
     document.getElementById('pImages').addEventListener('input', () => {
       const urls = document.getElementById('pImages').value.split('\n').map(s => s.trim()).filter(Boolean);
-      document.getElementById('pImagesPreview').innerHTML = urls.map(u => '<img src="' + u + '" style="width:56px;height:70px;object-fit:cover;border-radius:6px;border:1px solid rgba(201,169,110,0.2);" onerror="this.style.opacity=0.2">').join('');
+      document.getElementById('pImagesPreview').innerHTML = urls.map(u => '<img src="' + u + '" alt="Gallery preview" style="width:56px;height:70px;object-fit:cover;border-radius:6px;border:1px solid rgba(201,169,110,0.2);" onerror="this.style.opacity=0.2">').join('');
     });
 
     // Device image upload -> downscale -> base64 (saved into pImg + gallery)
@@ -1376,7 +1399,7 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
         }
       } else {
         const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
-        products.push({ id: newId, name, category, price, discount, stock, img, images: images.length ? images : [img], occasion, style, budget, gender, link: 'detail.html', active: true });
+        products.push({ id: newId, name, category, price, discount, stock, img, images: images.length ? images : [img], occasion, style, budget, gender, link: '/piece/' + id, active: true });
       }
 
       saveProducts(products);
@@ -1398,7 +1421,7 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
         '<td style="width:70px"><div style="width:56px;height:70px;overflow:hidden;border:1px solid rgba(201,169,110,.25);background:#000;">' +
           (u.kind === 'video' || u.kind === 'youtube'
             ? '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:1.1rem;">▶</div>'
-            : '<img src="' + esc(u.media) + '" style="width:100%;height:100%;object-fit:cover;">') +
+            : '<img src="' + esc(u.media) + '" alt="' + esc(u.caption || u.name || 'Client look') + '" style="width:100%;height:100%;object-fit:cover;">') +
         '</div></td>' +
         '<td><strong style="color:var(--white)">' + esc(u.name || '—') + '</strong>' + (u.city ? '<br><span style="font-size:.7rem;color:var(--gold);letter-spacing:1px;">' + esc(u.city) + '</span>' : '') + '</td>' +
         '<td style="font-size:.78rem;color:var(--text-muted);max-width:260px;">' + esc(u.caption || '—') + '</td>' +
@@ -1755,7 +1778,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
     window.aiAddSuggested = function(name, cat, price) {
       let products = getProducts();
       const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
-      products.push({ id: newId, name, category: cat, price, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'], occasion: ['wedding','party'], style: ['elegant'], budget: 'mid', gender: 'women', active: true, link: 'detail.html' });
+      products.push({ id: newId, name, category: cat, price, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'], occasion: ['wedding','party'], style: ['elegant'], budget: 'mid', gender: 'women', active: true, link: '/piece/' + id });
       saveProducts(products);
       document.getElementById('aiActionResult').innerHTML = '<span style="color:#4CAF50;">✓ ' + name + ' added to catalog!</span>';
       loadDashboard();
@@ -1929,7 +1952,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         const newId = all.length ? Math.max(...all.map(p => p.id)) + 1 : 1;
         const name = String(v.name || 'New piece').trim();
         const price = Math.max(0, Math.round(Number(v.price) || 0));
-        all.push({ id: newId, name: name, category: String(v.category || 'evening').toLowerCase(), price: price, discount: 0, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'], occasion: ['wedding'], style: ['elegant'], budget: 'mid', gender: 'women', active: true, link: 'detail.html' });
+        all.push({ id: newId, name: name, category: String(v.category || 'evening').toLowerCase(), price: price, discount: 0, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'], occasion: ['wedding'], style: ['elegant'], budget: 'mid', gender: 'women', active: true, link: '/piece/' + id });
         saveProducts(all); loadDashboard();
         return 'Naya product add kiya — <strong>' + name + '</strong> (₹' + price + '/day, ' + v.category + ')';
       }
@@ -2375,7 +2398,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
             id: newId, name: d.name, category: d.category.toLowerCase(), price: d.price,
             img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80',
             images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'],
-            occasion: ['wedding'], style: ['elegant'], budget: 'mid', gender: d.gender, active: true, link: 'detail.html'
+            occasion: ['wedding'], style: ['elegant'], budget: 'mid', gender: d.gender, active: true, link: '/piece/' + id
           });
           saveProducts(allProducts);
           loadDashboard();

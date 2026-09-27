@@ -62,10 +62,10 @@ if (location.search.toLowerCase().includes('author')) {
 (function () {
   const page = location.pathname.split('/').pop();
   let sel = null;
-  if (page === 'cart.html' || page === 'checkout.html') sel = 'a[href="cart.html"]';
-  else if (page === 'wishlist.html') sel = 'a[href="wishlist.html"]';
-  else if (page === 'messages.html') sel = 'a[href="messages.html"]';
-  else if (page === 'account.html' || page === 'auth.html') sel = 'a.header-account';
+  if (page === '/cart' || page === '/checkout') sel = 'a[href="/cart"]';
+  else if (page === '/wishlist') sel = 'a[href="/wishlist"]';
+  else if (page === '/messages') sel = 'a[href="/messages"]';
+  else if (page === '/account' || page === '/login') sel = 'a.header-account';
   if (!sel) return;
   const icon = document.querySelector('.header-icons ' + sel);
   if (icon) icon.classList.add('active');
@@ -84,7 +84,7 @@ function showToast(msg) {
 
 // Bounce the header cart icon
 function bounceCart() {
-  const icon = document.querySelector('.header-icons a[href="cart.html"]');
+  const icon = document.querySelector('.header-icons a[href="/cart"]');
   if (!icon) return;
   icon.classList.remove('bounce');
   void icon.offsetWidth;
@@ -124,10 +124,10 @@ function flyToIcon(item, iconSel, okMsg, originEl) {
 }
 
 // Fly to cart icon (shorthand)
-function flyToCart(item, originEl) { flyToIcon(item, 'a[href="cart.html"]', 'Added to cart', originEl); }
+function flyToCart(item, originEl) { flyToIcon(item, 'a[href="/cart"]', 'Added to cart', originEl); }
 
 // Fly to wishlist heart icon
-function flyToWishlist(item, originEl) { flyToIcon(item, 'a[href="wishlist.html"]', 'Added to wishlist', originEl); }
+function flyToWishlist(item, originEl) { flyToIcon(item, 'a[href="/wishlist"]', 'Added to wishlist', originEl); }
 
 // Mobile bottom nav (app-style icon bar) — injected once, shows only on small screens.
 (function () {
@@ -140,17 +140,17 @@ function flyToWishlist(item, originEl) { flyToIcon(item, 'a[href="wishlist.html"
     me: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'
   };
   const items = [
-    ['index.html', 'Home', svg.home],
-    ['catalog.html', 'Shop', svg.shop],
-    ['wishlist.html', 'Wishlist', svg.heart, 'wishBadge'],
-    ['cart.html', 'Cart', svg.cart, 'cartCount'],
-    ['account.html', 'Me', svg.me]
+    ['/', 'Home', svg.home],
+    ['/collection', 'Shop', svg.shop],
+    ['/wishlist', 'Wishlist', svg.heart, 'wishBadge'],
+    ['/cart', 'Cart', svg.cart, 'cartCount'],
+    ['/account', 'Me', svg.me]
   ];
-  let active = 'index.html';
-  if (page === 'catalog.html') active = 'catalog.html';
-  else if (page === 'wishlist.html') active = 'wishlist.html';
-  else if (page === 'cart.html' || page === 'checkout.html') active = 'cart.html';
-  else if (page === 'account.html' || page === 'auth.html') active = 'account.html';
+  let active = '/';
+  if (page === '/collection') active = '/collection';
+  else if (page === '/wishlist') active = '/wishlist';
+  else if (page === '/cart' || page === '/checkout') active = '/cart';
+  else if (page === '/account' || page === '/login') active = '/account';
   const nav = document.createElement('nav');
   nav.className = 'bottom-nav';
   nav.setAttribute('aria-label', 'Mobile navigation');
@@ -222,7 +222,7 @@ document.querySelectorAll('input[type="date"]').forEach(el => el.min = today);
 // data-review-type="site" = whole website, data-review-type="item" (with data-item="productID") = one product.
 document.addEventListener('DOMContentLoaded', function () {
   const starHTML = '<button type="button" class="rev-star" data-v="1" aria-label="1 star">&#9733;</button><button type="button" class="rev-star" data-v="2" aria-label="2 stars">&#9733;</button><button type="button" class="rev-star" data-v="3" aria-label="3 stars">&#9733;</button><button type="button" class="rev-star" data-v="4" aria-label="4 stars">&#9733;</button><button type="button" class="rev-star" data-v="5" aria-label="5 stars">&#9733;</button>';
-  const CONSENT_NOTE = 'By submitting you consent to us storing and displaying your review. See our <a href="privacy.html" target="_blank">Privacy Policy</a>.';
+  const CONSENT_NOTE = 'By submitting you consent to us storing and displaying your review. See our <a href="/privacy" target="_blank">Privacy Policy</a>.';
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function () {
   b.setAttribute('role', 'region');
   b.setAttribute('aria-label', 'Data and storage notice');
   const p = document.createElement('p');
-  p.innerHTML = 'Rent-RO-Vastra stores your cart, orders and messages only in your own browser (localStorage) and uses <strong>no tracking cookies</strong>. The optional chat assistant sends your message to our AI provider (Google) to generate a reply. See our <a href="privacy.html">Privacy Policy</a> and <a href="cookies.html">Cookie &amp; Storage Policy</a>.';
+  p.innerHTML = 'Rent-RO-Vastra stores your cart, orders and messages only in your own browser (localStorage) and uses <strong>no tracking cookies</strong>. The optional chat assistant sends your message to our AI provider (Google) to generate a reply. See our <a href="/privacy">Privacy Policy</a> and <a href="/cookies">Cookie &amp; Storage Policy</a>.';
   const btn = document.createElement('button');
   btn.textContent = 'Got it';
   btn.addEventListener('click', () => { localStorage.setItem('luxe_consent', '1'); b.remove(); });
@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Hover gallery on catalog product cards — shows ‹ › arrows over the image to click through gallery images manually
 document.addEventListener('DOMContentLoaded', function () {
-  if (!location.pathname.endsWith('catalog.html') && !location.pathname.endsWith('index.html')) return;
+  if (!location.pathname.endsWith('/collection') && !location.pathname.endsWith('/')) return;
   document.querySelectorAll('#catalogGrid .card').forEach(card => {
     const wrap = card.querySelector('.card-img-wrap');
     const img = card.querySelector('.card-img');

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page not found — Rent-RO-Vastra</title>
+  <meta name="description" content="That page has moved or never existed. Browse the Rent-RO-Vastra collection of designer lehengas, sherwanis and gowns, or talk to our style assistant.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://rent-rovastra.onrender.com/404">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#100D0B">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .nf { min-height: 74vh; display: grid; place-items: center; text-align: center; padding: 120px 20px 60px; }
+    .nf-code { font-family: var(--display); font-size: clamp(4rem, 18vw, 9rem); line-height: 1; letter-spacing: 4px;
+      background: linear-gradient(120deg, #F0DFBA, #E8A0C0 55%, #A9B8F0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .nf h1 { font-family: var(--display); font-size: clamp(1.5rem, 5vw, 2.4rem); color: var(--white); margin: 10px 0 14px; letter-spacing: 1px; }
+    .nf p { color: var(--text-muted); max-width: 46ch; margin: 0 auto 26px; line-height: 1.8; }
+    .nf-links { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 30px; }
+    .nf-links a { border: 1px solid rgba(201,169,110,.3); color: var(--gold); padding: 11px 20px; font-size: .78rem; letter-spacing: 1px; text-transform: uppercase; transition: var(--transition); }
+    .nf-links a:hover { background: var(--gold); color: var(--black); }
+    .nf-search { display: flex; gap: 10px; max-width: 460px; margin: 0 auto; }
+    .nf-search input { flex: 1; background: rgba(255,255,255,.05); border: 1px solid rgba(201,169,110,.25); color: var(--text); padding: 13px 18px; font-family: var(--sans); font-size: .9rem; }
+    .nf-search input::placeholder { color: var(--text-muted); }
+    .nf-search button { background: var(--gold); color: var(--black); border: none; padding: 13px 22px; font-family: var(--sans); font-size: .74rem; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header class="main-header">
+    <a href="/" class="header-logo">Rent-RO-Vastra</a>
+    <div class="header-icons">
+      <a href="/collection" class="header-icon" title="Collection">Collection</a>
+      <a href="/faq" class="header-icon" title="Help">Help</a>
+    </div>
+  </header>
+
+  <main class="nf">
+    <div>
+      <div class="nf-code" aria-hidden="true">404</div>
+      <h1>This page slipped out of the wardrobe</h1>
+      <p>The link may be old or typed slightly wrong. The collection, sizing guide and delivery info are all still here — or ask Styla and she will point you straight to it.</p>
+      <div class="nf-links">
+        <a href="/collection">Browse Collection</a>
+        <a href="/how-it-works">How It Works</a>
+        <a href="/faq">FAQ</a>
+        <a href="/contact">Contact</a>
+      </div>
+      <form class="nf-search" id="nfSearch" action="/collection" method="get">
+        <label class="sr-only" for="nfq">Search pieces</label>
+        <input id="nfq" name="q" type="search" placeholder="Search lehenga, sherwani, gown…" autocomplete="off">
+        <button type="submit">Search</button>
+      </form>
+    </div>
+  </main>
+
+  <footer style="border-top:1px solid rgba(201,169,110,.15);padding:26px 0;text-align:center">
+    <div class="container">
+      <p style="color:var(--text-muted);font-size:.7rem;letter-spacing:1px">&copy; Rent-RO-Vastra &middot; Mainpuri &amp; Etawah, Uttar Pradesh</p>
+      <p style="margin-top:8px"><a href="/privacy" style="color:var(--gold);font-size:.7rem">Privacy</a> &middot; <a href="/terms" style="color:var(--gold);font-size:.7rem">Terms</a> &middot; <a href="/refunds" style="color:var(--gold);font-size:.7rem">Refunds</a></p>
+    </div>
+  </footer>
+  <script>
+    // the collection filters on #q=, so mirror the header search behaviour
+    document.getElementById('nfSearch').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var q = document.getElementById('nfq').value.trim();
+      location.href = '/collection' + (q ? '#q=' + encodeURIComponent(q) : '');
+    });
+  </script>
+</body>
+</html>

@@ -3,41 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login � Rent-RO-Vastra</title>
   <link rel="stylesheet" href="styles.css">
+
+<!-- seo-head -->
+  <title>Login or Create an Account | Rent-RO-Vastra</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Sign in with your email or a one-time code to see your bookings, wishlist and messages. New here? Creating an account takes under a minute.">
+  <link rel="canonical" href="https://rent-rovastra.onrender.com/login">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#100D0B">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Rent-RO-Vastra">
+  <meta property="og:locale" content="en_IN">
+  <meta property="og:title" content="Login or Create an Account | Rent-RO-Vastra">
+  <meta property="og:description" content="Sign in with your email or a one-time code to see your bookings, wishlist and messages. New here? Creating an account takes under a minute.">
+  <meta property="og:url" content="https://rent-rovastra.onrender.com/login">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1200&h=630&q=70">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Login or Create an Account | Rent-RO-Vastra">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Login or Create an Account | Rent-RO-Vastra">
+  <meta name="twitter:description" content="Sign in with your email or a one-time code to see your bookings, wishlist and messages. New here? Creating an account takes under a minute.">
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1200&h=630&q=70">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://rent-rovastra.onrender.com/#organization","name":"Rent-RO-Vastra","url":"https://rent-rovastra.onrender.com/","logo":{"@type":"ImageObject","url":"https://rent-rovastra.onrender.com/favicon.svg"},"description":"Premium Indian designer fashion rental. Lehengas, sherwanis, gowns, sarees and accessories rented by the day, delivered in Mainpuri and Etawah, Uttar Pradesh."},{"@type":"WebSite","@id":"https://rent-rovastra.onrender.com/#website","url":"https://rent-rovastra.onrender.com/","name":"Rent-RO-Vastra","description":"Premium Indian designer fashion rental. Lehengas, sherwanis, gowns, sarees and accessories rented by the day, delivered in Mainpuri and Etawah, Uttar Pradesh.","inLanguage":"en-IN","publisher":{"@id":"https://rent-rovastra.onrender.com/#organization"}},{"@type":"WebPage","@id":"https://rent-rovastra.onrender.com/login#webpage","url":"https://rent-rovastra.onrender.com/login","name":"Login or Create an Account | Rent-RO-Vastra","description":"Sign in with your email or a one-time code to see your bookings, wishlist and messages. New here? Creating an account takes under a minute.","inLanguage":"en-IN","isPartOf":{"@id":"https://rent-rovastra.onrender.com/#website"},"breadcrumb":{"@id":"https://rent-rovastra.onrender.com/login#breadcrumb"},"primaryImageOfPage":{"@type":"ImageObject","url":"https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1200&h=630&q=70"}},{"@type":"BreadcrumbList","@id":"https://rent-rovastra.onrender.com/login#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://rent-rovastra.onrender.com/"},{"@type":"ListItem","position":2,"name":"Login","item":"https://rent-rovastra.onrender.com/login"}]}]}</script>
+  <!-- /seo-head -->
 </head>
 <body>
   <div class="page-loader" id="pageLoader"><div class="loader-spinner"></div></div>
 
     <header class="main-header">
-    <a href="index.html" class="header-logo">Rent-RO-Vastra</a>
+    <a href="/" class="header-logo">Rent-RO-Vastra</a>
     <div class="header-search">
       <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
       <input type="text" id="headerSearch" placeholder="Search designer pieces...">
     </div>
     <div class="header-icons">
-      <a href="wishlist.html" class="header-icon" title="Wishlist">
+      <a href="/wishlist" class="header-icon" title="Wishlist">
         <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
         <span class="h-badge" id="wishBadge" style="display:none">0</span>
       </a>
-      <a href="cart.html" class="header-icon" title="Cart">
+      <a href="/cart" class="header-icon" title="Cart">
         <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
         <span class="h-badge" id="cartCount">0</span>
       </a>
-      <a href="messages.html" class="header-icon header-msg" title="Messages"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg><span class="h-badge" id="msgBadge" style="display:none">0</span></a>
-      <a href="auth.html" class="header-icon header-account" title="Account">
+      <a href="/messages" class="header-icon header-msg" title="Messages"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg><span class="h-badge" id="msgBadge" style="display:none">0</span></a>
+      <a href="/login" class="header-icon header-account" title="Account">
         <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
       </a>
     </div>
   </header><nav>
     <div class="nav-inner">
       <div class="nav-links" id="navLinks">
-        <a href="index.html">Home</a>
-        <a href="catalog.html">Collection</a>
-        <a href="ugc.html">Client Looks</a>
-        <a href="how-it-works.html">How It Works</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
+        <a href="/">Home</a>
+        <a href="/collection">Collection</a>
+        <a href="/client-looks">Client Looks</a>
+        <a href="/how-it-works">How It Works</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
       </div>
       <button class="hamburger" aria-label="Toggle menu" aria-expanded="false">
         <span></span><span></span><span></span>
@@ -47,13 +70,15 @@
 
 <div class="auth-page">
     <div class="auth-box">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a><span class="sep" aria-hidden="true">/</span></li><li><span aria-current="page">Login</span></li></ol></nav>
 <div class="wrap-logo" style="text-align:center;">
-        <a href="index.html" class="logo" style="font-size:1.3rem;">Rent-RO-Vastra</a>
+        <a href="/" class="logo" style="font-size:1.3rem;">Rent-RO-Vastra</a>
       </div>
       <div class="auth-tabs">
         <button class="auth-tab active" data-tab="login">Login</button>
         <button class="auth-tab" data-tab="register">Register</button>
       </div>
+      <h1 class="auth-title">Login or create your account</h1>
 
       <form class="auth-form active" id="loginForm">
         <div class="form-group">
@@ -115,7 +140,7 @@
         </div>
         <label style="display:flex;align-items:flex-start;gap:8px;color:var(--text-muted);font-size:0.72rem;margin-bottom:16px;cursor:pointer;line-height:1.5;">
           <input type="checkbox" id="regConsent" style="accent-color:var(--gold);margin-top:3px;" required>
-          I agree to the <a href="terms.html" style="color:var(--gold);text-decoration:underline;" target="_blank">Terms &amp; Conditions</a> and <a href="privacy.html" style="color:var(--gold);text-decoration:underline;" target="_blank">Privacy Policy</a>, and I consent to my details being used to manage my rentals.
+          I agree to the <a href="/terms" style="color:var(--gold);text-decoration:underline;" target="_blank">Terms &amp; Conditions</a> and <a href="/privacy" style="color:var(--gold);text-decoration:underline;" target="_blank">Privacy Policy</a>, and I consent to my details being used to manage my rentals.
         </label>
 <button type="submit" class="btn-primary" style="width:100%;text-align:center;">Create Account</button>
       </form>
@@ -147,7 +172,7 @@ const err = document.getElementById('authError');
         if (user) {
           err.style.color = '#4CAF50';
           err.textContent = 'Login successful! Redirecting...';
-          setTimeout(() => { window.location.href = 'account.html'; }, 800);
+          setTimeout(() => { window.location.href = '/account'; }, 800);
         } else {
           err.style.color = '#ff8a80';
           err.textContent = 'Invalid email or password';
@@ -174,7 +199,7 @@ if (!document.getElementById('regConsent').checked) { err.style.color = '#ff8a80
         if (user) {
           err.style.color = '#4CAF50';
           err.textContent = 'Account created! Redirecting...';
-          setTimeout(() => { window.location.href = 'account.html'; }, 800);
+          setTimeout(() => { window.location.href = '/account'; }, 800);
         } else {
           err.style.color = '#ff8a80';
           err.textContent = 'Email already registered';
@@ -210,7 +235,7 @@ if (!document.getElementById('regConsent').checked) { err.style.color = '#ff8a80
         if (!r.ok) throw new Error(d.error || 'Could not verify code');
         otpMsg.style.color = '#4CAF50';
         otpMsg.textContent = 'Logged in! Redirecting...';
-        setTimeout(() => { window.location.href = 'account.html'; }, 800);
+        setTimeout(() => { window.location.href = '/account'; }, 800);
       } catch (e) { otpMsg.style.color = '#ff8a80'; otpMsg.textContent = e.message; }
     });
   </script>
