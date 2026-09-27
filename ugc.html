@@ -38,10 +38,16 @@
     .look-media img, .look-media video { width: 100%; height: 100%; object-fit: cover; display: block;
       transition: transform .8s cubic-bezier(.2,.7,.2,1); }
     .look:hover .look-media img, .look:hover .look-media video { transform: scale(1.07); }
+    /* the cue has to be visible on touch, where there is no hover to reveal it */
     .look-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
       font-size: 1.5rem; color: var(--gold); text-shadow: 0 0 24px rgba(201,169,110,0.6);
-      background: radial-gradient(circle at 50% 50%, rgba(201,169,110,0.12), transparent 60%); opacity: 0; transition: opacity .35s; }
-    .look:hover .look-play { opacity: 1; }
+      background: radial-gradient(circle at 50% 50%, rgba(201,169,110,0.12), transparent 60%); opacity: 1; transition: opacity .35s; }
+    @media (hover: hover) and (pointer: fine) {
+      .look-play { opacity: 0; }
+      .look:hover .look-play { opacity: 1; }
+    }
+    /* touch has no hover, so the tap needs its own feedback */
+    .look:active { transform: scale(0.985); }
     .look-meta { padding: 16px 18px 18px; }
     .look-meta strong { font-family: var(--serif); color: var(--white); font-size: 1.02rem; }
     .look-city { font-size: 0.66rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-left: 8px; }
@@ -49,18 +55,41 @@
     .look-badge { display: inline-block; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase;
       color: #7fd6a6; border: 1px solid rgba(127,214,166,0.35); padding: 3px 9px; }
 
-    /* lightbox */
-    .look-light { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center;
-      padding: 4vh 4vw; background: rgba(4,4,5,0.94); backdrop-filter: blur(6px); }
+    /* lightbox: the caption and the close button used to sit outside the frame
+       (bottom:-76px / top:-46px), so short screens clipped both of them */
+    .look-light { position: fixed; inset: 0; z-index: 9999; display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      padding: max(4vh, env(safe-area-inset-top, 0px)) 4vw max(4vh, env(safe-area-inset-bottom, 0px));
+      background: rgba(4,4,5,0.94); backdrop-filter: blur(6px); }
     .look-light.on { display: flex; }
-    .look-light-frame { position: relative; width: min(920px, 92vw); height: min(82vh, 82vw); background: #000;
+    .look-light-frame { position: relative; flex: none; width: min(920px, 92vw); height: min(72vh, 92vw); background: #000;
       border: 1px solid rgba(201,169,110,0.35); box-shadow: 0 40px 90px rgba(0,0,0,0.8); }
-    .look-light-cap { position: absolute; left: 0; right: 0; bottom: -76px; text-align: center; }
-    .look-light-cap b { font-family: var(--serif); color: var(--gold); font-size: 1.05rem; }
+    .look-light-frame img, .look-light-frame video, .look-light-frame iframe { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .look-light-cap { text-align: center; max-width: min(92vw, 640px); }
+    .look-light-cap b { display: block; font-family: var(--serif); color: var(--gold); font-size: 1.05rem; }
     .look-light-cap p { color: var(--text-muted); font-size: 0.82rem; margin-top: 4px; }
-    .look-light-x { position: absolute; top: -46px; right: 0; color: var(--gold); font-size: 1.6rem; cursor: pointer; }
+    .look-light-x { position: absolute; top: 8px; right: 8px; z-index: 2; width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center; border-radius: 50%;
+      color: var(--gold); font-size: 1.25rem; cursor: pointer;
+      background: rgba(4,4,5,0.6); border: 1px solid rgba(201,169,110,0.3); }
     .look-empty { text-align: center; padding: 100px 20px; color: var(--text-muted); }
-    @media (max-width: 640px) { .vip-hero { padding: 140px 0 60px; } .looks-grid { gap: 14px; } }
+    /* PHONE: the grid fell to a single column here, which made a 260px-wide
+       card and a very long scroll. Two up, with type and padding scaled down
+       to match the narrower card, city on its own line, caption clamped. */
+    @media (max-width: 640px) {
+      .vip-hero { padding: 140px 0 60px; }
+      .vip-stats { gap: 14px; margin-top: 34px; }
+      .vip-stats b { font-size: 1.45rem; }
+      .vip-stats span { font-size: 0.56rem; letter-spacing: 1.6px; }
+      .looks-head { padding: 46px 0 22px; }
+      .looks-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding-bottom: 60px; }
+      .look-meta { padding: 11px 12px 13px; }
+      .look-meta strong { font-size: 0.9rem; }
+      .look-city { display: block; margin: 3px 0 0; font-size: 0.58rem; letter-spacing: 1.8px; }
+      .look-meta p { font-size: 0.76rem; margin: 6px 0 8px; display: -webkit-box; -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical; overflow: hidden; }
+      .look-badge { font-size: 0.52rem; letter-spacing: 1.2px; padding: 2px 6px; }
+    }
   </style>
 
 <!-- seo-head -->
