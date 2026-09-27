@@ -438,14 +438,12 @@ async function cancelOrder(id) {
 function getProducts() {
   if (SERVER.on) return SERVER.products;
   const p = JSON.parse(localStorage.getItem('luxe_products') || DEFAULT_PRODUCTS);
-  const defaults = JSON.parse(DEFAULT_PRODUCTS);
   return p.map(prod => {
     if (prod.stock === undefined) prod = Object.assign({}, prod, { stock: 3 });
-    if (!prod.images || prod.images.length < 2) {
-      const d = defaults.find(x => x.id === prod.id);
-      prod = Object.assign({}, prod, { images: (d && d.images && d.images.length >= 2 ? d.images : [prod.img].filter(Boolean)) });
-    }
-    if (!prod.img) prod = Object.assign({}, prod, { img: prod.images[0] });
+    if (!Array.isArray(prod.images)) prod = Object.assign({}, prod, { images: prod.img ? [prod.img] : [] });
+    if (!prod.img) prod = Object.assign({}, prod, { img: (prod.images || [])[0] || '' });
+    // one main only: it always leads the list, so photo 1 and the main photo agree
+    if (prod.img && prod.images[0] !== prod.img) prod = Object.assign({}, prod, { images: [prod.img].concat(prod.images.filter(u => u && u !== prod.img)) });
     return prod;
   });
 }

@@ -895,13 +895,14 @@
           <input type="number" id="pDiscount" placeholder="0" min="0" max="90" value="0">
         </div>
 <div class="form-group">
-          <label>Image URL (ya apne device se upload karo)</label>
-          <input type="url" id="pImg" placeholder="https://images.unsplash.com/...">
+          <label>Main image</label>
+          <input type="url" id="pImg" readonly placeholder="gallery me se main choose karo (pehli photo)">
+          <div style="font-size:.68rem;color:var(--text-muted);margin-top:6px;">Neeche thumbnail par click karo jo main banani hai. Sirf ek main image hoti hai.</div>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;">
             <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(120deg,#E8D5B0,#C9A96E 45%,#a88956);color:#000;cursor:pointer;font-size:.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-radius:10px;box-shadow:0 6px 18px rgba(201,169,110,.3);">
               <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
               Upload Image
-              <input type="file" id="pImgFile" accept="image/*" style="display:none">
+              <input type="file" id="pImgFile" accept="image/*" multiple style="display:none">
             </label>
             <span id="pImgFileInfo" style="font-size:.72rem;color:var(--text-muted);"></span>
           </div>
@@ -912,7 +913,7 @@
         </div>
       </div>
 <div class="form-group">
-        <label>Gallery Images — one URL per line (first one is the main image)</label>
+        <label>Photos — one URL per line. Pehli photo MAIN hai, baaki gallery. (thumbnail par click = main banao)</label>
         <textarea id="pImages" rows="4" placeholder="https://images.unsplash.com/photo-1?w=600&q=80
 https://images.unsplash.com/photo-2?w=600&q=80"></textarea>
         <div id="pImagesPreview" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"></div>
@@ -959,48 +960,34 @@ https://images.unsplash.com/photo-2?w=600&q=80"></textarea>
     const LS_ORDERS = 'luxe_orders';
 
     const defaultProducts = [
-      { id: 1, name: 'Sabyasachi Silk Lehenga', category: 'evening', occasion: ['gala','wedding','reception','sangeet'], style: ['elegant','classic','glamorous'], budget: 'premium', price: 7499, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
-      { id: 2, name: 'Tarun Tahiliani Sherwani', category: 'formal', occasion: ['wedding','engagement','reception','formal'], style: ['classic','royal','sharp'], budget: 'mid', price: 5499, img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', link: '/piece/' + id, gender: 'men', active: true },
-      { id: 3, name: 'Manish Malhotra Cocktail Gown', category: 'cocktail', occasion: ['party','cocktail','reception','date night'], style: ['glamorous','chic','feminine'], budget: 'premium', price: 6099, img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
-      { id: 4, name: 'Anita Dongre Anarkali Suit', category: 'outerwear', occasion: ['festival','puja','family function','diwali'], style: ['classic','elegant','traditional'], budget: 'mid', price: 4699, img: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
-      { id: 5, name: 'Ritu Kumar Bridal Lehenga', category: 'evening', occasion: ['wedding','sangeet','mehendi','reception'], style: ['glamorous','bridal','ornate'], budget: 'premium', price: 7999, img: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
-      { id: 6, name: 'Rahul Mishra Tuxedo', category: 'formal', occasion: ['gala','wedding','cocktail','formal event'], style: ['glamorous','bold','luxurious'], budget: 'luxury', price: 9299, img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', link: '/piece/' + id, gender: 'men', active: true },
-      { id: 7, name: 'Kundan Bridal Set', category: 'accessories', occasion: ['wedding','engagement','reception','sangeet'], style: ['elegant','classic','glamorous'], budget: 'mid', price: 3899, img: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
-      { id: 8, name: 'Anamika Khrama Cocktail Dress', category: 'cocktail', occasion: ['party','cocktail','night out','birthday'], style: ['chic','trendy','feminine'], budget: 'premium', price: 6599, img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
-      { id: 9, name: 'Masaba Gupta Printed Jacket', category: 'outerwear', occasion: ['casual','brunch','college','travel'], style: ['edgy','bold','trendy'], budget: 'mid', price: 4099, img: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', link: '/piece/' + id, gender: 'unisex', active: true },
-      { id: 10, name: 'Sabyasachi Heritage Saree', category: 'accessories', occasion: ['wedding','festival','diwali','pooja'], style: ['classic','luxurious','traditional'], budget: 'luxury', price: 10099, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
-      { id: 11, name: 'Neeta Lulla Evening Gown', category: 'evening', occasion: ['gala','black-tie','red carpet','cocktail'], style: ['glamorous','luxurious','elegant'], budget: 'luxury', price: 8899, img: 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80', link: '/piece/' + id, gender: 'women', active: true },
-      { id: 12, name: 'Shantanu & Nikhil Blazer', category: 'formal', occasion: ['interview','business','dinner','wedding'], style: ['sharp','trendy','professional'], budget: 'mid', price: 4999, img: 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80', link: '/piece/' + id, gender: 'men', active: true }
+      { id: 1, name: 'Sabyasachi Silk Lehenga', category: 'evening', occasion: ['gala','wedding','reception','sangeet'], style: ['elegant','classic','glamorous'], budget: 'premium', price: 7499, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', gender: 'women', active: true },
+      { id: 2, name: 'Tarun Tahiliani Sherwani', category: 'formal', occasion: ['wedding','engagement','reception','formal'], style: ['classic','royal','sharp'], budget: 'mid', price: 5499, img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', gender: 'men', active: true },
+      { id: 3, name: 'Manish Malhotra Cocktail Gown', category: 'cocktail', occasion: ['party','cocktail','reception','date night'], style: ['glamorous','chic','feminine'], budget: 'premium', price: 6099, img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', gender: 'women', active: true },
+      { id: 4, name: 'Anita Dongre Anarkali Suit', category: 'outerwear', occasion: ['festival','puja','family function','diwali'], style: ['classic','elegant','traditional'], budget: 'mid', price: 4699, img: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80', gender: 'women', active: true },
+      { id: 5, name: 'Ritu Kumar Bridal Lehenga', category: 'evening', occasion: ['wedding','sangeet','mehendi','reception'], style: ['glamorous','bridal','ornate'], budget: 'premium', price: 7999, img: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', gender: 'women', active: true },
+      { id: 6, name: 'Rahul Mishra Tuxedo', category: 'formal', occasion: ['gala','wedding','cocktail','formal event'], style: ['glamorous','bold','luxurious'], budget: 'luxury', price: 9299, img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', gender: 'men', active: true },
+      { id: 7, name: 'Kundan Bridal Set', category: 'accessories', occasion: ['wedding','engagement','reception','sangeet'], style: ['elegant','classic','glamorous'], budget: 'mid', price: 3899, img: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80', gender: 'women', active: true },
+      { id: 8, name: 'Anamika Khrama Cocktail Dress', category: 'cocktail', occasion: ['party','cocktail','night out','birthday'], style: ['chic','trendy','feminine'], budget: 'premium', price: 6599, img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', gender: 'women', active: true },
+      { id: 9, name: 'Masaba Gupta Printed Jacket', category: 'outerwear', occasion: ['casual','brunch','college','travel'], style: ['edgy','bold','trendy'], budget: 'mid', price: 4099, img: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', gender: 'unisex', active: true },
+      { id: 10, name: 'Sabyasachi Heritage Saree', category: 'accessories', occasion: ['wedding','festival','diwali','pooja'], style: ['classic','luxurious','traditional'], budget: 'luxury', price: 10099, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80', gender: 'women', active: true },
+      { id: 11, name: 'Neeta Lulla Evening Gown', category: 'evening', occasion: ['gala','black-tie','red carpet','cocktail'], style: ['glamorous','luxurious','elegant'], budget: 'luxury', price: 8899, img: 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80', gender: 'women', active: true },
+      { id: 12, name: 'Shantanu & Nikhil Blazer', category: 'formal', occasion: ['interview','business','dinner','wedding'], style: ['sharp','trendy','professional'], budget: 'mid', price: 4999, img: 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80', gender: 'men', active: true }
     ];
 
     const defaultOrders = [];
 
-    const DEFAULT_GALLERY = {
-      1: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', 'https://images.unsplash.com/photo-1565483299862-1e4e0b0f45f0?w=400&q=80'],
-      2: ['https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80'],
-      3: ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80'],
-      4: ['https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80', 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', 'https://images.unsplash.com/photo-1551803091-e20673f15770?w=400&q=80'],
-      5: ['https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80'],
-      6: ['https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80'],
-      7: ['https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&q=80'],
-      8: ['https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80', 'https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80'],
-      9: ['https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&q=80', 'https://images.unsplash.com/photo-1551803091-e20673f15770?w=400&q=80', 'https://images.unsplash.com/photo-1544441893-675973e31985?w=400&q=80'],
-      10: ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80', 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80'],
-      11: ['https://images.unsplash.com/photo-1518577915332-c2a19f149a75?w=400&q=80', 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=80', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80'],
-      12: ['https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80', 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80']
-    };
-
     function getPass() { return localStorage.getItem(LS_PASS) || DEFAULT_PASS; }
+
     function setPass(p) { localStorage.setItem(LS_PASS, p); }
 function getProducts() {
       const d = JSON.parse(localStorage.getItem(LS_PRODUCTS) || 'null') || defaultProducts;
       return d.map(p => {
         if (p.stock === undefined) p = Object.assign({}, p, { stock: 3 });
-        if (!p.images || p.images.length < 2) {
-          const def = DEFAULT_GALLERY[p.id] || [p.img].filter(Boolean);
-          p = Object.assign({}, p, { images: def });
-        }
-        if (!p.img) p = Object.assign({}, p, { img: p.images[0] });
+        // never overwrite an author-chosen list, not even a short one
+        if (!Array.isArray(p.images)) p = Object.assign({}, p, { images: p.img ? [p.img] : [] });
+        if (!p.img) p = Object.assign({}, p, { img: p.images[0] || '' });
+        // one main only: it always leads the list, so photo 1 and the main photo agree
+        if (p.img && p.images[0] !== p.img) p = Object.assign({}, p, { images: [p.img].concat(p.images.filter(u => u && u !== p.img)) });
         return p;
       });
     }
@@ -1318,10 +1305,30 @@ renderProducts();
     document.getElementById('modalCancel').addEventListener('click', closeModal);
     document.getElementById('productModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
-    document.getElementById('pImages').addEventListener('input', () => {
-      const urls = document.getElementById('pImages').value.split('\n').map(s => s.trim()).filter(Boolean);
-      document.getElementById('pImagesPreview').innerHTML = urls.map(u => '<img src="' + u + '" alt="Gallery preview" style="width:56px;height:70px;object-fit:cover;border-radius:6px;border:1px solid rgba(201,169,110,0.2);" onerror="this.style.opacity=0.2">').join('');
-    });
+    // one ordered list: line 1 is the MAIN image, the rest are gallery.
+    // clicking a thumbnail promotes it to main; the old main stays in the gallery.
+    function renderImageRoles() {
+      const ta = document.getElementById('pImages');
+      const urls = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+      document.getElementById('pImg').value = urls[0] || '';
+      document.getElementById('pImagesPreview').innerHTML = urls.map((u, i) =>
+        '<button type="button" data-make-main="' + i + '" title="' + (i ? 'Isko main image banao' : 'Yehi main image hai') + '" ' +
+        'style="position:relative;padding:0;cursor:pointer;background:none;border:1px solid ' + (i ? 'rgba(201,169,110,0.25)' : '#C9A96E') + ';border-radius:8px;overflow:hidden;">' +
+        '<img src="' + u + '" alt="' + (i ? 'Gallery image ' + i : 'Main image') + '" style="width:64px;height:78px;object-fit:cover;display:block;opacity:' + (i ? '0.7' : '1') + '" onerror="this.style.opacity=0.2">' +
+        '<span style="position:absolute;left:0;right:0;bottom:0;background:' + (i ? 'rgba(0,0,0,.7)' : '#C9A96E') + ';color:' + (i ? '#E8D5B0' : '#000') + ';font-size:.55rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 0;">' + (i ? 'Gallery' : 'Main') + '</span>' +
+        '</button>').join('');
+      document.querySelectorAll('#pImagesPreview [data-make-main]').forEach(b => {
+        b.addEventListener('click', () => {
+          const i = parseInt(b.dataset.makeMain, 10);
+          if (i === 0) return;
+          const moved = urls.slice();
+          moved.unshift(moved.splice(i, 1)[0]);
+          ta.value = moved.join('\n');
+          renderImageRoles();
+        });
+      });
+    }
+    document.getElementById('pImages').addEventListener('input', renderImageRoles);
 
     // Device image upload -> downscale -> base64 (saved into pImg + gallery)
     function fileToDataURL(file, maxW) {
@@ -1345,31 +1352,34 @@ renderProducts();
       });
     }
     document.getElementById('pImgFile').addEventListener('change', async e => {
-      const f = e.target.files && e.target.files[0];
+      const files = [...(e.target.files || [])];
       const info = document.getElementById('pImgFileInfo');
-      if (!f) { info.textContent = ''; return; }
-      info.textContent = 'Processing ' + f.name + '...';
+      if (!files.length) { info.textContent = ''; return; }
+      const ta = document.getElementById('pImages');
       try {
-        const dataUrl = await fileToDataURL(f, 900);
-        info.textContent = 'Uploading… (img402 free host)';
-        const file = dataUrl.replace(/^data:image\/(png|jpe?g|webp|gif);base64,/, '');
-        let j;
-        if (window.ADMIN && window.ADMIN.api) {
-          j = await window.ADMIN.api('/img/upload', { method: 'POST', body: { file } });
-        } else {
-          const res = await fetch('/api/img/upload', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file })
-          });
-          j = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(j.error || 'upload failed');
+        for (let n = 0; n < files.length; n++) {
+          const f = files[n];
+          info.textContent = 'Uploading ' + f.name + ' (' + (n + 1) + '/' + files.length + ')…';
+          const dataUrl = await fileToDataURL(f, 900);
+          const file = dataUrl.replace(/^data:image\/(png|jpe?g|webp|gif);base64,/, '');
+          let j;
+          if (window.ADMIN && window.ADMIN.api) {
+            j = await window.ADMIN.api('/img/upload', { method: 'POST', body: { file } });
+          } else {
+            const res = await fetch('/api/img/upload', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ file })
+            });
+            j = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(j.error || 'upload failed');
+          }
+          if (!j.url) throw new Error(j.error || 'upload failed');
+          const lines = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+          if (!lines.includes(j.url)) lines.push(j.url);
+          ta.value = lines.join('\n');
         }
-        if (!j.url) throw new Error(j.error || 'upload failed');
-        document.getElementById('pImg').value = j.url;
-        const ta = document.getElementById('pImages');
-        ta.value = ta.value.trim() ? ta.value.trim() + '\n' + j.url : j.url;
-        ta.dispatchEvent(new Event('input'));
-        info.textContent = 'Image uploaded — link added.';
+        renderImageRoles();
+        info.textContent = files.length + ' photo upload ho gayi. Gallery me hain — main chunne ke liye thumbnail dabao.';
       } catch (err) { info.textContent = 'Upload failed: ' + err.message; }
       e.target.value = '';
     });
@@ -1380,8 +1390,10 @@ renderProducts();
 const price = parseFloat(document.getElementById('pPrice').value);
       const discount = Math.min(90, Math.max(0, parseInt(document.getElementById('pDiscount').value) || 0));
       const stock = parseInt(document.getElementById('pStock').value) || 1;
-      const img = document.getElementById('pImg').value.trim();
-      const images = document.getElementById('pImages').value.split('\n').map(s => s.trim()).filter(Boolean);
+      const lines = document.getElementById('pImages').value.split('\n').map(s => s.trim()).filter(Boolean);
+      const img = lines[0] || '';
+      // exactly one main, and it always leads the list
+      const images = img ? [img, ...lines.filter(u => u !== img)] : lines;
       const occasion = document.getElementById('pOccasion').value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
       const style = document.getElementById('pStyle').value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
       const budget = document.getElementById('pBudget').value;
@@ -1395,11 +1407,11 @@ const price = parseFloat(document.getElementById('pPrice').value);
       if (editId) {
         const idx = products.findIndex(p => p.id === parseInt(editId));
         if (idx >= 0) {
-products[idx] = { ...products[idx], name, category, price, discount, stock, img, images: images.length ? images : [img], occasion, style, budget, gender };
+products[idx] = { ...products[idx], name, category, price, discount, stock, img, images: images, occasion, style, budget, gender };
         }
       } else {
         const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
-        products.push({ id: newId, name, category, price, discount, stock, img, images: images.length ? images : [img], occasion, style, budget, gender, link: '/piece/' + id, active: true });
+        products.push({ id: newId, name, category, price, discount, stock, img, images: images, occasion, style, budget, gender, active: true });
       }
 
       saveProducts(products);
@@ -1504,9 +1516,8 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
 document.getElementById('pPrice').value = p.price;
       document.getElementById('pDiscount').value = p.discount || 0;
       document.getElementById('pStock').value = p.stock || 1;
-      document.getElementById('pImg').value = p.img;
-      document.getElementById('pImages').value = (p.images && p.images.length ? p.images : [p.img]).join('\n');
-      document.getElementById('pImages').dispatchEvent(new Event('input'));
+      document.getElementById('pImages').value = [...new Set([p.img].concat(p.images || []).filter(Boolean))].join('\n');
+      renderImageRoles();
       document.getElementById('pOccasion').value = (p.occasion || []).join(', ');
       document.getElementById('pStyle').value = (p.style || []).join(', ');
       document.getElementById('pBudget').value = p.budget;
@@ -1543,8 +1554,8 @@ document.getElementById('pName').value = '';
       document.getElementById('pPrice').value = '';
       document.getElementById('pDiscount').value = 0;
       document.getElementById('pStock').value = 3;
-      document.getElementById('pImg').value = '';
       document.getElementById('pImages').value = '';
+      renderImageRoles();
       document.getElementById('pOccasion').value = '';
       document.getElementById('pStyle').value = '';
       document.getElementById('editId').value = '';
@@ -1778,7 +1789,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
     window.aiAddSuggested = function(name, cat, price) {
       let products = getProducts();
       const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
-      products.push({ id: newId, name, category: cat, price, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'], occasion: ['wedding','party'], style: ['elegant'], budget: 'mid', gender: 'women', active: true, link: '/piece/' + id });
+      products.push({ id: newId, name, category: cat, price, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'], occasion: ['wedding','party'], style: ['elegant'], budget: 'mid', gender: 'women', active: true });
       saveProducts(products);
       document.getElementById('aiActionResult').innerHTML = '<span style="color:#4CAF50;">✓ ' + name + ' added to catalog!</span>';
       loadDashboard();
@@ -1952,7 +1963,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         const newId = all.length ? Math.max(...all.map(p => p.id)) + 1 : 1;
         const name = String(v.name || 'New piece').trim();
         const price = Math.max(0, Math.round(Number(v.price) || 0));
-        all.push({ id: newId, name: name, category: String(v.category || 'evening').toLowerCase(), price: price, discount: 0, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'], occasion: ['wedding'], style: ['elegant'], budget: 'mid', gender: 'women', active: true, link: '/piece/' + id });
+        all.push({ id: newId, name: name, category: String(v.category || 'evening').toLowerCase(), price: price, discount: 0, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'], occasion: ['wedding'], style: ['elegant'], budget: 'mid', gender: 'women', active: true });
         saveProducts(all); loadDashboard();
         return 'Naya product add kiya — <strong>' + name + '</strong> (₹' + price + '/day, ' + v.category + ')';
       }
@@ -2398,7 +2409,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
             id: newId, name: d.name, category: d.category.toLowerCase(), price: d.price,
             img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80',
             images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'],
-            occasion: ['wedding'], style: ['elegant'], budget: 'mid', gender: d.gender, active: true, link: '/piece/' + id
+            occasion: ['wedding'], style: ['elegant'], budget: 'mid', gender: d.gender, active: true
           });
           saveProducts(allProducts);
           loadDashboard();

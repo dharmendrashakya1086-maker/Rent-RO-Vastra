@@ -31,7 +31,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://rent-rovastra.onrender.com/#organization","name":"Rent-RO-Vastra","url":"https://rent-rovastra.onrender.com/","logo":{"@type":"ImageObject","url":"https://rent-rovastra.onrender.com/favicon.svg"},"description":"Premium Indian designer fashion rental. Lehengas, sherwanis, gowns, sarees and accessories rented by the day, delivered in Mainpuri and Etawah, Uttar Pradesh."},{"@type":"WebSite","@id":"https://rent-rovastra.onrender.com/#website","url":"https://rent-rovastra.onrender.com/","name":"Rent-RO-Vastra","description":"Premium Indian designer fashion rental. Lehengas, sherwanis, gowns, sarees and accessories rented by the day, delivered in Mainpuri and Etawah, Uttar Pradesh.","inLanguage":"en-IN","publisher":{"@id":"https://rent-rovastra.onrender.com/#organization"}}]}</script>
   <!-- /seo-head -->
 </head>
-<body>
+<body class="detail-pending">
   <div class="page-loader" id="pageLoader"><div class="loader-spinner"></div></div>
 
     <header class="main-header">
@@ -72,6 +72,7 @@
 
   <section style="padding-top: 120px; padding-bottom: 60px;">
     <div class="container">
+      <p class="detail-loading" id="detailLoading">Loading piece…</p>
       <div class="detail-grid">
 <div>
           <div class="gallery">
@@ -447,14 +448,14 @@ refreshAvailability();
       var can = document.head.querySelector('link[rel="canonical"]');
       if (can) can.setAttribute('href', url);
       else { can = document.createElement('link'); can.rel = 'canonical'; can.href = url; document.head.appendChild(can); }
-      var hero = (prod.images && prod.images[0]) || prod.img;
+      var hero = prod.img || (prod.images && prod.images[0]);
       if (hero) {
         hero = hero.replace('w=400', 'w=1200').replace('w=600', 'w=1200').replace('h=400', 'h=630').replace('h=600', 'h=630');
         ['property="og:image"', 'name="twitter:image"'].forEach(function (k) { set(k, hero); });
       }
       var ld = {
         '@context': 'https://schema.org', '@type': 'Product', name: prod.name,
-        image: (prod.images && prod.images.length ? prod.images : [prod.img]).map(function (s) { return s.replace('w=400', 'w=1200'); }),
+        image: [prod.img].concat((prod.images || []).filter(function (s) { return s && s !== prod.img; })).map(function (s) { return s.replace('w=400', 'w=1200'); }),
         description: desc, url: url, sku: String(prod.id),
         category: occ || prod.category,
         offers: {
@@ -477,6 +478,9 @@ refreshAvailability();
       s.textContent = JSON.stringify(ld);
       document.head.appendChild(s);
     })();
+
+    // everything below is product specific, so it is safe to show now
+    document.body.classList.remove('detail-pending');
   });
   </script>
   <script src="chat.js"></script>

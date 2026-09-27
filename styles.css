@@ -482,6 +482,11 @@ section { padding: clamp(60px, 10vw, 100px) 0; }
 .rev-card p { font-size: 0.88rem; line-height: 1.7; color: var(--text-muted); margin: 0; }
 
 /* DETAIL PAGE */
+/* the piece is fetched after load, so never paint the placeholder product */
+.detail-loading { display: none; padding: 90px 0; text-align: center; color: var(--text-muted); font-size: .72rem; letter-spacing: 2px; text-transform: uppercase; }
+body.detail-pending .detail-loading { display: block; }
+body.detail-pending .detail-grid { visibility: hidden; min-height: 55vh; }
+
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px, 6vw, 60px); align-items: start; }
 .detail-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; }
 .detail-info h1 { font-family: var(--display); font-size: clamp(1.3rem, 3.5vw, 2rem); color: var(--white); margin-bottom: 8px; letter-spacing: 3px; text-transform: uppercase; font-weight: 400; }
