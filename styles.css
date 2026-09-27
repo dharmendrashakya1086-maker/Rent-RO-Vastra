@@ -1252,3 +1252,17 @@ html { scroll-behavior: smooth; scroll-padding-top: 130px; }
   .footer-col a { display: inline-block; padding: 3px 12px 3px 0; margin: 0; font-size: 0.78rem; line-height: 1.5; }
   .footer-bottom { padding-top: 12px; font-size: 0.62rem; letter-spacing: 0.5px; gap: 4px; }
 }
+
+/* CONTINUOUS category ticker (chips cloned once by modern.js, then CSS loops -50%) */
+.cat-strip {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+.cat-track { display: flex; align-items: center; gap: clamp(6px, 1.5vw, 16px); width: max-content; animation: catScroll 34s linear infinite; }
+.cat-strip:hover .cat-track, .cat-strip:focus-within .cat-track { animation-play-state: paused; }
+@keyframes catScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .cat-strip { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
+  .cat-track { animation: none; }
+}

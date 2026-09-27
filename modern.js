@@ -68,7 +68,20 @@
   addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
-  // 4. spotlight follows the cursor on cards
+  // 4. category strip loops forever: wrap chips in a track, clone it once, CSS slides -50%
+  var strip = document.querySelector('.cat-strip');
+  if (strip && !reduced) {
+    var track = document.createElement('div');
+    track.className = 'cat-track';
+    while (strip.firstChild) track.appendChild(strip.firstChild);
+    strip.appendChild(track);
+    var loop = track.cloneNode(true);
+    loop.setAttribute('aria-hidden', 'true');
+    [].slice.call(loop.querySelectorAll('a')).forEach(function (a) { a.tabIndex = -1; });
+    track.appendChild(loop);
+  }
+
+  // 5. spotlight follows the cursor on cards
   if (!reduced && matchMedia('(hover: hover)').matches) {
     document.addEventListener('pointermove', function (e) {
       var el = e.target.closest && e.target.closest(GLOW);
