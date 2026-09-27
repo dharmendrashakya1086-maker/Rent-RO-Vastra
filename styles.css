@@ -266,6 +266,8 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
   .bottom-nav a svg { width: 22px; height: 22px; fill: currentColor; }
   .bottom-nav a.active { color: var(--gold); }
   .bottom-nav .h-badge { position: absolute; top: 2px; right: 4px; }
+  /* cart + wishlist live in the bottom bar on phones, so drop the header duplicates */
+  .header-icons a[href="/cart"], .header-icons a[href="/wishlist"] { display: none; }
   body { padding-bottom: 70px; }
   .chat-bubble { bottom: 88px; }
 }
