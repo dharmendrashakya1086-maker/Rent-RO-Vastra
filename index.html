@@ -348,6 +348,8 @@
       var title = card.querySelector('.card-title').textContent;
       var prod = INDEX_PRODUCTS.find(function (p) { return p.name === title; });
       var realId = prod ? prod.id : null;
+      var viewLink = acts.querySelector('a.card-btn');
+      if (viewLink && realId) viewLink.href = '/piece/' + realId;
       var wBtn = document.createElement('button');
       wBtn.className = 'card-btn wish-btn';
       wBtn.title = 'Add to wishlist';

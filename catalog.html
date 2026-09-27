@@ -324,6 +324,7 @@
       var stockEl;
       if (product) {
         card.dataset.productId = product.id;
+        link.href = '/piece/' + product.id;
         const total = product.stock || 1;
         const stockHtml = '<div style="margin:0 0 12px clamp(14px,2.5vw,20px);"><span style="display:inline-block;padding:4px 10px;border:1px solid ' + (total <= 1 ? 'rgba(231,76,60,0.5)' : 'rgba(76,175,80,0.4)') + ';color:' + (total <= 1 ? '#e74c3c' : '#4CAF50') + ';font-size:0.62rem;letter-spacing:1.5px;text-transform:uppercase;">' + (total <= 1 ? total + ' piece available' : total + ' pieces available') + '</span></div>';
 actions.insertAdjacentHTML('beforebegin', stockHtml);
