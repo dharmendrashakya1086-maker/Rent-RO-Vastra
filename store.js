@@ -212,17 +212,18 @@ function hashPass(pass) {
   }
   return Promise.resolve(pass);
 }
-async function login(email, pass) {
+async function login(idOrEmail, pass) {
   if (SERVER.on) {
-    const r = await api('POST', '/api/auth/login', { body: { email, password: pass } });
+    const r = await api('POST', '/api/auth/login', { body: { login: idOrEmail, password: pass } });
     SERVER.user = norm(r.user);
     await adoptGuestData();
     return SERVER.user;
   }
   const h = await hashPass(pass);
   const users = getUsers();
-  const user = users.find(u => u.email === email && (u.pass === h || u.pass === pass));
-  if (user) {
+  const q = String(idOrEmail || '').trim().toLowerCase();
+  const user = users.find(u => (u.email || '').toLowerCase() === q || (u.phone || '') === q || (u.first || '').toLowerCase() === q);
+  if (user && (user.pass === h || user.pass === pass)) {
     if (user.pass === pass) { user.pass = h; saveUsers(users); }
     sessionStorage.setItem('luxe_current_user', user.email);
     adoptGuestData();
@@ -230,10 +231,26 @@ async function login(email, pass) {
   }
   return null;
 }
+async function sendOtp(email) {
+  if (SERVER.on) { const r = await api('POST', '/api/auth/otp/send', { body: { email } }); return r.sent === true; }
+  return true;
+}
+async function forgot(email) {
+  if (SERVER.on) { const r = await api('POST', '/api/auth/forgot', { body: { email } }); return r.sent === true; }
+  return true;
+}
+async function resetPass(email, code, pass) {
+  if (SERVER.on) {
+    const r = await api('POST', '/api/auth/reset', { body: { email, code, password: pass } });
+    SERVER.user = norm(r.user);
+    return !!SERVER.user;
+  }
+  return true;
+}
 async function register(data) {
   if (SERVER.on) {
     const r = await api('POST', '/api/auth/register', {
-      body: { name: (data.first || '') + ' ' + (data.last || ''), email: data.email, phone: data.phone || '', password: data.pass }
+      body: { name: (data.first || '') + ' ' + (data.last || ''), email: data.email, phone: data.phone || '', password: data.pass, code: data.code }
     });
     SERVER.user = norm(r.user);
     await adoptGuestData();

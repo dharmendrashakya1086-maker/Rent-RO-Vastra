@@ -172,48 +172,53 @@ app.use(async (req, res, next) => {
 function authUnavailable(res) { return res.status(503).json({ error: 'Signup/login is temporarily unavailable. Please try again shortly.' }); }
 
 app.post('/api/auth/register', async (req, res) => {
-  const { name, email, phone = '', password } = req.body || {};
+  const { name, email, phone = '', password, code } = req.body || {};
   if (!email || !password || password.length < 8) return res.status(400).json({ error: 'Email and password (8+ chars) required' });
+  if (!code) return res.status(400).json({ error: 'Enter the 6-digit code sent to your email' });
   if (!sb) return authUnavailable(res);
   const em = String(email).trim().toLowerCase();
   const ip = throttle('reg:' + req.ip, 10, 3600 * 1000);
   if (ip.blocked) return res.status(429).json({ error: 'Too many sign-ups from this device. 1 ghanta baad try karo.' });
+  // OTP proves inbox ownership first; Supabase creates the auth user on verify.
+  const { data, error } = await sb.auth.verifyOtp({ email: em, token: String(code || '').trim(), type: 'email' });
+  if (error || !data || !data.user) return res.status(401).json({ error: 'Invalid or expired code. Send a new code and try again.' });
   const dup = await q('SELECT id,password_hash FROM users WHERE email=$1', [em]);
   if (dup.rows.length) {
     // A profile created via email-OTP already proved inbox ownership: never let someone else claim it.
     if (!dup.rows[0].password_hash) return res.status(409).json({ error: 'Ye email pehle se account hai — login karein ya OTP se OTP login karein' });
     return res.status(409).json({ error: 'Email already registered' });
   }
-  const { data, error } = await sb.auth.admin.createUser({ email: em, password, email_confirm: true });
-  if (error) {
-    const msg = /already|exists/i.test(error.message || '') ? 'Email already registered' : error.message;
-    return res.status(409).json({ error: msg });
-  }
   const uid = data.user.id;
+  // Give the OTP-created auth user a password so email+password login works too.
+  await sb.auth.admin.updateUserById(uid, { password, email_confirm: true });
   const role = em === ADMIN_EMAIL ? 'admin' : 'user';
+  const phoneDigits = String(phone || '').replace(/\D/g, '');
   await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6)',
-    [uid, em, String(name || ''), phone, role, now()]);
-  res.json({ user: loginUser(req, res, { id: uid, email: em, name: String(name || ''), phone, role }, false) });
+    [uid, em, String(name || ''), phoneDigits, role, now()]);
+  res.json({ user: loginUser(req, res, { id: uid, email: em, name: String(name || ''), phone: phoneDigits, role }, false) });
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password, remember } = req.body || {};
+  const { login: idemo, password, remember } = req.body || {};
   if (!sb) return authUnavailable(res);
-  const em = String(email || '').trim().toLowerCase();
+  const idem = String(idemo || '').trim();
+  const em = idem.toLowerCase();
   const key = 'li:' + em + ':' + req.ip;
   const guard = throttle(key, 6, 15 * 60 * 1000);
   if (guard.blocked) return res.status(429).json({ error: 'Too many failed attempts. ' + guard.mins + ' minute baad try karo.' });
-  const { data, error } = await sb.auth.signInWithPassword({ email: em, password: String(password || '') });
-  if (error) return res.status(401).json({ error: 'Invalid email or password' });
+  const digits = em.replace(/\D/g, '');
+  let row = null;
+  if (em.includes('@')) row = (await q('SELECT * FROM users WHERE email=$1', [em])).rows[0];
+  else if (digits.length >= 7) row = (await q('SELECT * FROM users WHERE phone=$1 OR phone=$2', [digits, digits.replace(/^91/, '')])).rows[0];
+  // last resort: username == stored name (or its first word)
+  if (!row) row = (await q("SELECT * FROM users WHERE LOWER(name)=$1 OR LOWER(SPLIT_PART(name, ' ', 1))=$1 ORDER BY created_at LIMIT 1", [em])).rows[0];
+  if (!row) return res.status(401).json({ error: 'Invalid login details' });
+  const { data, error } = await sb.auth.signInWithPassword({ email: row.email, password: String(password || '') });
+  if (error) return res.status(401).json({ error: 'Invalid login details' });
   unthrottle(key);
-  const uid = data.user.id;
-  let u = (await q('SELECT * FROM users WHERE id=$1', [uid])).rows[0];
-  if (!u) {
-    const full = (data.user.user_metadata && data.user.user_metadata.full_name) || '';
-    u = (await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      [uid, em, String(full), '', em === ADMIN_EMAIL ? 'admin' : 'user', now()])).rows[0];
-  } else if (u.role !== 'admin' && em === ADMIN_EMAIL) {
-    await q('UPDATE users SET role=$1 WHERE id=$2', ['admin', uid]);
+  let u = row;
+  if (u.role !== 'admin' && row.email === ADMIN_EMAIL) {
+    await q('UPDATE users SET role=$1 WHERE id=$2', ['admin', row.id]);
     u.role = 'admin';
   }
   res.json({ user: loginUser(req, res, u, !!remember) });
@@ -243,6 +248,38 @@ app.post('/api/auth/otp/verify', async (req, res) => {
   let u = (await q('SELECT * FROM users WHERE email=$1', [email])).rows[0];
   if (!u) {
     // ponytail: OTP-first user has a real Supabase auth id but no password row yet.
+    u = (await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+[data.user.id, email, email.split('@')[0], '', 'user', now()])).rows[0];
+  }
+  res.json({ user: loginUser(req, res, u, true) });
+});
+
+// ---- Forgot password (email OTP only) ----
+app.post('/api/auth/forgot', async (req, res) => {
+  const email = String((req.body || {}).email || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email' });
+  if (!sb) return authUnavailable(res);
+  const exists = (await q('SELECT 1 FROM users WHERE email=$1', [email])).rows.length;
+  if (!exists) return res.status(404).json({ error: 'No account found with this email' });
+  const otpGuard = throttle('otp:' + email, 5, 3600 * 1000);
+  if (otpGuard.blocked) return res.status(429).json({ error: 'Is email pe OTP limit ho gaya. 1 ghanta baad try karo.' });
+  const { error } = await sb.auth.signInWithOtp({ email });
+  if (error) return res.status(500).json({ error: 'Could not send code. Try again in a minute.' });
+  res.json({ sent: true });
+});
+
+app.post('/api/auth/reset', async (req, res) => {
+  const email = String((req.body || {}).email || '').trim().toLowerCase();
+  const code = String((req.body || {}).code || '').trim();
+  const password = String((req.body || {}).password || '');
+  if (!email || !code || password.length < 8) return res.status(400).json({ error: 'Email, code and password (8+ chars) required' });
+  if (!sb) return authUnavailable(res);
+  const { data, error } = await sb.auth.verifyOtp({ email, token: code, type: 'email' });
+  if (error || !data || !data.user) return res.status(401).json({ error: 'Invalid or expired code. Send a new code and try again.' });
+  await sb.auth.admin.updateUserById(data.user.id, { password, email_confirm: true });
+  let u = (await q('SELECT * FROM users WHERE email=$1', [email])).rows[0];
+  if (!u) {
+    // ponytail: OTP-created profile with no password yet — attach one on reset.
     u = (await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
       [data.user.id, email, email.split('@')[0], '', 'user', now()])).rows[0];
   }

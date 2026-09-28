@@ -81,17 +81,18 @@
 
       <form class="auth-form active" id="loginForm">
         <div class="form-group">
-          <label for="loginEmail">Email</label>
-          <input type="email" id="loginEmail" placeholder="you@example.com" required>
+          <label for="loginId">Username / Phone / Email</label>
+          <input type="text" id="loginId" placeholder="yourname / +91 99999 99999 / you@example.com" required autocomplete="username">
         </div>
         <div class="form-group">
           <label for="loginPass">Password</label>
-          <input type="password" id="loginPass" placeholder="Your password" required>
+          <input type="password" id="loginPass" placeholder="Your password" required autocomplete="current-password">
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <label style="display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:0.75rem;cursor:pointer;">
             <input type="checkbox" id="rememberMe" style="accent-color:var(--gold);"> Remember me
-</label>
+          </label>
+          <button type="button" id="forgotLink" style="color:var(--gold);font-size:0.75rem;text-decoration:underline;background:none;border:none;cursor:pointer;">Forgot password?</button>
         </div>
         <button type="submit" class="btn-primary" style="width:100%;text-align:center;">Login</button>
         <div class="auth-divider">or login with code</div>
@@ -110,6 +111,26 @@
         </div>
       </form>
 
+<form class="auth-form" id="forgotForm" style="display:none;">
+        <h2 class="auth-subtitle">Reset password</h2>
+        <div class="form-group">
+          <label for="forgotEmail">Email</label>
+          <input type="email" id="forgotEmail" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <button type="button" class="btn-outline" id="forgotSend" style="width:100%;text-align:center;">Send code</button>
+        <p id="forgotHint" style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);text-align:center;min-height:1em;">Check your Gmail for the OTP</p>
+        <div class="form-group">
+          <label for="forgotCode">6-digit code</label>
+          <input type="text" id="forgotCode" inputmode="numeric" maxlength="6" placeholder="000000" required>
+        </div>
+        <div class="form-group">
+          <label for="forgotPass">New password</label>
+          <input type="password" id="forgotPass" placeholder="Min 8 characters" minlength="8" required autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;text-align:center;">Reset password</button>
+        <button type="button" class="btn-text" id="forgotBack" style="width:100%;text-align:center;border:none;background:none;color:var(--text-muted);font-size:0.75rem;text-decoration:underline;cursor:pointer;margin-top:10px;">Back to login</button>
+      </form>
+
 <form class="auth-form" id="registerForm">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div class="form-group">
@@ -124,6 +145,14 @@
         <div class="form-group">
           <label for="regEmail">Email</label>
           <input type="email" id="regEmail" placeholder="you@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="regCode">Email code <span style="color:var(--text-muted);font-weight:400;">(required)</span></label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="regCode" inputmode="numeric" maxlength="6" placeholder="000000" required style="flex:1;min-width:0;">
+            <button type="button" class="btn-outline" id="regOtpSend" style="padding:0 14px;white-space:nowrap;">Send code</button>
+          </div>
+          <p id="regOtpHint" style="margin-top:6px;font-size:0.72rem;color:var(--text-muted);min-height:1em;">Check your Gmail for the OTP</p>
         </div>
         <div class="form-group">
           <label for="regPhone">Phone</label>
@@ -157,6 +186,8 @@
         document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
         tab.classList.add('active');
         document.getElementById(tab.dataset.tab + 'Form').classList.add('active');
+        document.getElementById('forgotForm').style.display = 'none';
+        document.getElementById('loginForm').style.display = '';
         document.getElementById('authError').textContent = '';
       });
     });
@@ -164,17 +195,18 @@
     // Login
     document.getElementById('loginForm').addEventListener('submit', e => {
       e.preventDefault();
-      const email = document.getElementById('loginEmail').value.trim();
+      const id = document.getElementById('loginId').value.trim();
       const pass = document.getElementById('loginPass').value;
-const err = document.getElementById('authError');
-      login(email, pass).then(user => {
+      const err = document.getElementById('authError');
+      if (!id) { err.style.color = '#ff8a80'; err.textContent = 'Enter your username, phone or email'; return; }
+      login(id, pass).then(user => {
         if (user) {
           err.style.color = '#4CAF50';
           err.textContent = 'Login successful! Redirecting...';
           setTimeout(() => { window.location.href = '/account'; }, 800);
         } else {
           err.style.color = '#ff8a80';
-          err.textContent = 'Invalid email or password';
+          err.textContent = 'Invalid login details';
         }
       }).catch(e => {
         err.style.color = '#ff8a80';
@@ -182,22 +214,72 @@ const err = document.getElementById('authError');
       });
     });
 
+    // Forgot password view
+    const showView = (showLogin) => {
+      document.getElementById('loginForm').style.display = showLogin ? '' : 'none';
+      document.getElementById('forgotForm').style.display = showLogin ? 'none' : '';
+      document.getElementById('authError').textContent = '';
+    };
+    document.getElementById('forgotLink').addEventListener('click', () => showView(false));
+    document.getElementById('forgotBack').addEventListener('click', () => showView(true));
+    document.getElementById('forgotSend').addEventListener('click', async () => {
+      const hint = document.getElementById('forgotHint');
+      const em = document.getElementById('forgotEmail').value.trim();
+      if (!em) { hint.style.color = '#ff8a80'; hint.textContent = 'Enter your email first.'; return; }
+      hint.style.color = 'var(--text-muted)';
+      hint.textContent = 'Sending code...';
+      try {
+        await forgot(em);
+        hint.style.color = '#4CAF50';
+        hint.textContent = 'Check your Gmail for the OTP';
+      } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send code'; }
+    });
+    document.getElementById('forgotForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const err = document.getElementById('authError');
+      const em = document.getElementById('forgotEmail').value.trim();
+      const code = document.getElementById('forgotCode').value.trim();
+      const pass = document.getElementById('forgotPass').value;
+      if (!code) { err.style.color = '#ff8a80'; err.textContent = 'Enter the 6-digit code from your email'; return; }
+      if (pass.length < 8) { err.style.color = '#ff8a80'; err.textContent = 'Password must be at least 8 characters'; return; }
+      try {
+        await resetPass(em, code, pass);
+        err.style.color = '#4CAF50';
+        err.textContent = 'Password reset! Logging you in...';
+        setTimeout(() => { window.location.href = '/account'; }, 800);
+      } catch (e) { err.style.color = '#ff8a80'; err.textContent = e.message || 'Could not reset password. Try again.'; }
+    });
+
     // Register
+    document.getElementById('regOtpSend').addEventListener('click', async () => {
+      const hint = document.getElementById('regOtpHint');
+      const em = document.getElementById('regEmail').value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { hint.style.color = '#ff8a80'; hint.textContent = 'Enter a valid email first.'; return; }
+      hint.style.color = 'var(--text-muted)';
+      hint.textContent = 'Sending code...';
+      try {
+        await sendOtp(em);
+        hint.style.color = '#4CAF50';
+        hint.textContent = 'Check your Gmail for the OTP';
+      } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send code'; }
+    });
     document.getElementById('registerForm').addEventListener('submit', e => {
       e.preventDefault();
       const err = document.getElementById('authError');
       const first = document.getElementById('regFirst').value.trim();
       const last = document.getElementById('regLast').value.trim();
       const email = document.getElementById('regEmail').value.trim();
+      const code = document.getElementById('regCode').value.trim();
       const phone = document.getElementById('regPhone').value.trim();
       const pass = document.getElementById('regPass').value;
       const confirm = document.getElementById('regPassConfirm').value;
 
-if (pass !== confirm) { err.style.color = '#ff8a80'; err.textContent = 'Passwords do not match'; return; }
-    if (pass.length < 8) { err.style.color = '#ff8a80'; err.textContent = 'Password must be at least 8 characters'; return; }
-if (!document.getElementById('regConsent').checked) { err.style.color = '#ff8a80'; err.textContent = 'Please accept the Terms & Conditions and Privacy Policy.'; return; }
+      if (pass !== confirm) { err.style.color = '#ff8a80'; err.textContent = 'Passwords do not match'; return; }
+      if (pass.length < 8) { err.style.color = '#ff8a80'; err.textContent = 'Password must be at least 8 characters'; return; }
+      if (!code) { err.style.color = '#ff8a80'; err.textContent = 'Enter the 6-digit code sent to your email'; return; }
+      if (!document.getElementById('regConsent').checked) { err.style.color = '#ff8a80'; err.textContent = 'Please accept the Terms & Conditions and Privacy Policy.'; return; }
 
-      register({ first, last, email, phone, pass }).then(user => {
+      register({ first, last, email, phone, pass, code }).then(user => {
         if (user) {
           err.style.color = '#4CAF50';
           err.textContent = 'Account created! Redirecting...';
@@ -212,7 +294,7 @@ if (!document.getElementById('regConsent').checked) { err.style.color = '#ff8a80
       });
     });
 
-    // Email OTP login (Resend)
+    // Email OTP login (Supabase)
     const otpMsg = document.getElementById('otpMsg');
     document.getElementById('otpSend').addEventListener('click', async () => {
       const em = document.getElementById('otpEmail').value.trim();
