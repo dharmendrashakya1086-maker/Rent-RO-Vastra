@@ -178,7 +178,7 @@ a.nav-cta:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 
   transition: transform 0.5s cubic-bezier(0.68, -0.35, 0.27, 1.35), opacity 0.35s ease;
 }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.header-icon.bounce { animation: iconBounce 0.6s ease; }
+.header-icon.bounce, .bottom-nav a.bounce { animation: iconBounce 0.6s ease; }
 @keyframes iconBounce { 0% { transform: scale(1); } 30% { transform: scale(1.45); } 55% { transform: scale(0.9); } 75% { transform: scale(1.15); } 100% { transform: scale(1); } }
 .wish-btn.pop { animation: heartPop 0.5s cubic-bezier(0.68, -0.35, 0.27, 1.35); }
 @keyframes heartPop { 0% { transform: scale(1); } 40% { transform: scale(1.6) rotate(8deg); } 70% { transform: scale(0.85); } 100% { transform: scale(1); } }

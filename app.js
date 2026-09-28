@@ -93,8 +93,14 @@ function bounceCart() {
 
 // Fly a mini-picture of the item into a header icon (cart or wishlist), starting from the clicked element
 function flyToIcon(item, iconSel, okMsg, originEl) {
-  let icon = document.querySelector('.header-icons ' + iconSel);
-  if (!icon && window.innerWidth <= 900) icon = document.querySelector('.bottom-nav ' + iconSel);
+  // ponytail: on phones the header cart/wishlist links are display:none (the icons
+  // live in the bottom dock), so a zero-size rect must fall through to .bottom-nav.
+  // Picking a hidden link sent the image flying to 0,0.
+  const visible = sel => {
+    const el = document.querySelector(sel);
+    return el && el.getBoundingClientRect().width ? el : null;
+  };
+  let icon = visible('.header-icons ' + iconSel) || visible('.bottom-nav ' + iconSel);
   if (!icon || !item || !item.img) {
     if (icon) { icon.classList.remove('bounce'); void icon.offsetWidth; icon.classList.add('bounce'); }
     showToast(okMsg); return;
