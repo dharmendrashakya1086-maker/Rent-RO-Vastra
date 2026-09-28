@@ -1595,15 +1595,17 @@ html { scroll-behavior: smooth; scroll-padding-top: 130px; }
 .to-top:hover { background: var(--gold); color: var(--black); box-shadow: 0 0 26px rgba(201,169,110,0.5); }
 .to-top svg { width: 22px; height: 22px; fill: currentColor; }
 
-/* MOBILE: compact footer - links flow inline, everything tighter (~40% less height) */
+/* MOBILE: compact footer - links flow inline, tagline dropped, ~half height */
 @media (max-width: 600px) {
-  footer { padding: 26px 0 16px; }
-  .footer-grid { grid-template-columns: 1fr 1fr; gap: 16px 14px; margin-bottom: 20px; }
-  .footer-brand .logo { margin-bottom: 6px; font-size: 1rem; }
-  .footer-brand p { font-size: 0.76rem; line-height: 1.5; max-width: none; }
-  .footer-col h4 { margin-bottom: 8px; font-size: 0.66rem; letter-spacing: 2px; }
-  .footer-col a { display: inline-block; padding: 3px 12px 3px 0; margin: 0; font-size: 0.78rem; line-height: 1.5; }
-  .footer-bottom { padding-top: 12px; font-size: 0.62rem; letter-spacing: 0.5px; gap: 4px; }
+  footer { padding: 18px 0 10px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .footer-brand { grid-column: 1 / -1; }
+  .footer-brand .logo { margin: 0; font-size: 0.95rem; }
+  .footer-brand p { display: none; }
+  .footer-col h4 { margin: 0 0 4px; font-size: 0.6rem; letter-spacing: 1.5px; }
+  .footer-col a { display: inline-block; padding: 2px 10px 2px 0; margin: 0; font-size: 0.74rem; line-height: 1.45; }
+  .footer-bottom { padding-top: 8px; font-size: 0.6rem; letter-spacing: 0.4px; gap: 2px; }
+  .footer-bottom span + span { display: none; }
 }
 
 /* CONTINUOUS category ticker (chips cloned once by modern.js, then CSS loops -50%) */
