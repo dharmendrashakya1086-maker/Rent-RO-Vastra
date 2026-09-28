@@ -85,7 +85,7 @@ function storeReady(fn) { if (booted) fn(); else pending.push(fn); }
 function norm(u) {
   if (!u) return null;
   const parts = String(u.name || '').split(' ');
-  return { id: u.id, first: parts[0], last: parts.slice(1).join(' '), email: u.email, phone: u.phone || '', created: u.created, role: u.role };
+  return { id: u.id, first: parts[0], last: parts.slice(1).join(' '), username: u.username || '', email: u.email, phone: u.phone || '', created: u.created, role: u.role };
 }
 
 async function boot() {
@@ -250,7 +250,7 @@ async function resetPass(email, code, pass) {
 async function register(data) {
   if (SERVER.on) {
     const r = await api('POST', '/api/auth/register', {
-      body: { name: (data.first || '') + ' ' + (data.last || ''), email: data.email, phone: data.phone || '', password: data.pass, code: data.code }
+      body: { name: (data.first || '') + ' ' + (data.last || ''), username: data.username, email: data.email, phone: data.phone || '', password: data.pass, code: data.code }
     });
     SERVER.user = norm(r.user);
     await adoptGuestData();
@@ -317,6 +317,7 @@ function saveUser(data) {
     const body = {};
     if (data.name) body.name = data.name;
     if (data.phone) body.phone = data.phone;
+    if (data.username) body.username = data.username;
     api('PATCH', '/api/me', { body }).then(r => { SERVER.user = norm(r.user); }).catch(() => {});
     return;
   }

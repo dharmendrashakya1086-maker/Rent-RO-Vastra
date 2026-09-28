@@ -110,6 +110,7 @@
               </div>
               <div class="form-group"><label>Email</label><input type="email" id="profEmail" readonly></div>
               <div class="form-group"><label>Phone</label><input type="tel" id="profPhone"></div>
+              <div class="form-group"><label>Username <span style="color:var(--text-muted);font-weight:400;">(login ke liye)</span></label><input type="text" id="profUsername" placeholder="your username" maxlength="20" style="text-transform:lowercase;"><p id="profUserMsg" style="margin-top:6px;font-size:0.72rem;color:var(--text-muted);min-height:1em;"></p></div>
               <button type="submit" class="btn-primary" style="text-align:center;">Save Changes</button>
             </form>
           </div>
@@ -146,6 +147,25 @@
       document.getElementById('profLast').value = user.last || '';
       document.getElementById('profEmail').value = user.email;
       document.getElementById('profPhone').value = user.phone || '';
+      document.getElementById('profUsername').value = user.username || '';
+
+      // Live username availability check
+      const profUnMsg = document.getElementById('profUserMsg');
+      let profUnTimer = null;
+      document.getElementById('profUsername').addEventListener('input', e => {
+        const v = e.target.value.trim().toLowerCase();
+        clearTimeout(profUnTimer);
+        if (!v || v === (user.username || '').toLowerCase()) { profUnMsg.style.color = 'var(--text-muted)'; profUnMsg.textContent = ''; return; }
+        if (v.length < 3) { profUnMsg.style.color = '#ff8a80'; profUnMsg.textContent = '3-20 letters, numbers, dot or underscore'; return; }
+        profUnTimer = setTimeout(async () => {
+          try {
+            const r = await fetch('/api/auth/username?u=' + encodeURIComponent(v));
+            const d = await r.json();
+            if (d.available) { profUnMsg.style.color = '#4CAF50'; profUnMsg.textContent = 'Username "' + v + '" is available'; }
+            else { profUnMsg.style.color = '#ff8a80'; profUnMsg.textContent = 'Username "' + v + '" is already taken'; }
+          } catch (e) { profUnMsg.style.color = 'var(--text-muted)'; profUnMsg.textContent = ''; }
+        }, 400);
+      });
 
 // Rentals
       function renderRentals() {
@@ -194,6 +214,7 @@
       u.first = document.getElementById('profFirst').value.trim();
       u.last = document.getElementById('profLast').value.trim();
       u.phone = document.getElementById('profPhone').value.trim();
+      u.username = document.getElementById('profUsername').value.trim().toLowerCase();
       saveUser(u);
       document.getElementById('userName').textContent = u.first + ' ' + (u.last || '');
       document.getElementById('userInitial').textContent = u.first.charAt(0).toUpperCase();

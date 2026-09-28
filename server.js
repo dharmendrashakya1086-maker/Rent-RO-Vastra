@@ -36,7 +36,7 @@ const ADMIN_PASS = process.env.ADMIN_PASS || 'luxe123';
 
 // ---------------- helpers ----------------
 const now = () => Date.now();
-function safeUser(u) { return u ? { id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role, created: u.created_at } : null; }
+function safeUser(u) { return u ? { id: u.id, name: u.name, username: u.username || '', email: u.email, phone: u.phone, role: u.role, created: u.created_at } : null; }
 
 function authReq(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Not signed in' });
@@ -180,14 +180,42 @@ app.use(async (req, res, next) => {
 // ---------------- auth ----------------
 function authUnavailable(res) { return res.status(503).json({ error: 'Signup/login is temporarily unavailable. Please try again shortly.' }); }
 
+const USERNAME_RE = /^[a-z0-9._]{3,20}$/;
+const usernameOk = s => USERNAME_RE.test(String(s || '').toLowerCase());
+async function usernameFree(name) {
+  if (!usernameOk(name)) return false;
+  return !(await q('SELECT 1 FROM users WHERE LOWER(username)=$1', [String(name).toLowerCase()])).rows.length;
+}
+// ponytail: server-assigned username (OTP signups) — base + 2 digits if the base is taken.
+async function autoUsername(base) {
+  const s = String(base || 'user').toLowerCase().replace(/[^a-z0-9._]/g, '').slice(0, 16) || 'user';
+  if (await usernameFree(s)) return s;
+  for (let i = 0; i < 9; i++) {
+    const c = s + (10 + Math.floor(Math.random() * 90));
+    if (await usernameFree(c)) return c;
+  }
+  return s + now().toString(36).slice(-4);
+}
+// live availability check for the register form
+app.get('/api/auth/username', async (req, res) => {
+  const g = throttle('un:' + req.ip, 120, 10 * 60 * 1000);
+  if (g.blocked) return res.status(429).json({ error: 'Too many checks. Thoda ruko.' });
+  const name = String((req.query || {}).u || '').trim().toLowerCase();
+  if (!usernameOk(name)) return res.json({ available: false, reason: '3-20 letters, numbers, dot or underscore' });
+  res.json({ available: await usernameFree(name) });
+});
+
 app.post('/api/auth/register', async (req, res) => {
-  const { name, email, phone = '', password, code } = req.body || {};
+  const { name, email, phone = '', password, code, username } = req.body || {};
   if (!email || !password || password.length < 8) return res.status(400).json({ error: 'Email and password (8+ chars) required' });
   if (!code) return res.status(400).json({ error: 'Enter the 6-digit code sent to your email' });
+  if (!usernameOk(username)) return res.status(400).json({ error: 'Username 3-20 letters, numbers, dot or underscore se bana ho' });
   if (!sb) return authUnavailable(res);
   const em = String(email).trim().toLowerCase();
+  const un = String(username).toLowerCase();
   const ip = throttle('reg:' + req.ip, 10, 3600 * 1000);
   if (ip.blocked) return res.status(429).json({ error: 'Too many sign-ups from this device. 1 ghanta baad try karo.' });
+  if (!(await usernameFree(un))) return res.status(409).json({ error: 'Ye username already taken hai — koi aur try karo' });
   // OTP proves inbox ownership first; Supabase creates the auth user on verify.
   const { data, error } = await sb.auth.verifyOtp({ email: em, token: String(code || '').trim(), type: 'email' });
   if (error || !data || !data.user) return res.status(401).json({ error: 'Invalid or expired code. Send a new code and try again.' });
@@ -202,9 +230,9 @@ app.post('/api/auth/register', async (req, res) => {
   await sb.auth.admin.updateUserById(uid, { password, email_confirm: true });
   const role = em === ADMIN_EMAIL ? 'admin' : 'user';
   const phoneDigits = String(phone || '').replace(/\D/g, '');
-  await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6)',
-    [uid, em, String(name || ''), phoneDigits, role, now()]);
-  res.json({ user: loginUser(req, res, { id: uid, email: em, name: String(name || ''), phone: phoneDigits, role }, false) });
+  await q('INSERT INTO users (id,email,name,username,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+    [uid, em, String(name || ''), un, phoneDigits, role, now()]);
+  res.json({ user: loginUser(req, res, { id: uid, email: em, name: String(name || ''), username: un, phone: phoneDigits, role }, false) });
 });
 
 app.post('/api/auth/login', async (req, res) => {
@@ -219,8 +247,8 @@ app.post('/api/auth/login', async (req, res) => {
   let row = null;
   if (em.includes('@')) row = (await q('SELECT * FROM users WHERE email=$1', [em])).rows[0];
   else if (digits.length >= 7) row = (await q('SELECT * FROM users WHERE phone=$1 OR phone=$2', [digits, digits.replace(/^91/, '')])).rows[0];
-  // last resort: username == stored name (or its first word)
-  if (!row) row = (await q("SELECT * FROM users WHERE LOWER(name)=$1 OR LOWER(SPLIT_PART(name, ' ', 1))=$1 ORDER BY created_at LIMIT 1", [em])).rows[0];
+  // last resort: username column, or first word of name for legacy rows
+  if (!row) row = (await q("SELECT * FROM users WHERE LOWER(username)=$1 OR (COALESCE(username,'')='' AND LOWER(SPLIT_PART(name, ' ', 1))=$1) ORDER BY created_at LIMIT 1", [em])).rows[0];
   if (!row) return res.status(401).json({ error: 'Invalid login details' });
   const { data, error } = await sb.auth.signInWithPassword({ email: row.email, password: String(password || '') });
   if (error) return res.status(401).json({ error: 'Invalid login details' });
@@ -289,8 +317,8 @@ app.post('/api/auth/reset', async (req, res) => {
   let u = (await q('SELECT * FROM users WHERE email=$1', [email])).rows[0];
   if (!u) {
     // ponytail: OTP-created profile with no password yet — attach one on reset.
-    u = (await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      [data.user.id, email, email.split('@')[0], '', 'user', now()])).rows[0];
+    u = (await q('INSERT INTO users (id,email,name,username,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+      [data.user.id, email, email.split('@')[0], await autoUsername(email.split('@')[0]), '', 'user', now()])).rows[0];
   }
   res.json({ user: loginUser(req, res, u, true) });
 });
@@ -303,11 +331,18 @@ app.post('/api/auth/logout', (req, res) => {
 app.get('/api/auth/me', (req, res) => res.json({ user: safeUser(req.user) }));
 
 app.patch('/api/me', authReq, async (req, res) => {
-  const { name, phone } = req.body || {};
+  const { name, phone, username } = req.body || {};
   const upd = [];
   const params = [];
   if (name != null) { upd.push('name=$' + (upd.length + 1)); params.push(String(name)); }
   if (phone != null) { upd.push('phone=$' + (upd.length + 1)); params.push(String(phone)); }
+  if (username != null) {
+    if (!usernameOk(username)) return res.status(400).json({ error: 'Username 3-20 letters, numbers, dot or underscore se bana ho' });
+    const un = String(username).toLowerCase();
+    if ((await q('SELECT 1 FROM users WHERE LOWER(username)=$1 AND id<>$2', [un, req.user.id])).rows.length)
+      return res.status(409).json({ error: 'Ye username already taken hai' });
+    upd.push('username=$' + (upd.length + 1)); params.push(un);
+  }
   if (upd.length) {
     params.push(req.user.id);
     await q('UPDATE users SET ' + upd.join(',') + ' WHERE id=$' + params.length, params);

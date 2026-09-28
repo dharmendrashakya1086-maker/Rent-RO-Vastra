@@ -132,6 +132,11 @@
       </form>
 
 <form class="auth-form" id="registerForm">
+        <div class="form-group">
+          <label for="regUsername">Username <span style="color:var(--text-muted);font-weight:400;">(unique — isi se login karoge)</span></label>
+          <input type="text" id="regUsername" placeholder="priya_sharma" required minlength="3" maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false" style="text-transform:lowercase;">
+          <p id="regUserMsg" style="margin-top:6px;font-size:0.72rem;color:var(--text-muted);min-height:1em;">3-20 letters, numbers, dot or underscore</p>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div class="form-group">
             <label for="regFirst">First Name</label>
@@ -179,6 +184,24 @@
   <script src="app.js"></script>
   <script src="store.js"></script>
   <script>
+    // Live username availability check
+    const unMsg = document.getElementById('regUserMsg');
+    let unTimer = null, unState = '';
+    const setUn = (state, text) => { unState = state; unMsg.style.color = state === 'ok' ? '#4CAF50' : state === 'bad' ? '#ff8a80' : 'var(--text-muted)'; unMsg.textContent = text; };
+    document.getElementById('regUsername').addEventListener('input', e => {
+      const v = e.target.value.trim().toLowerCase();
+      clearTimeout(unTimer);
+      if (v.length < 3) { setUn('', '3-20 letters, numbers, dot or underscore'); return; }
+      unTimer = setTimeout(async () => {
+        try {
+          const r = await fetch('/api/auth/username?u=' + encodeURIComponent(v));
+          const d = await r.json();
+          if (d.available) setUn('ok', 'Username "' + v + '" is available');
+          else setUn('bad', 'Username "' + v + '" is already taken');
+        } catch (err) { setUn('', 'Could not check right now'); }
+      }, 400);
+    });
+
     const lockSendBtn = (btn, secs = 60) => {
       const orig = btn.dataset.label || btn.textContent;
       btn.dataset.label = orig;
@@ -284,6 +307,7 @@
       const err = document.getElementById('authError');
       const first = document.getElementById('regFirst').value.trim();
       const last = document.getElementById('regLast').value.trim();
+      const username = document.getElementById('regUsername').value.trim().toLowerCase();
       const email = document.getElementById('regEmail').value.trim();
       const code = document.getElementById('regCode').value.trim();
       const phone = document.getElementById('regPhone').value.trim();
@@ -293,9 +317,11 @@
       if (pass !== confirm) { err.style.color = '#ff8a80'; err.textContent = 'Passwords do not match'; return; }
       if (pass.length < 8) { err.style.color = '#ff8a80'; err.textContent = 'Password must be at least 8 characters'; return; }
       if (!code) { err.style.color = '#ff8a80'; err.textContent = 'Enter the 6-digit code sent to your email'; return; }
+      if (!username) { err.style.color = '#ff8a80'; err.textContent = 'Pick a username first'; return; }
+      if (unState !== 'ok') { err.style.color = '#ff8a80'; err.textContent = 'Username available hona chahiye — upar dekho'; return; }
       if (!document.getElementById('regConsent').checked) { err.style.color = '#ff8a80'; err.textContent = 'Please accept the Terms & Conditions and Privacy Policy.'; return; }
 
-      register({ first, last, email, phone, pass, code }).then(user => {
+      register({ first, last, username, email, phone, pass, code }).then(user => {
         if (user) {
           err.style.color = '#4CAF50';
           err.textContent = 'Account created! Redirecting...';
