@@ -376,19 +376,20 @@
         if (m) m.setAttribute('data-flip-id', 'look');
       });
       if (!motion) return;
-      // One scrubbed timeline per card: it slides in from a side, holds centered,
-      // then retreats to the side it came from. Scrub ties the animation to scroll
-      // position, so scrolling back up reverses it for free and each card unveils
-      // back toward its starting side.
+      // One scrubbed timeline per card: slide in from a side plus a slight scale
+      // pop and tilt, finishing in the first quarter of the card's travel, then a
+      // flat hold for the remaining three quarters. The hold is what keeps a card
+      // revealed as you scroll back up — nothing in this timeline ever fades a
+      // card back out, so it never looks like the gallery is retracting.
       cards.forEach((card, i) => {
         const dir = i % 2 ? 1 : -1;
         const m = card.querySelector('.look-media img, .look-media video');
         const tl = G.timeline({
           scrollTrigger: { trigger: card, start: 'top bottom', end: 'bottom top', scrub: true, invalidateOnRefresh: true }
         });
-        tl.fromTo(card, { xPercent: dir * SIDE, opacity: 0 },
-          { xPercent: 0, opacity: 1, duration: .3, ease: 'none' }, 0)
-          .to(card, { xPercent: dir * SIDE, opacity: 0, duration: .3, ease: 'none' }, .7);
+        tl.fromTo(card, { xPercent: dir * SIDE, opacity: 0, scale: .9, rotation: dir * 3 },
+          { xPercent: 0, opacity: 1, scale: 1, rotation: 0, duration: .25, ease: 'none' }, 0)
+          .to(card, { xPercent: 0, opacity: 1, scale: 1, rotation: 0, duration: .75, ease: 'none' }, .25);
         // the photo drifts against the scroll, which reads as depth
         if (m) {
           G.set(m, { scale: 1.12 });
