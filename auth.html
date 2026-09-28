@@ -179,6 +179,20 @@
   <script src="app.js"></script>
   <script src="store.js"></script>
   <script>
+    const lockSendBtn = (btn, secs = 60) => {
+      const orig = btn.dataset.label || btn.textContent;
+      btn.dataset.label = orig;
+      btn.disabled = true;
+      btn.classList.add('disabled');
+      let n = secs;
+      btn.textContent = 'Resend in ' + n + 's';
+      const tick = setInterval(() => {
+        n -= 1;
+        if (n <= 0) { clearInterval(tick); btn.disabled = false; btn.classList.remove('disabled'); btn.textContent = orig; }
+        else btn.textContent = 'Resend in ' + n + 's';
+      }, 1000);
+    };
+
     // Tab switching
     document.querySelectorAll('.auth-tab').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -232,6 +246,7 @@
         await forgot(em);
         hint.style.color = '#4CAF50';
         hint.textContent = 'Check your Gmail for the OTP';
+        lockSendBtn(document.getElementById('forgotSend'));
       } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send code'; }
     });
     document.getElementById('forgotForm').addEventListener('submit', async e => {
@@ -261,6 +276,7 @@
         await sendOtp(em);
         hint.style.color = '#4CAF50';
         hint.textContent = 'Check your Gmail for the OTP';
+        lockSendBtn(document.getElementById('regOtpSend'));
       } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send code'; }
     });
     document.getElementById('registerForm').addEventListener('submit', e => {
@@ -309,6 +325,7 @@
         document.getElementById('otpCodeWrap').style.display = '';
         document.getElementById('otpVerify').style.display = '';
         document.getElementById('otpSend').textContent = 'Resend code';
+        lockSendBtn(document.getElementById('otpSend'));
       } catch (e) { otpMsg.style.color = '#ff8a80'; otpMsg.textContent = e.message; }
     });
     document.getElementById('otpVerify').addEventListener('click', async () => {

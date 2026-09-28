@@ -73,6 +73,15 @@ function throttle(key, max, windowMs) {
   return { blocked: rec.n > max, mins: Math.max(1, Math.ceil((rec.reset - t) / 60000)) };
 }
 const unthrottle = key => hits.delete(key);
+// ponytail: OTP resend cooldown, in-memory last-sent per email. Returns seconds to wait, 0 = ok to send.
+const sentAt = new Map();
+function cooldown(key, ms) {
+  const t = now();
+  const last = sentAt.get(key);
+  if (last && t - last < ms) return Math.ceil((last + ms - t) / 1000);
+  sentAt.set(key, t);
+  return 0;
+}
 
 // legacy localStorage product -> db row (same key names as store.js)
 function productRow(p) {
@@ -231,11 +240,11 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/otp/send', async (req, res) => {
   const email = String((req.body || {}).email || '').trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email' });
-  if (!sb) return authUnavailable(res);
-  const otpGuard = throttle('otp:' + email, 5, 3600 * 1000);
-  if (otpGuard.blocked) return res.status(429).json({ error: 'Is email pe OTP limit ho gaya. 1 ghanta baad try karo.' });
+if (!sb) return authUnavailable(res);
+  const wait = cooldown('otp:' + email, 60 * 1000);
+  if (wait) return res.status(429).json({ error: 'Resend karne se pehle ' + wait + ' second ruko.' });
   const { error } = await sb.auth.signInWithOtp({ email });
-if (error) return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
+  if (error) return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
   res.json({ sent: true });
 });
 
@@ -261,8 +270,8 @@ app.post('/api/auth/forgot', async (req, res) => {
   if (!sb) return authUnavailable(res);
   const exists = (await q('SELECT 1 FROM users WHERE email=$1', [email])).rows.length;
   if (!exists) return res.status(404).json({ error: 'No account found with this email' });
-  const otpGuard = throttle('otp:' + email, 5, 3600 * 1000);
-  if (otpGuard.blocked) return res.status(429).json({ error: 'Is email pe OTP limit ho gaya. 1 ghanta baad try karo.' });
+  const wait = cooldown('otp:' + email, 60 * 1000);
+  if (wait) return res.status(429).json({ error: 'Resend karne se pehle ' + wait + ' second ruko.' });
   const { error } = await sb.auth.signInWithOtp({ email });
   if (error) return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
   res.json({ sent: true });
