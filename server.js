@@ -240,7 +240,29 @@ app.post('/api/auth/otp/send', async (req, res) => {
         from: process.env.RESEND_FROM || 'Rent-RO-Vastra <onboarding@resend.dev>',
         to: [email],
         subject: 'Your Rent-RO-Vastra login code',
-        html: '<p>Your login code is <b>' + code + '</b>.</p><p>It expires in 5 minutes. If you did not request this, ignore this email.</p>'
+        html: `<!doctype html><html><body style="margin:0;padding:0;background:#0d0d0f;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0f;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="background:#14151a;border:1px solid #c9a96e;border-radius:12px;overflow:hidden;">
+        <tr><td style="background:#1a1b20;padding:36px 40px 10px;text-align:center;">
+          <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;letter-spacing:6px;color:#e8d9b5;text-transform:uppercase;">RENT-RO-VASTRA</div>
+          <div style="color:#8a8f9a;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-top:6px;">Premium Fashion Rental</div>
+        </td></tr>
+        <tr><td style="padding:34px 40px;text-align:center;border-top:1px solid rgba(201,169,110,0.25);">
+          <div style="color:#e8d9b5;font-family:Georgia,serif;font-size:18px;letter-spacing:1px;">Your login code</div>
+          <div style="margin:22px 0;padding:18px 10px;background:#0d0d0f;border:1px dashed #c9a96e;border-radius:8px;">
+            <span style="font-family:Georgia,serif;font-size:34px;letter-spacing:12px;color:#c9a96e;font-weight:bold;">${code}</span>
+          </div>
+          <div style="color:#a5abb8;font-size:13px;line-height:1.75;text-align:center;">Enter this code on the login screen.<br/>It expires in <b style="color:#e8d9b5;">5 minutes</b>.</div>
+        </td></tr>
+        <tr><td style="padding:0 40px 30px;text-align:center;color:#5d6370;font-size:11px;line-height:1.7;border-top:1px solid rgba(201,169,110,0.1);padding-top:22px;">
+          If you didn't request this code, you can safely ignore this email.<br/>
+          &copy; 2026 Rent-RO-Vastra &middot; Live the moment, rent the look.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`
       })
     });
     if (!r.ok) throw new Error((await r.text()).slice(0, 200));
