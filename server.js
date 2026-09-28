@@ -235,7 +235,7 @@ app.post('/api/auth/otp/send', async (req, res) => {
   const otpGuard = throttle('otp:' + email, 5, 3600 * 1000);
   if (otpGuard.blocked) return res.status(429).json({ error: 'Is email pe OTP limit ho gaya. 1 ghanta baad try karo.' });
   const { error } = await sb.auth.signInWithOtp({ email });
-  if (error) return res.status(500).json({ error: 'Could not send code. Try again in a minute.' });
+if (error) return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
   res.json({ sent: true });
 });
 
@@ -264,7 +264,7 @@ app.post('/api/auth/forgot', async (req, res) => {
   const otpGuard = throttle('otp:' + email, 5, 3600 * 1000);
   if (otpGuard.blocked) return res.status(429).json({ error: 'Is email pe OTP limit ho gaya. 1 ghanta baad try karo.' });
   const { error } = await sb.auth.signInWithOtp({ email });
-  if (error) return res.status(500).json({ error: 'Could not send code. Try again in a minute.' });
+  if (error) return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
   res.json({ sent: true });
 });
 
