@@ -314,8 +314,10 @@
     const rail = $('#railTrack');
     const active = new Set();
     // how far a card starts out sideways, as a percentage of its own width.
-    // raise it to leave the screen entirely, lower it to stay inside the column
-    const SIDE = 120;
+    // 120% suits a wide desktop grid where the slide reads as leaving the
+    // screen, but on a 2-3 column phone layout a card that far has no room:
+    // it flies over its neighbor. 12% is a nudge that stays inside the column.
+    const SIDE = matchMedia('(max-width: 900px)').matches ? 12 : 120;
     let all = [], flipState = null, closing = false, gridTriggers = [], featTimer = null, featIdx = 0;
 
     const passes = u => {
