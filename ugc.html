@@ -376,10 +376,10 @@
         if (m) m.setAttribute('data-flip-id', 'look');
       });
       if (!motion) return;
-      // One scrubbed timeline per card: it slides in from one side, holds while
-      // it is centred, then travels on toward the other side. Scrub ties the
-      // animation to scroll position, so scrolling back up reverses it for free
-      // and the cards retreat to the sides they came from.
+      // One scrubbed timeline per card: it slides in from a side, holds centered,
+      // then retreats to the side it came from. Scrub ties the animation to scroll
+      // position, so scrolling back up reverses it for free and each card unveils
+      // back toward its starting side.
       cards.forEach((card, i) => {
         const dir = i % 2 ? 1 : -1;
         const m = card.querySelector('.look-media img, .look-media video');
@@ -388,7 +388,7 @@
         });
         tl.fromTo(card, { xPercent: dir * SIDE, opacity: 0 },
           { xPercent: 0, opacity: 1, duration: .3, ease: 'none' }, 0)
-          .to(card, { xPercent: -dir * SIDE, opacity: 0, duration: .3, ease: 'none' }, .7);
+          .to(card, { xPercent: dir * SIDE, opacity: 0, duration: .3, ease: 'none' }, .7);
         // the photo drifts against the scroll, which reads as depth
         if (m) {
           G.set(m, { scale: 1.12 });
