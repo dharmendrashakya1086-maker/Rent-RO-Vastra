@@ -108,6 +108,49 @@ async function stock(id) { return Number((await q('SELECT stock FROM products WH
     ok(r.status === 200, 'save cart with buy line');
     r = await call('GET', '/api/me/cart');
     ok(r.data.cart.length === 1 && r.data.cart[0].type === 'buy', 'cart keeps type=buy');
+
+    // ===== user blocking (admin omniscience task) =====
+    const admin = 'test-admin-user';
+    await q('DELETE FROM sessions WHERE user_id=$1', [admin]);
+    await q('DELETE FROM users WHERE id=$1', [admin]);
+    await q('INSERT INTO users (id,email,name,role,created_at) VALUES ($1,$2,$3,$4,$5)',
+      [admin, 'admin@example.com', 'Owner', 'admin', Date.now()]);
+    jar.sid = 'testadmin-' + Date.now();
+    await q('INSERT INTO sessions (token,user_id,expires_at) VALUES ($1,$2,$3)',
+      [jar.sid, admin, Date.now() + 3600e3]);
+    const adminTok = jar.sid;
+
+    r = await call('GET', '/api/admin/users');
+    ok(r.status === 200 && r.data.users.some(u => u.id === uid && u.blocked === false), 'admin user list exposes blocked:false');
+
+    // non-admin cannot block
+    jar.sid = 'testbuy-' + Date.now();
+    await q('DELETE FROM sessions WHERE user_id=$1', [uid]);
+    await q('INSERT INTO sessions (token,user_id,expires_at) VALUES ($1,$2,$3)',
+      [jar.sid, uid, Date.now() + 3600e3]);
+    r = await call('POST', '/api/admin/users/' + uid + '/block');
+    ok(r.status === 403, 'non-admin block attempt -> 403');
+
+    jar.sid = adminTok;
+    r = await call('POST', '/api/admin/users/' + uid + '/block');
+    ok(r.status === 200 && r.data.blocked === true, 'admin blocks user -> {blocked:true}');
+
+    // a session created AFTER blocking still can't authenticate -> middleware reads the flag live
+    const blockedTok = 'freshblocked-' + Date.now();
+    await q('INSERT INTO sessions (token,user_id,expires_at) VALUES ($1,$2,$3)',
+      [blockedTok, uid, Date.now() + 3600e3]);
+    jar.sid = blockedTok;
+    r = await call('GET', '/api/auth/me');
+    ok(r.status === 200 && r.data.user === null, 'blocked user auth session -> user null (flag, not just wipe)');
+    r = await call('POST', '/api/orders', { items: [{ productId: 3, qty: 1, type: 'rent', startDate: '2027-04-01', endDate: '2027-04-02' }], name: 'Buy Tester', email: 'buyer@example.com' });
+    ok(r.status === 401, 'blocked user order -> 401');
+
+    jar.sid = adminTok;
+    r = await call('POST', '/api/admin/users/' + uid + '/block');
+    ok(r.status === 200 && r.data.blocked === false, 'admin unblocks -> {blocked:false}');
+    jar.sid = blockedTok;
+    r = await call('GET', '/api/auth/me');
+    ok(r.status === 200 && r.data.user && r.data.user.email === 'buyer@example.com', 'unblocked user works again');
   } catch (e) {
     failed++;
     console.log('FAIL test-buy crashed: ' + e.message);

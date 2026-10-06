@@ -1865,7 +1865,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       if (document.getElementById('aiChatMessages').children.length) return;
       const products = getProducts();
       const orders = getOrders();
-      aiChatReply('Hi, main Styla hoon. Jo kaam ho — products, bookings, reviews, inbox — seedha bol do, main kar deti hoon. (' + products.length + ' products, ' + orders.length + ' bookings.)', ['Confirm bookings', 'Change price', 'Check availability', 'Store summary', 'Inbox / Reply']);
+      aiChatReply('Hi, main Styla hoon. Jo kaam ho — products, bookings, reviews, inbox — seedha bol do, main kar deti hoon. (' + products.length + ' products, ' + orders.length + ' bookings.)', ['Confirm bookings', 'Change price', 'Store summary', 'Recent changes', 'Unread messages', 'Last order']);
     }
 
     window.aiChatPick = function(val) {
@@ -1885,7 +1885,15 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       if (!cfg || !cfg.enabled) return Promise.resolve(null);
       const p = getProducts();
       const o = getOrders();
-      const ctx = 'Store: ' + p.length + ' active products, ' + o.length + ' bookings, revenue ₹' + o.reduce((s, x) => s + (x.total || 0), 0).toLocaleString('en-IN') + '. Products: ' + p.slice(0, 15).map(x => x.name + ' (₹' + x.price + ', ' + x.category + ')').join('; ');
+      const act = getActivity().slice(0, 5).map(a => new Date(a.t).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' ' + a.by + ': ' + a.what).join(' | ');
+      const unread = adminMessages().filter(m => m.to === 'admin' && !(m.readBy || []).length);
+      const users = getUsers();
+      const lastO = o.slice().sort((a, b) => (b.id || 0) - (a.id || 0))[0];
+      const ctx = 'Store: ' + p.length + ' active products, ' + o.length + ' bookings, revenue ₹' + o.reduce((s, x) => s + (x.total || 0), 0).toLocaleString('en-IN') + '. Products: ' + p.slice(0, 15).map(x => x.name + ' (₹' + x.price + ', ' + x.category + ')').join('; ') +
+        '. Recent activity: ' + (act || 'none yet') +
+        '. Unread customer messages: ' + (unread.length ? unread.length + ' — ' + unread.slice(0, 3).map(m => m.from + ': ' + String(m.body || '').slice(0, 60)).join(' | ') : 'none') +
+        '. Last order: ' + (lastO ? '#' + lastO.id + ' ' + lastO.name + ', ' + lastO.item + ' → ' + (lastO.city || 'n/a') + ', ₹' + lastO.total + ', ' + lastO.status : 'none') +
+        '. Customers: ' + users.length + ' total, ' + users.filter(u => u.blocked).length + ' blocked.';
       const system = 'You are Styla, the assistant inside a rental store admin panel. Answer in the language the owner used (English, Hindi or Hinglish), casual and normal, 1-2 short lines, under 40 words. Plain text, no emojis, no markdown, no exclamation marks. When an action is needed, just say the short command to type, like "Confirm bookings" or "Change price of <item> to <number>". ' + ctx;
       return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: msg }) })
         .then(r => r.json())
@@ -2005,7 +2013,9 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       const act = await adminExecAction(raw);
       aiTyping(false);
       if (!act || act.action === 'none' || act.action === undefined) return false;
+      window.ACT_BY = 'Styla';
       const done = applyAdminAction(act);
+      window.ACT_BY = null;
       if (done) { aiChatReply(done + '.', ['Confirm bookings', 'Edit another', 'Store summary', 'Back to menu']); return true; }
       return false;
     }
@@ -2030,6 +2040,10 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
     }
 
     async function aiProcessInput(input) {
+      // chat-driven mutations are Styla's doing (activity log labels them);
+      // the flag clears on the next tick — long LLM paths re-set it around applyAdminAction
+      window.ACT_BY = 'Styla';
+      setTimeout(() => { window.ACT_BY = null; }, 0);
       const msg = hinglish(input.toLowerCase().trim());
       const products = getProducts();
       const orders = getOrders();
@@ -2104,6 +2118,12 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           const sec = /overview|dashboard/.test(msg) ? 'overview' : /review/.test(msg) ? 'reviews' : /message|inbox|mail/.test(msg) ? 'messages' : /order|booking/.test(msg) ? 'orders' : /product/.test(msg) ? 'products' : /setting|password|config|key/.test(msg) ? 'settings' : /styla|assistant|ai agent|ai panel|ai chat/.test(msg) ? 'ai' : null;
           if (sec) { const lnk = document.querySelector('.dash-nav a[data-section="' + sec + '"]'); if (lnk) lnk.click(); aiChatReply('Opened <strong>' + sec + '</strong>.', ['Store summary', 'Confirm bookings', 'Back to menu']); return; }
         }
+
+        // what the owner most often asks the agent to "know": recent edits, unread mail, last order, block a suspect
+        if (/activit|audit|history|changes|edits?\s*hua|last (edit|chang)|what.*(edit|chang)|kya.*chang/.test(msg)) return showActivity();
+        if (/unread|not read|na padha|nhi padha/.test(msg)) return showUnread();
+        if (/last order|latest order|newest order|last booking/.test(msg)) return showLastOrder();
+        if (/\bblock\b|\bfake\b|\bfraud\b|\bscam\b/.test(msg)) return startBlockFlow(msg);
 
         if (isBookingTalk && (isConfirm || msg.includes('pending'))) return startOrderFlow('confirm');
         if (isBookingTalk && isCancel) return startOrderFlow('cancel');
@@ -2536,6 +2556,78 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       aiChatReply('Send a broadcast to whom?', opts);
     }
 
+    function getActivity() { try { return JSON.parse(localStorage.getItem('luxe_activity') || '[]'); } catch (e) { return []; } }
+
+    function showActivity() {
+      const list = getActivity().slice(0, 8);
+      if (!list.length) { aiChatReply('Abhi tak koi change record nahi hua panel me. Jab bhi product/order/message edit hoga, yahin dikhega.', ['Store summary', 'Back to menu']); return; }
+      const rows = list.map(a => '<span style="opacity:.65;">' + new Date(a.t).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</span> · <strong>' + esc(a.by || 'owner') + '</strong>: ' + esc(a.what));
+      aiChatReply('<strong>Recent changes</strong><br>' + rows.join('<br>'), ['Store summary', 'Show orders', 'Back to menu']);
+    }
+
+    function showUnread() {
+      const msgs = adminMessages().filter(m => m.to === 'admin' && !(m.readBy || []).length);
+      if (!msgs.length) { aiChatReply('Koi unread message nahi — sab clear hai.', ['Inbox / Reply', 'Store summary', 'Back to menu']); return; }
+      const users = getUsers();
+      const rows = msgs.slice(0, 5).map(m => {
+        const u = users.find(x => String(x.email).toLowerCase() === String(m.from).toLowerCase());
+        return '<strong>' + esc(u ? (u.name || u.email) : m.from) + '</strong> <span style="opacity:.6;">(' + esc(m.from) + ')</span>: ' + esc(String(m.body || '').slice(0, 160));
+      });
+      // seeing = read: mark on the server so they don't show up again
+      const unreadIds = new Set(msgs.map(m => m.id));
+      msgs.forEach(m => { if (m.id !== undefined && m.id !== null) ADMIN.api('/messages/' + m.id + '/read', { method: 'POST' }).catch(() => {}); });
+      const all = getMessages();
+      all.forEach(m => { if (unreadIds.has(m.id)) m.readBy = (m.readBy || []).concat(Date.now()); });
+      saveMessages(all);
+      aiChatReply('<strong>' + msgs.length + ' unread message' + (msgs.length > 1 ? 's' : '') + '</strong> —<br>' + rows.join('<br>') + (msgs.length > 5 ? '<br><span style="opacity:.65;">+' + (msgs.length - 5) + ' aur</span>' : ''), ['Inbox / Reply', 'Store summary', 'Back to menu']);
+    }
+
+    function showLastOrder() {
+      const list = getOrders().slice().sort((a, b) => (b.id || 0) - (a.id || 0));
+      const o = list.find(x => x.status !== 'Cancelled') || list[0];
+      if (!o) { aiChatReply('Abhi tak koi order nahi aaya.', ['Store summary', 'Back to menu']); return; }
+      const isBuy = (o.type || 'rent') === 'buy';
+      aiChatReply('<strong>Last order #' + o.id + '</strong> — ' + esc(o.name || o.email) + '<br>' +
+        esc(o.item || '') + (isBuy ? ' <strong>(purchase)</strong>' : '') + '<br>' +
+        '<strong>Deliver to:</strong> ' + esc([o.addr, o.city, o.zip].filter(Boolean).join(', ') || 'address not set') + '<br>' +
+        (isBuy ? '' : 'Dates: ' + esc(o.dates || ((o.startDate || '?') + ' — ' + (o.endDate || '?'))) + '<br>') +
+        '₹' + Number(o.total || 0).toLocaleString('en-IN') + ' · ' + esc(o.status || ''),
+        ['Show orders', 'Confirm bookings', 'Back to menu']);
+    }
+
+    function startBlockFlow(msg) {
+      const users = getUsers();
+      if (!users.length) { aiChatReply('Koi customer hai hi nahi abhi.', ['Store summary', 'Back to menu']); return; }
+      const q = msg.replace(/block|fake|fraud|scam|user|customer|karo|kardo|kar|do|ko|se|please|wale|wala/g, ' ').replace(/\s+/g, ' ').trim();
+      const hits = users.filter(u => {
+        const em = String(u.email || '').toLowerCase(), nm = String(u.name || u.first || '').toLowerCase();
+        return (q && (em.includes(q) || nm.includes(q) || q.includes(em) || String(u.id) === q)) ||
+          (em && msg.includes(em)) || (nm && msg.includes(nm.split(' ')[0]));
+      });
+      if (hits.length === 1) return toggleBlock(hits[0]);
+      if (hits.length > 1) return aiChatReply('Kaun sa user? Ek naam/email batao:', hits.slice(0, 6).map(u => (u.name || u.email) + ' — ' + u.email));
+      aiChatReply('Kaunsa user fake laga? Email se pehchan lo:', users.slice(0, 6).map(u => u.email));
+    }
+
+    window.aiToggleBlock = function (id) {
+      const u = getUsers().find(x => String(x.id) === String(id));
+      if (u) toggleBlock(u);
+    };
+
+    function toggleBlock(u) {
+      if (!window.ADMIN || !ADMIN.api) { aiChatReply('Block sirf live (server) panel me chalta hai.'); return; }
+      ADMIN.api('/admin/users/' + encodeURIComponent(u.id) + '/block', { method: 'POST', body: {} })
+        .then(r => {
+          ADMIN.logAct((r.blocked ? 'Blocked' : 'Unblocked') + ' user ' + (u.name || u.email));
+          if (ADMIN.loadUsers) ADMIN.loadUsers();
+          aiChatReply(r.blocked
+            ? '<strong>' + esc(u.name || u.email) + '</strong> blocked — ab ye login, naya order aur message nahi kar payega. Purane orders dikhe rehte hain (chaaho to cancel kar do).'
+            : '<strong>' + esc(u.name || u.email) + '</strong> unblocked — wapas normal chalega.',
+            ['Show customers', 'Store summary', 'Back to menu']);
+        })
+        .catch(e => aiChatReply('Block nahi hua: ' + esc(e.message || 'error')));
+    }
+
     function startInboxFlow() {
       chatState.flow = 'inbox'; chatState.step = 1; chatState.data = {};
       const msgs = getMessages().slice(-10).reverse();
@@ -2555,7 +2647,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       const rows = users.map(u => {
         const oo = orders.filter(o => String(o.name || '').toLowerCase().split(/\s+/)[0] === String(u.first || '').toLowerCase());
         const spend = oo.reduce((s, x) => s + (x.total || 0), 0);
-        return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,169,110,0.08);font-size:0.85rem;"><span>' + esc(u.first || u.email) + ' (' + esc(u.email) + ')</span><span>' + oo.length + ' booking(s) · ₹' + spend.toLocaleString('en-IN') + '</span></div>';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(201,169,110,0.08);font-size:0.85rem;"><span>' + esc(u.name || u.first || u.email) + (u.blocked ? ' <strong style="color:#e05252;">BLOCKED</strong>' : '') + ' (' + esc(u.email) + ')</span><span style="display:flex;gap:8px;align-items:center;">' + oo.length + ' booking(s) · ₹' + spend.toLocaleString('en-IN') + ' <button class="add-btn" style="font-size:.72rem;padding:3px 10px;margin:0;" onclick="aiToggleBlock(\'' + u.id + '\')">' + (u.blocked ? 'Unblock' : 'Block') + '</button></span></div>';
       }).join('');
       aiChatReply('<strong>Customers (' + users.length + ')</strong>:<br>' + rows, ['Send broadcast', 'Show orders', 'Back to menu']);
     }

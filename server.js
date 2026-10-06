@@ -173,8 +173,8 @@ app.use(async (req, res, next) => {
   try {
     const token = req.cookies && req.cookies[SESSION_COOKIE];
     if (token) {
-      const s = (await q('SELECT s.*, u.id AS uid, u.email, u.name, u.phone, u.role FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token=$1', [token])).rows[0];
-      if (s && s.expires_at > now()) req.user = { id: s.uid, email: s.email, name: s.name, phone: s.phone, role: s.role };
+      const s = (await q('SELECT s.*, u.id AS uid, u.email, u.name, u.phone, u.role, u.blocked FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token=$1', [token])).rows[0];
+      if (s && s.expires_at > now() && !s.blocked) req.user = { id: s.uid, email: s.email, name: s.name, phone: s.phone, role: s.role };
     }
   } catch (e) { /* anonymous */ }
   next();
@@ -253,6 +253,7 @@ app.post('/api/auth/login', async (req, res) => {
   // last resort: username column, or first word of name for legacy rows
   if (!row) row = (await q("SELECT * FROM users WHERE LOWER(username)=$1 OR (COALESCE(username,'')='' AND LOWER(SPLIT_PART(name, ' ', 1))=$1) ORDER BY created_at LIMIT 1", [em])).rows[0];
   if (!row) return res.status(401).json({ error: 'Invalid login details' });
+  if (row.blocked) return res.status(403).json({ error: 'Ye account block kiya gaya hai. Support se baat karo.' });
   const { data, error } = await sb.auth.signInWithPassword({ email: row.email, password: String(password || '') });
   if (error) return res.status(401).json({ error: 'Invalid login details' });
   unthrottle(key);
@@ -291,6 +292,7 @@ app.post('/api/auth/otp/verify', async (req, res) => {
     u = (await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
 [data.user.id, email, email.split('@')[0], '', 'user', now()])).rows[0];
   }
+  if (u.blocked) return res.status(403).json({ error: 'Ye account block kiya gaya hai. Support se baat karo.' });
   res.json({ user: loginUser(req, res, u, true) });
 });
 
@@ -539,8 +541,17 @@ app.get('/api/admin/orders', adminReq, async (req, res) => {
 
 // ---------------- users (admin) ----------------
 app.get('/api/admin/users', adminReq, async (req, res) => {
-  const rows = (await q("SELECT id,email,name,phone,role,created_at FROM users WHERE role='user' ORDER BY id")).rows;
+  const rows = (await q("SELECT id,email,name,phone,role,created_at,blocked FROM users WHERE role='user' ORDER BY id")).rows;
   res.json({ users: rows });
+});
+app.post('/api/admin/users/:id/block', adminReq, async (req, res) => {
+  const r = (await q('SELECT blocked FROM users WHERE id=$1 AND role=$2', [String(req.params.id), 'user'])).rows[0];
+  if (!r) return res.status(404).json({ error: 'User not found' });
+  const nb = !r.blocked;
+  await q('UPDATE users SET blocked=$1 WHERE id=$2', [nb, String(req.params.id)]);
+  // a blocked account must lose its live sessions immediately; unblock = normal login again
+  if (nb) await q('DELETE FROM sessions WHERE user_id=$1', [String(req.params.id)]);
+  res.json({ blocked: nb });
 });
 app.delete('/api/admin/users/:id', adminReq, async (req, res) => {
   const target = req.params.id;

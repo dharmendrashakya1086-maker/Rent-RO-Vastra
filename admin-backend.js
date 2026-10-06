@@ -22,6 +22,15 @@
   const cache = { products: [], orders: [], users: [], messages: [], reviews: [] };
   const KEYDB = { luxe_products: 'products', luxe_orders: 'orders', luxe_users: 'users', luxe_messages: 'messages', luxe_reviews: 'reviews' };
   const nativeGet = Storage.prototype.getItem, nativeSet = Storage.prototype.setItem, nativeRemove = Storage.prototype.removeItem;
+  // ponytail: activity log lives in plain localStorage (per-browser, last 40 edits) —
+  // every panel mutation funnels through the sync hooks below, so nothing is missed.
+  function logAct(what) {
+    try {
+      const list = JSON.parse(nativeGet.call(localStorage, 'luxe_activity') || '[]');
+      list.unshift({ t: Date.now(), by: window.ACT_BY || 'owner', what: String(what) });
+      nativeSet.call(localStorage, 'luxe_activity', JSON.stringify(list.slice(0, 40)));
+    } catch (e) {}
+  }
   let routed = false, booting = false;
 
   window.ADMIN = { server: false, email: null, api: api };
@@ -57,30 +66,42 @@
       if (!p || p.id === undefined || p.id === null) return;
       const before = prev.find(o => String(o.id) === String(p.id));
       if (before && JSON.stringify(before) === JSON.stringify(p)) return;
+      if (before) {
+        const ch = [];
+        ['price', 'discount', 'stock', 'active', 'for_sale', 'sale_price', 'category'].forEach(k => {
+          if (before[k] !== p[k]) ch.push(k + ' ' + before[k] + ' → ' + p[k]);
+        });
+        logAct('Edited ' + p.name + (ch.length ? ' (' + ch.join(', ') + ')' : ''));
+      } else logAct('Added ' + p.name + ' (₹' + p.price + ')');
       api('/products/' + p.id, { method: 'PUT', body: p }).then(refresh).catch(() => {});
     });
-    prev.forEach(p => { if (!nextIds.has(String(p.id))) api('/products/' + p.id, { method: 'DELETE' }).then(refresh).catch(() => {}); });
+    prev.forEach(p => { if (!nextIds.has(String(p.id))) { logAct('Deleted ' + p.name); api('/products/' + p.id, { method: 'DELETE' }).then(refresh).catch(() => {}); } });
   }
 
   function syncOrders(next) {
     const pm = {}; cache.orders.forEach(o => pm[String(o.id)] = o);
     next.forEach(o => {
       const before = pm[String(o.id)];
-      if (before && before.status !== o.status) api('/admin/orders/' + o.id, { method: 'PUT', body: { status: o.status } }).then(refresh).catch(() => {});
+      if (before && before.status !== o.status) {
+        logAct('Order #' + o.id + ' (' + (o.item || '') + ') ' + before.status + ' → ' + o.status);
+        api('/admin/orders/' + o.id, { method: 'PUT', body: { status: o.status } }).then(refresh).catch(() => {});
+      }
     });
   }
 
   function syncMessages(next) {
     const ids = new Set(cache.messages.map(m => String(m.id)));
     next.forEach(m => {
-      if (m && m.from === 'admin' && m.to && m.body && !ids.has(String(m.id)))
+      if (m && m.from === 'admin' && m.to && m.body && !ids.has(String(m.id))) {
+        logAct('Sent message to ' + m.to + ': ' + String(m.body).slice(0, 60));
         api('/messages', { method: 'POST', body: { to: m.to, body: m.body } }).then(refresh).catch(() => {});
+      }
     });
   }
 
   function syncReviews(next) {
     const prevIds = new Set(cache.reviews.map(r => String(r.id))), nextIds = new Set(next.map(r => String(r.id)));
-    prevIds.forEach(id => { if (!nextIds.has(id)) api('/reviews/' + id, { method: 'DELETE' }).then(refresh).catch(() => {}); });
+    prevIds.forEach(id => { if (!nextIds.has(id)) { logAct('Review #' + id + ' deleted'); api('/reviews/' + id, { method: 'DELETE' }).then(refresh).catch(() => {}); } });
   }
 
   function refresh(extra) {
@@ -102,6 +123,10 @@
     return api('/auth/change', { method: 'POST', body: { oldPass: oldPass, newPass: newPass } }).then(() => true).catch(() => false);
   };
   ADMIN.logout = function () { api('/auth/logout', { method: 'POST' }).catch(() => {}); };
+  ADMIN.logAct = logAct;
+  ADMIN.loadUsers = function () {
+    return api('/admin/users').then(j => { cache.users = j.users || []; return cache.users; }).catch(() => null);
+  };
 
   function ensureLockEmail() {
     if (document.getElementById('lockEmail')) return;

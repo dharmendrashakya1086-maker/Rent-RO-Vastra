@@ -33,6 +33,7 @@ async function migrate() {
   await q(`ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT`);
   // one username per person, case-insensitive; blanks allowed for legacy rows
   await q(`CREATE UNIQUE INDEX IF NOT EXISTS users_username_uniq ON users (LOWER(username)) WHERE COALESCE(username,'') <> ''`);
+  await q('ALTER TABLE users ADD COLUMN IF NOT EXISTS blocked BOOLEAN DEFAULT FALSE');
   await q(`CREATE TABLE IF NOT EXISTS sessions (
     token TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
