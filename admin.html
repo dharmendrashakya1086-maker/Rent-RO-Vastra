@@ -2140,6 +2140,28 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
 
         if (/summary|stats|revenue|how many|cheap|expensive|insight|health|report|performance|business|overview/.test(msg)) return showStoreSummary(msg);
 
+        // jab requirement clear ho (product ka naam aa gaya ho) to category mat puchho;
+        // delete → seedha confirm, edit → seedha field/value
+        if (/delete|remove|hatao|hata d\w*/.test(msg) && qHit()) {
+          const dp = qHit();
+          chatState.flow = 'delete'; chatState.step = 3; chatState.data = { product: dp };
+          aiChatReply('Delete <strong>' + dp.name + '</strong> (₹' + dp.price + ')? Store se hata dega.', ['Yes, delete it', 'No, cancel']);
+          return;
+        }
+        const ep = qHit();
+        if (ep && /edit|update|change|badl\w*|set\b/.test(msg)) {
+          const _f = /stock|qty|pcs|quantity/.test(msg) ? 'Stock' : /price|rate|cost|daam|charge/.test(msg) ? 'Price' : null;
+          if (_f) {
+            chatState.flow = 'edit'; chatState.step = 4; chatState.data = { product: ep, field: _f };
+            if (_f === 'Price') aiChatReply('Current: <strong>₹' + ep.price + '</strong>/day. Naya price kya ho? Bas number likho:', []);
+            else aiChatReply('Current stock: <strong>' + (ep.stock || 0) + '</strong>. Nayi quantity? Number batao:', []);
+            return;
+          }
+          chatState.flow = 'edit'; chatState.step = 3; chatState.data = { product: ep };
+          aiChatReply('Editing <strong>' + ep.name + '</strong> (₹' + ep.price + (ep.discount ? ', ' + ep.discount + '% OFF' : '') + '). Kya badalna hai?', ['Name', 'Price', 'Discount', 'Category', 'Occasion', 'Style', 'Budget', 'Gender', 'Image URL', 'Active (Show/Hide)', 'Stock']);
+          return;
+        }
+
         if (/edit|update|change/.test(msg)) { chatState.flow = 'edit'; chatState.step = 1; chatState.data = {}; const cats = [...new Set(products.filter(p => p.active !== false).map(p => p.category))]; aiChatReply('Which category?', cats.map(c => c.charAt(0).toUpperCase() + c.slice(1))); return; }
         if (/delete|remove/.test(msg) && !msg.includes('review')) { chatState.flow = 'delete'; chatState.step = 1; chatState.data = {}; const cats = [...new Set(products.filter(p => p.active !== false).map(p => p.category))]; aiChatReply('Which category? Pick one:', cats.map(c => c.charAt(0).toUpperCase() + c.slice(1))); return; }
         if (/add|new|create/.test(msg) && !msg.includes('how many')) { chatState.flow = 'add'; chatState.step = 1; chatState.data = {}; aiChatReply("What's the product name?"); return; }
@@ -2151,7 +2173,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         askAdminAI(input).then(ans => {
           aiTyping(false);
           if (ans) aiChatReply(ans);
-          else aiChatReply('Bas bolo — English, Hindi ya Hinglish, kaam ho jayega. Try:', ['Confirm bookings', 'Check availability', 'Store summary', 'Inbox / Reply', 'Add product']);
+          else aiChatReply('Abhi store me <strong>' + products.length + ' products, ' + orders.length + ' bookings</strong> hain. Kya karna hai — seedha bolo: price/stock badlo, add/delete product, booking confirm/cancel, availability, unread, broadcast, customer block. Sab direct ho jata hai.', ['Confirm bookings', 'Change price', 'Store summary', 'Unread messages', 'Last order']);
         });
         return;
       }
@@ -2366,7 +2388,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           if (!product) { aiChatReply("Didn't find that. Pick a number (1-" + list.length + "):", list.map((p, i) => (i + 1) + '. ' + p.name)); return; }
           chatState.data.product = product;
           chatState.step = 3;
-          aiChatReply('Editing <strong>' + product.name + '</strong> (₹' + product.price + (product.discount ? ', ' + product.discount + '% OFF' : '') + '). What to change?', ['Name', 'Price', 'Discount', 'Category', 'Occasion', 'Style', 'Budget', 'Gender', 'Image URL', 'Active (Show/Hide)']);
+          aiChatReply('Editing <strong>' + product.name + '</strong> (₹' + product.price + (product.discount ? ', ' + product.discount + '% OFF' : '') + '). What to change?', ['Name', 'Price', 'Discount', 'Stock', 'Category', 'Occasion', 'Style', 'Budget', 'Gender', 'Image URL', 'Active (Show/Hide)']);
           return;
         }
         if (chatState.step === 3) {
@@ -2374,6 +2396,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           chatState.step = 4;
           const f = chatState.data.field;
           if (f.includes('name')) aiChatReply('Current: <strong>' + chatState.data.product.name + '</strong>. Type the new name:');
+          else if (f.includes('stock')) aiChatReply('Current stock: <strong>' + (chatState.data.product.stock || 0) + '</strong>. Type the new quantity (number):');
           else if (f.includes('price')) aiChatReply('Current: <strong>₹' + chatState.data.product.price + '</strong>/day. Type the new price (number):');
           else if (f.includes('discount')) aiChatReply('Current discount: <strong>' + (chatState.data.product.discount || 0) + '%</strong>. Type new discount % (0-90), 0 = remove:');
           else if (f.includes('category')) aiChatReply('Current: <strong>' + chatState.data.product.category + '</strong>. Type new category:', ['evening', 'formal', 'cocktail', 'outerwear', 'accessories']);
@@ -2394,6 +2417,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           const idx = allProducts.findIndex(p => p.id === product.id);
           if (idx === -1) { aiChatReply('Product not found. Starting over.'); chatState.flow = null; return; }
           if (field.includes('name')) allProducts[idx].name = val;
+          else if (field.includes('stock')) allProducts[idx].stock = Math.max(0, parseInt(val) || allProducts[idx].stock);
           else if (field.includes('price')) allProducts[idx].price = parseInt(val) || allProducts[idx].price;
           else if (field.includes('discount')) allProducts[idx].discount = Math.min(90, Math.max(0, parseInt(val) || 0));
           else if (field.includes('category')) allProducts[idx].category = val.toLowerCase();
