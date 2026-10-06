@@ -1895,7 +1895,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         '. Unread customer messages: ' + (unread.length ? unread.length + ' — ' + unread.slice(0, 3).map(m => m.from + ': ' + String(m.body || '').slice(0, 60)).join(' | ') : 'none') +
         '. Last order: ' + (lastO ? '#' + lastO.id + ' ' + lastO.name + ', ' + lastO.item + ' → ' + (lastO.city || 'n/a') + ', ₹' + lastO.total + ', ' + lastO.status : 'none') +
         '. Customers: ' + users.length + ' total, ' + users.filter(u => u.blocked).length + ' blocked.';
-      const system = 'You are Styla, a friendly, smart assistant inside a rental store admin panel. Answer like ChatGPT: natural, normal, helpful. Reply in the language the owner used (English, Hindi or Hinglish), casual, 1-3 short lines, plain text — no emojis, no markdown, no exclamation marks, no bullet lists. General questions (fashion, styling, business, pricing, marketing tips for a small rental store, how to use this panel) get a real helpful answer. When the owner clearly wants an ACTION done (change price/stock, add/delete product, confirm/cancel booking, discount, broadcast), give exactly the short command to type, like "Change price of <item> to <number>" or "Confirm bookings". Store context you can rely on: ' + ctx;
+      const system = 'You are Styla, a friendly, smart assistant inside a rental store admin panel. Answer like ChatGPT: natural, normal, helpful. Reply in the language the owner used (English, Hindi or Hinglish), casual, 1-3 short lines, plain text — no emojis, no markdown, no exclamation marks, no bullet lists. General questions (fashion, styling, business, pricing, marketing tips for a small rental store, how to use this panel) get a real helpful answer. When the owner clearly wants an ACTION done (change price/stock, add/delete product, confirm/cancel booking, discount, broadcast), give exactly the short command to type, like "Change price of <item> to <number>" or "Confirm bookings". Panel capabilities you can mention: confirm/cancel bookings; change <item> price/stock; discount n% (all/category/item); sell <item> for ₹n (place on sale, "sale hatao" to remove); add <name> ₹<price> <category>; edit <item> (name/price/discount/stock/category/occasion/style/budget/gender/image/active); delete or hide <item>, show <item> again; reviews delete/approve; inbox replies; broadcast to customers; customer list and block/unblock; availability check; change password; auto-optimize prices; generate report; suggest new products; clean inactive items; clear chat. Store context you can rely on: ' + ctx;
       return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: msg }) })
         .then(r => r.json())
         .then(j => j.text || null)
@@ -2067,12 +2067,12 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           return best;
         };
         // one-shot: put a product up for sale (or take it off) — "lehenga ko 15000 pe bech do"
-        if (/sale|kharid|khareed|purchase|\bbuy\b|bech/.test(msg) && !/kharidaar|khareedaar|customer/.test(msg)) {
+        if (/sell|\bsale\b|sellable|buyable|bikau|kharid|khareed|purchase|\bbuy\b|bech|place|list it|for sale/.test(msg) && !/kharidaar|khareedaar|customer/.test(msg)) {
           const p = qHit();
           if (p) {
-            const off = /band|hat\w*|remove|zero|nahi chahiye|sirf rent|rent only|off karo/.test(msg);
+            const off = /\b(off|band|hat\w*|remove|delete|zero|nahi chahiye|sirf rent|rent only|unlist)\b/.test(msg);
             const price = qnum ? parseInt(qnum) : 0;
-            if (!off && !price) { aiChatReply('Sale price kitna? Number likh do (jaise <strong>15000</strong>).'); return; }
+            if (!off && !price) { chatState.flow = 'sale'; chatState.step = 1; chatState.data = { product: p }; aiChatReply('Sale price kitna? Number likh do (jaise <strong>15000</strong>) ya "sale hatao" bol do.'); return; }
             const on = !off && price > 0;
             let all = getProducts(); const i = all.findIndex(x => x.id === p.id);
             all[i].for_sale = on; all[i].sale_price = on ? price : 0;
@@ -2120,6 +2120,13 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           if (sec) { const lnk = document.querySelector('.dash-nav a[data-section="' + sec + '"]'); if (lnk) lnk.click(); aiChatReply('Opened <strong>' + sec + '</strong>.', ['Store summary', 'Confirm bookings', 'Back to menu']); return; }
         }
 
+        // AI panel one-click buttons — wahi actions chat se bhi
+        if (/optimiz|auto.?price|smart.?price|seasonal demand|prices? (adjust|set smart|tighten)/.test(msg)) { aiAutoPrice(); aiChatReply('Prices auto-optimize kar diye (seasonal demand ke hisaab se).', ['Store summary', 'Back to menu']); return; }
+        if (/generate.{0,14}report|report (banao|dikhao|chahiye)|business report/.test(msg)) { aiGenerateReport(); aiChatReply('Report ban gayi — <strong>AI panel</strong> me dekh lo.', ['Store summary', 'Back to menu']); return; }
+        if (/suggest (new )?products|new products? (ideas?|suggest)|catalog ideas|inspiration/.test(msg)) { aiSuggestProducts(); aiChatReply('Naye product ideas aa gaye — AI panel me "Add" dabao ya naam bolo.', ['Store summary', 'Back to menu']); return; }
+        if (/clean (inactive|catalog|up)|inactive.*(clean|remove|hata)|catalog (clean|saf)/.test(msg)) { aiCleanCatalog(); aiChatReply('Inactive items catalog se clean kar diye.', ['Store summary', 'Back to menu']); return; }
+        if (/clear chat|chat clear|chat (saf|saaf)/.test(msg)) { aiClearChat(); return; }
+
         // what the owner most often asks the agent to "know": recent edits, unread mail, last order, block a suspect
         if (/activit|audit|history|changes|edits?\s*hua|delete.*hua|removed|last (edit|chang)|what.*(edit|chang)|kya.*chang/.test(msg)) return showActivity();
         if (/unread|not read|na padha|nhi padha/.test(msg)) return showUnread();
@@ -2154,6 +2161,20 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
 // "edit/change/delete" + (hua/gaya/request/check/…) = is bat ka jawab, command nahi
         if (/edit|change|update|delete|remove/.test(msg) && /hua|gayi?|kiye|request|kaise|samajh|log|galat|wrong|check|show/.test(msg)) {
           aiChatReply('Jo change/delete hua, wo <strong>Recent changes</strong> me dikhta hai — sab record ho jata hai. Nayi edit karwani ho to product bolo: <strong>"plumeria price 5000"</strong>.', ['Recent changes', 'Store summary', 'Back to menu']);
+          return;
+        }
+        // hide / show ("kangna chhupa do", "kangna wapas dikha do")
+        const hhp = qHit();
+        if (hhp && /hide|hidden|chhup\w*|chhipa|invisible/.test(msg)) {
+          let all = getProducts(); all[all.findIndex(x => x.id === hhp.id)].active = false;
+          saveProducts(all); loadDashboard();
+          aiChatReply('<strong>' + hhp.name + '</strong> store se hide ho gaya — catalog me ab nahi dikhega.', ['Show it again', 'Edit another', 'Back to menu']);
+          return;
+        }
+        if (hhp && /(show|dikh\w*|visible|wapas lau\w*)/.test(msg) && !/price|stock|cost|summary|recent|changes|activity|unread|bookings?|orders|users|customers|info|detail|all\b/.test(msg)) {
+          let all = getProducts(); all[all.findIndex(x => x.id === hhp.id)].active = true;
+          saveProducts(all); loadDashboard();
+          aiChatReply('<strong>' + hhp.name + '</strong> wapas store me show ho raha hai.', ['Edit another', 'Back to menu']);
           return;
         }
         // delete → seedha confirm, edit → seedha field/value
@@ -2199,7 +2220,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         askAdminAI(input).then(ans => {
           aiTyping(false);
           if (ans) aiChatReply(ans);
-          else aiChatReply('Abhi store me <strong>' + products.length + ' products, ' + orders.length + ' bookings</strong> hain. Kya karna hai — seedha bolo: price/stock badlo, add/delete product, booking confirm/cancel, availability, unread, broadcast, customer block. Sab direct ho jata hai.', ['Confirm bookings', 'Change price', 'Store summary', 'Unread messages', 'Last order']);
+          else aiChatReply('Abhi store me <strong>' + products.length + ' products, ' + orders.length + ' bookings</strong> hain. Kya karna hai — seedha bolo: price/stock badlo, add/delete product, <strong>sell pe place karo</strong>, booking confirm/cancel, availability, unread, broadcast, customer block. Sab direct ho jata hai.', ['Confirm bookings', 'Change price', 'Store summary', 'Unread messages', 'Last order']);
         });
         return;
       }
@@ -2250,6 +2271,25 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           chatState.flow = null; chatState.step = 0;
           return;
         }
+      }
+
+      // ===== SALE: PENDING PRICE (sale pe place karo → price poochha, ab number aaya) =====
+      if (chatState.flow === 'sale') {
+        const d = chatState.data || {};
+        let all = getProducts();
+        const p = all.find(x => x.id === (d.product || {}).id);
+        if (!p) { aiChatReply('Wo product ab catalog me nahi hai.', ['Back to menu']); chatState.flow = null; chatState.step = 0; chatState.data = {}; return; }
+        const off = /(off|band|hata|remove|delete|zero|nahi|unlist)/.test(msg);
+        const val = parseInt(msg) || 0;
+        const on = !off && val > 0;
+        p.for_sale = on; p.sale_price = on ? val : 0;
+        saveProducts(all); loadDashboard();
+        aiChatReply(on
+          ? '<strong>' + p.name + '</strong> ab <strong>sale pe</strong> — ₹' + val + ' one-time. Buy button ab store me dikhega.'
+          : '<strong>' + p.name + '</strong> ka sale hata diya — ab sirf rental.',
+          ['Edit another', 'Back to menu']);
+        chatState.flow = null; chatState.step = 0; chatState.data = {};
+        return;
       }
 
       // ===== AVAILABILITY =====
