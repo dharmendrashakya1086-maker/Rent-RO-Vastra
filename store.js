@@ -125,9 +125,11 @@ function saveCart(c) {
 }
 function addToCart(item) {
   const cart = getCart();
-  const existing = cart.find(c => c.id === item.id);
+  // one line per product per mode: the same piece can be rented AND bought
+  const type = item.type === 'buy' ? 'buy' : 'rent';
+  const existing = cart.find(c => c.id === item.id && (c.type || 'rent') === type);
   if (!existing) {
-    cart.push({ id: item.id, name: item.name, category: item.category, price: item.price, img: item.img, days: 1, qty: 1, startDate: '', endDate: '' });
+    cart.push({ id: item.id, name: item.name, category: item.category, price: item.price, img: item.img, days: 1, qty: 1, startDate: '', endDate: '', type: type });
     saveCart(cart);
     return true;
   }

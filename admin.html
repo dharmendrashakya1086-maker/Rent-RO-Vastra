@@ -910,6 +910,16 @@
           <label>Stock (pieces owned)</label>
           <input type="number" id="pStock" placeholder="3" min="1" value="3">
         </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="pForSale" style="accent-color:var(--gold);width:16px;height:16px;">
+            For sale — customer ye kharid bhi sakta hai
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Sale price (₹, one-time) — 0 = sirf rental</label>
+          <input type="number" id="pSalePrice" placeholder="15000" min="0" value="0">
+        </div>
       </div>
 <div class="form-group">
         <label>Photos — one URL per line. Pehli photo MAIN hai, baaki gallery. (thumbnail par click = main banao)</label>
@@ -1248,7 +1258,7 @@ renderProducts();
           <td><img src="${esc(p.img)}" class="thumb" alt="${esc(p.name)}"></td>
           <td>${esc(p.name)}</td>
           <td>${esc(p.category)}</td>
-          <td><strong style="color:var(--gold)">₹${p.price}</strong>${p.discount > 0 ? '<br><span style="color:#4CAF50;font-size:0.72rem;">' + p.discount + '% OFF → ₹' + Math.round(p.price * (1 - p.discount / 100)) + '</span>' : ''}</td>
+          <td><strong style="color:var(--gold)">₹${p.price}</strong>${p.discount > 0 ? '<br><span style="color:#4CAF50;font-size:0.72rem;">' + p.discount + '% OFF → ₹' + Math.round(p.price * (1 - p.discount / 100)) + '</span>' : ''}${p.for_sale && p.sale_price > 0 ? '<br><span style="color:#E8D5B0;font-size:0.72rem;">FOR SALE ₹' + p.sale_price + '</span>' : ''}</td>
           <td><span style="color:#4CAF50;font-weight:600">${total} pc</span><br><span style="color:${low ? '#e74c3c' : '#aaa'};font-size:0.75rem;">${free} free now</span></td>
           <td><span class="badge ${p.active !== false ? 'badge-green' : 'badge-red'}">${p.active !== false ? 'Active' : 'Hidden'}</span></td>
           <td>
@@ -1389,6 +1399,8 @@ renderProducts();
 const price = parseFloat(document.getElementById('pPrice').value);
       const discount = Math.min(90, Math.max(0, parseInt(document.getElementById('pDiscount').value) || 0));
       const stock = parseInt(document.getElementById('pStock').value) || 1;
+      const forSale = document.getElementById('pForSale').checked;
+      const salePrice = Math.max(0, parseInt(document.getElementById('pSalePrice').value) || 0);
       const lines = document.getElementById('pImages').value.split('\n').map(s => s.trim()).filter(Boolean);
       const img = lines[0] || '';
       // exactly one main, and it always leads the list
@@ -1399,6 +1411,9 @@ const price = parseFloat(document.getElementById('pPrice').value);
       const gender = document.getElementById('pGender').value;
 
       if (!name || !price || !img) { alert('Name, price, and image URL are required.'); return; }
+      if (forSale && salePrice <= 0) { alert('For sale ke liye sale price daalo (1 ya zyada), warna checkbox hata do.'); return; }
+      const for_sale = forSale && salePrice > 0;
+      const sale_price = for_sale ? salePrice : 0;
 
       let products = getProducts();
       const editId = document.getElementById('editId').value;
@@ -1406,11 +1421,11 @@ const price = parseFloat(document.getElementById('pPrice').value);
       if (editId) {
         const idx = products.findIndex(p => p.id === parseInt(editId));
         if (idx >= 0) {
-products[idx] = { ...products[idx], name, category, price, discount, stock, img, images: images, occasion, style, budget, gender };
+products[idx] = { ...products[idx], name, category, price, discount, stock, img, images: images, occasion, style, budget, gender, for_sale, sale_price };
         }
       } else {
         const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
-        products.push({ id: newId, name, category, price, discount, stock, img, images: images, occasion, style, budget, gender, active: true });
+        products.push({ id: newId, name, category, price, discount, stock, img, images: images, occasion, style, budget, gender, active: true, for_sale, sale_price });
       }
 
       saveProducts(products);
@@ -1467,7 +1482,7 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
         document.getElementById('lookUrl').value = j.url;
         document.getElementById('lookPreview').style.display = 'block';
         document.getElementById('lookPreviewImg').src = j.url;
-        info.textContent = 'Photo uploaded ✓ ab "Add to Gallery" dabao';
+        info.textContent = 'Photo uploaded ab "Add to Gallery" dabao';
       } catch (err) { info.textContent = 'Upload failed: ' + err.message; }
       e.target.value = '';
     });
@@ -1485,7 +1500,7 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
         if (!r.ok) throw new Error(j.error || 'save failed');
         ['lookName', 'lookCity', 'lookCaption', 'lookUrl'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('lookPreview').style.display = 'none';
-        document.getElementById('lookUpInfo').textContent = 'Added to gallery ✓';
+        document.getElementById('lookUpInfo').textContent = 'Added to gallery';
         loadLooks();
       } catch (err) { alert(err.message); }
       btn.textContent = 'Add to Gallery';
@@ -1499,7 +1514,7 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
         const r = await fetch('/api/admin/ugc/demo', { method: 'POST', credentials: 'same-origin' });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(j.error || 'failed');
-        document.getElementById('lookUpInfo').textContent = j.added + ' demo looks added ✓';
+        document.getElementById('lookUpInfo').textContent = j.added + ' demo looks added';
         loadLooks();
       } catch (err) { alert(err.message); }
       btn.textContent = 'Load 7 Demo Looks';
@@ -1515,6 +1530,8 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
 document.getElementById('pPrice').value = p.price;
       document.getElementById('pDiscount').value = p.discount || 0;
       document.getElementById('pStock').value = p.stock || 1;
+      document.getElementById('pForSale').checked = !!p.for_sale;
+      document.getElementById('pSalePrice').value = p.sale_price || 0;
       document.getElementById('pImages').value = [...new Set([p.img].concat(p.images || []).filter(Boolean))].join('\n');
       renderImageRoles();
       document.getElementById('pOccasion').value = (p.occasion || []).join(', ');
@@ -1553,6 +1570,8 @@ document.getElementById('pName').value = '';
       document.getElementById('pPrice').value = '';
       document.getElementById('pDiscount').value = 0;
       document.getElementById('pStock').value = 3;
+      document.getElementById('pForSale').checked = false;
+      document.getElementById('pSalePrice').value = 0;
       document.getElementById('pImages').value = '';
       renderImageRoles();
       document.getElementById('pOccasion').value = '';
@@ -1707,7 +1726,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       suggestions.push("Bundle bridal packages (lehenga + jewelry + dupatta) at one price to lift order value.");
       suggestions.push("Reply to every message fast — responsiveness is the #1 driver of rentals in small markets.");
 
-      el.innerHTML = suggestions.map(s => '<div style="margin-bottom:8px;font-size:0.85rem;color:var(--text);">💡 ' + s + '</div>').join('');
+      el.innerHTML = suggestions.map(s => '<div style="margin-bottom:8px;font-size:0.85rem;color:var(--text);">' + s + '</div>').join('');
     }
 
     function generateForecast() {
@@ -1753,7 +1772,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         }
       });
       saveProducts(products);
-      el.innerHTML = '<span style="color:#4CAF50;">✓ Prices ' + (isPeak ? 'increased by 10%' : 'adjusted by -5%') + ' for ' + changed + ' items based on seasonal demand.</span>';
+      el.innerHTML = '<span style="color:#4CAF50;"> Prices ' + (isPeak ? 'increased by 10%' : 'adjusted by -5%') + ' for ' + changed + ' items based on seasonal demand.</span>';
       loadDashboard();
     };
 
@@ -1790,7 +1809,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
       products.push({ id: newId, name, category: cat, price, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80'], occasion: ['wedding','party'], style: ['elegant'], budget: 'mid', gender: 'women', active: true });
       saveProducts(products);
-      document.getElementById('aiActionResult').innerHTML = '<span style="color:#4CAF50;">✓ ' + name + ' added to catalog!</span>';
+      document.getElementById('aiActionResult').innerHTML = '<span style="color:#4CAF50;"> ' + name + ' added to catalog!</span>';
       loadDashboard();
     };
 
@@ -1801,7 +1820,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       const removed = before - products.length;
       if (removed > 0) {
         saveProducts(products);
-        document.getElementById('aiActionResult').innerHTML = '<span style="color:#4CAF50;">✓ Removed ' + removed + ' inactive items from catalog.</span>';
+        document.getElementById('aiActionResult').innerHTML = '<span style="color:#4CAF50;"> Removed ' + removed + ' inactive items from catalog.</span>';
         loadDashboard();
       } else {
         document.getElementById('aiActionResult').innerHTML = '<span style="color:var(--text-muted);">No inactive items to clean.</span>';
@@ -1835,7 +1854,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           el = document.createElement('div');
           el.id = 'aiTypingBubble';
           el.style.cssText = 'margin-bottom:8px;color:var(--text-muted);font-size:0.8rem;';
-          el.textContent = 'Styla is analyzing your data…';
+          el.textContent = 'Styla is typing…';
           msgs.appendChild(el);
         }
       } else if (el) el.remove();
@@ -1846,7 +1865,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       if (document.getElementById('aiChatMessages').children.length) return;
       const products = getProducts();
       const orders = getOrders();
-      aiChatReply('Hi! I\'m Styla — your business AI. I have <strong>full access</strong> to this admin panel: products, bookings, availability, reviews, inbox replies, broadcasts, customers and settings. Speak or type in English, Hindi or Hinglish — e.g. "confirm bookings", "sabyasachi ka price 7000 karo", "lehenga par 20% discount laga do", "reviews hatao", "inbox dikhao". Just tell me the task — I do it, no menu clicking needed. (' + products.length + ' products, ' + orders.length + ' bookings.) What do you need?', ['Confirm bookings', 'Change price', 'Check availability', 'Inbox / Reply', 'Customers list', 'Manage reviews', 'Send broadcast', 'Store summary', 'Add product']);
+      aiChatReply('Hi, main Styla hoon. Jo kaam ho — products, bookings, reviews, inbox — seedha bol do, main kar deti hoon. (' + products.length + ' products, ' + orders.length + ' bookings.)', ['Confirm bookings', 'Change price', 'Check availability', 'Store summary', 'Inbox / Reply']);
     }
 
     window.aiChatPick = function(val) {
@@ -1867,7 +1886,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       const p = getProducts();
       const o = getOrders();
       const ctx = 'Store: ' + p.length + ' active products, ' + o.length + ' bookings, revenue ₹' + o.reduce((s, x) => s + (x.total || 0), 0).toLocaleString('en-IN') + '. Products: ' + p.slice(0, 15).map(x => x.name + ' (₹' + x.price + ', ' + x.category + ')').join('; ');
-      const system = 'You are Styla, the admin AI for a luxury rental store. You have full access to the admin panel and can confirm/cancel bookings, edit products (name, price, stock, category, occasion, style, budget, gender, image, active), delete products, manage reviews, reply to messages, send broadcasts, list customers, show availability, change the password, and open any section when the author says things like "open products". Answer in the language the author used (English, Hindi or Hinglish), short and practical, under 90 words. For actions, reply with the exact command phrase the author should say, e.g. say "Confirm bookings" or "Change price of <item> to <number>". ' + ctx;
+      const system = 'You are Styla, the assistant inside a rental store admin panel. Answer in the language the owner used (English, Hindi or Hinglish), casual and normal, 1-2 short lines, under 40 words. Plain text, no emojis, no markdown, no exclamation marks. When an action is needed, just say the short command to type, like "Confirm bookings" or "Change price of <item> to <number>". ' + ctx;
       return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: msg }) })
         .then(r => r.json())
         .then(j => j.text || null)
@@ -1880,7 +1899,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       try { cfg = JSON.parse(localStorage.getItem('luxe_chat_ai') || 'null') || DEFAULT_AI; } catch (e) { cfg = DEFAULT_AI; }
       if (!cfg || !cfg.enabled) return Promise.resolve(null);
       const P = getProducts();
-      const system = 'You control a rental store admin panel. The owner gives an instruction in English/Hindi/Hinglish. Reply with ONLY one JSON object, no other text. Schema: {"action":"set_price|set_discount|set_discount_all|set_discount_category|set_stock|rename|hide|show|delete|add_product|none","product":"product name, id, or category","value": number or string or {"name":"...","price":5000,"category":"..."}}. set_discount = one product (product=name), set_discount_all = every active product (set product to "all"), set_discount_category = all products in a category (product=evening|formal|cocktail|outerwear|accessories). Discount value = percent 0-90 (0 removes). set_price = rupees/day. hide = hide from store, show = show it. delete = soft-delete (hide). Bulk phrases like "sabhi products pe 20% discount" or "evening category pe 15% off" MUST map to set_discount_all / set_discount_category, never to "none". If the message is advice/a question, return {"action":"none"}. Products: ' + JSON.stringify(P.map(function (p) { return { id: p.id, name: p.name, category: p.category }; }));
+      const system = 'You control a rental store admin panel. The owner gives an instruction in English/Hindi/Hinglish. Reply with ONLY one JSON object, no other text. Schema: {"action":"set_price|set_discount|set_discount_all|set_discount_category|set_stock|set_for_sale|rename|hide|show|delete|add_product|none","product":"product name, id, or category","value": number or string or {"name":"...","price":5000,"category":"..."}}. set_discount = one product (product=name), set_discount_all = every active product (set product to "all"), set_discount_category = all products in a category (product=evening|formal|cocktail|outerwear|accessories). Discount value = percent 0-90 (0 removes). set_price = rupees/day. set_for_sale = make one product buyable as well as rentable; value = one-time sale price in rupees (0 or "off" removes it from sale). hide = hide from store, show = show it. delete = soft-delete (hide). Bulk phrases like "sabhi products pe 20% discount" or "evening category pe 15% off" MUST map to set_discount_all / set_discount_category, never to "none". If the message is advice/a question, return {"action":"none"}. Products: ' + JSON.stringify(P.map(function (p) { return { id: p.id, name: p.name, category: p.category }; }));
       return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: msg }) })
         .then(r => r.json())
         .then(j => {
@@ -1936,6 +1955,18 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         saveProducts(all); loadDashboard();
         return '<strong>' + p.name + '</strong> — stock ' + p.stock + ' kar diya';
       }
+      if (a.action === 'set_for_sale') {
+        const p = findP(a.product);
+        if (!p) return "product '" + a.product + "' nahi mila";
+        const off = a.value === 0 || a.value === 'off' || a.value === false;
+        const v = Math.max(0, Math.round(Number(a.value) || 0));
+        p.for_sale = !off && v > 0;
+        p.sale_price = p.for_sale ? v : 0;
+        saveProducts(all); loadDashboard();
+        return p.for_sale
+          ? '<strong>' + p.name + '</strong> — sale pe daal diya, ₹' + p.sale_price + ' one-time (Buy button ab dikhega)'
+          : '<strong>' + p.name + '</strong> ka sale hata diya — ab sirf rental';
+      }
       if (a.action === 'rename') {
         const p = findP(a.product);
         if (!p) return "product '" + a.product + "' nahi mila";
@@ -1975,7 +2006,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       aiTyping(false);
       if (!act || act.action === 'none' || act.action === undefined) return false;
       const done = applyAdminAction(act);
-      if (done) { aiChatReply('✅ ' + done + '.', ['Confirm bookings', 'Edit another', 'Store summary', 'Back to menu']); return true; }
+      if (done) { aiChatReply(done + '.', ['Confirm bookings', 'Edit another', 'Store summary', 'Back to menu']); return true; }
       return false;
     }
 
@@ -2020,13 +2051,31 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           });
           return best;
         };
+        // one-shot: put a product up for sale (or take it off) — "lehenga ko 15000 pe bech do"
+        if (/sale|kharid|khareed|purchase|\bbuy\b|bech/.test(msg) && !/kharidaar|khareedaar|customer/.test(msg)) {
+          const p = qHit();
+          if (p) {
+            const off = /band|hat\w*|remove|zero|nahi chahiye|sirf rent|rent only|off karo/.test(msg);
+            const price = qnum ? parseInt(qnum) : 0;
+            if (!off && !price) { aiChatReply('Sale price kitna? Number likh do (jaise <strong>15000</strong>).'); return; }
+            const on = !off && price > 0;
+            let all = getProducts(); const i = all.findIndex(x => x.id === p.id);
+            all[i].for_sale = on; all[i].sale_price = on ? price : 0;
+            saveProducts(all); loadDashboard();
+            aiChatReply(on
+              ? '<strong>' + p.name + '</strong> ab <strong>sale pe</strong> — ₹' + price + ' one-time. Buy button ab har jagah dikhega.'
+              : '<strong>' + p.name + '</strong> ka sale hata diya — ab sirf rental.',
+              ['Edit another', 'Back to menu']);
+            return;
+          }
+        }
         if (qnum && /price|rate|cost|charge|daam/.test(msg)) {
           const p = qHit();
-          if (p) { let all = getProducts(); all[all.findIndex(x => x.id === p.id)].price = parseInt(qnum); saveProducts(all); loadDashboard(); aiChatReply('Updated <strong>' + p.name + '</strong> — price is now <strong>₹' + qnum + '</strong>/day. ✓', ['Edit another', 'Back to menu']); return; }
+          if (p) { let all = getProducts(); all[all.findIndex(x => x.id === p.id)].price = parseInt(qnum); saveProducts(all); loadDashboard(); aiChatReply('Updated <strong>' + p.name + '</strong> — price is now <strong>₹' + qnum + '</strong>/day.', ['Edit another', 'Back to menu']); return; }
         }
         if (qnum && /stock|qty|pcs|pieces/.test(msg)) {
           const p = qHit();
-          if (p) { let all = getProducts(); all[all.findIndex(x => x.id === p.id)].stock = parseInt(qnum); saveProducts(all); loadDashboard(); aiChatReply('Set <strong>' + p.name + '</strong> stock to <strong>' + qnum + '</strong>. ✓', ['Edit another', 'Back to menu']); return; }
+          if (p) { let all = getProducts(); all[all.findIndex(x => x.id === p.id)].stock = parseInt(qnum); saveProducts(all); loadDashboard(); aiChatReply('Set <strong>' + p.name + '</strong> stock to <strong>' + qnum + '</strong>.', ['Edit another', 'Back to menu']); return; }
         }
         if (/discount|off|chhut|offer|kam karo|sasta karo/.test(msg)) {
           const raw = input.toLowerCase();
@@ -2044,7 +2093,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
             saveProducts(all); loadDashboard();
             const ex = targets[0], sale = Math.round(ex.price * (1 - d / 100));
             const names = targets.slice(0, 3).map(t => t.name).join(', ') + (targets.length > 3 ? ' +' + (targets.length - 3) : '');
-            aiChatReply('Discount laga diya — <strong>' + targets.length + ' products</strong> (' + esc(scope) + ') par <strong>' + d + '% OFF</strong>.<br><span style="opacity:.75;">' + esc(names) + ' · e.g. ₹' + ex.price + ' → ₹' + sale + '/day</span> ✓<br><span style="opacity:.6;font-size:.8rem;">Undo: "sabhi products pe discount hatao"</span>',
+            aiChatReply('Discount laga diya — <strong>' + targets.length + ' products</strong> (' + esc(scope) + ') par <strong>' + d + '% OFF</strong>.<br><span style="opacity:.75;">' + esc(names) + ' · e.g. ₹' + ex.price + ' → ₹' + sale + '/day</span><br><span style="opacity:.6;font-size:.8rem;">Undo: "sabhi products pe discount hatao"</span>',
               ['Discount hatao sab pe', 'Store summary', 'Back to menu']);
             return;
           }
@@ -2053,7 +2102,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         // navigate to a panel ("open products tab kholo")
         if (!/summary|status|how many|detail|report|dikh/.test(msg) && /(open|khol\w*|go to|switch|jump|tab|panel|section|page)/.test(msg)) {
           const sec = /overview|dashboard/.test(msg) ? 'overview' : /review/.test(msg) ? 'reviews' : /message|inbox|mail/.test(msg) ? 'messages' : /order|booking/.test(msg) ? 'orders' : /product/.test(msg) ? 'products' : /setting|password|config|key/.test(msg) ? 'settings' : /styla|assistant|ai agent|ai panel|ai chat/.test(msg) ? 'ai' : null;
-          if (sec) { const lnk = document.querySelector('.dash-nav a[data-section="' + sec + '"]'); if (lnk) lnk.click(); aiChatReply('Opened <strong>' + sec + '</strong>. ✓', ['Store summary', 'Confirm bookings', 'Back to menu']); return; }
+          if (sec) { const lnk = document.querySelector('.dash-nav a[data-section="' + sec + '"]'); if (lnk) lnk.click(); aiChatReply('Opened <strong>' + sec + '</strong>.', ['Store summary', 'Confirm bookings', 'Back to menu']); return; }
         }
 
         if (isBookingTalk && (isConfirm || msg.includes('pending'))) return startOrderFlow('confirm');
@@ -2075,14 +2124,14 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         if (/delete|remove/.test(msg) && !msg.includes('review')) { chatState.flow = 'delete'; chatState.step = 1; chatState.data = {}; const cats = [...new Set(products.filter(p => p.active !== false).map(p => p.category))]; aiChatReply('Which category? Pick one:', cats.map(c => c.charAt(0).toUpperCase() + c.slice(1))); return; }
         if (/add|new|create/.test(msg) && !msg.includes('how many')) { chatState.flow = 'add'; chatState.step = 1; chatState.data = {}; aiChatReply("What's the product name?"); return; }
 
-        if (/help|menu|what can|options|hi|hello|hey|bolo|suno/.test(msg)) { aiChatReply('I have full access to the admin panel — products (add / edit / delete / price / stock), bookings (confirm / cancel), availability, reviews, inbox replies, broadcasts, customers list, and settings (password, AI key). Try:', ['Confirm bookings', 'Cancel a booking', 'Check availability', 'Inbox / Reply', 'Customers list', 'Manage reviews', 'Send broadcast', 'Store summary', 'Open settings', 'Change password', 'Add product', 'Edit product', 'Delete product']); return; }
+        if (/help|menu|what can|options|hi|hello|hey|bolo|suno/.test(msg)) { aiChatReply('Sab ho jata hai — products (add/edit/delete, price, stock), bookings (confirm/cancel), availability, reviews, inbox, broadcasts, customers aur settings. Bas bolo:', ['Confirm bookings', 'Check availability', 'Store summary', 'Inbox / Reply', 'Manage reviews']); return; }
 
         // Fallback: real LLM if configured, else helpful fallback
         aiTyping(true);
         askAdminAI(input).then(ans => {
           aiTyping(false);
           if (ans) aiChatReply(ans);
-          else aiChatReply("I can handle anything in the admin panel — just ask in English, Hindi or Hinglish. Try:", ['Confirm bookings', 'Cancel a booking', 'Check availability', 'Inbox / Reply', 'Customers list', 'Manage reviews', 'Send broadcast', 'Store summary', 'Change password', 'Add product', 'Edit product', 'Delete product']);
+          else aiChatReply('Bas bolo — English, Hindi ya Hinglish, kaam ho jayega. Try:', ['Confirm bookings', 'Check availability', 'Store summary', 'Inbox / Reply', 'Add product']);
         });
         return;
       }
@@ -2093,7 +2142,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           const pending = orders.filter(o => o.status === 'Pending');
           if (msg.includes('all') || msg === 'confirm all') {
             pending.forEach(o => { o.status = 'Confirmed'; }); saveOrders(orders); loadDashboard();
-            aiChatReply('Confirmed all ' + pending.length + ' pending bookings. ✓', ['Show orders', 'Check availability', 'Back to menu']);
+            aiChatReply('Confirmed all ' + pending.length + ' pending bookings.', ['Show orders', 'Check availability', 'Back to menu']);
             chatState.flow = null; chatState.step = 0; return;
           }
           const pick = parseInt(msg) - 1;
@@ -2102,7 +2151,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           target.status = 'Confirmed';
           saveOrders(orders);
           loadDashboard();
-          aiChatReply('Confirmed <strong>' + target.name + '</strong> — ' + target.item + ' (' + (target.dates || 'TBD') + '). ✓', ['Confirm more', 'Show orders', 'Back to menu']);
+          aiChatReply('Confirmed <strong>' + target.name + '</strong> — ' + target.item + ' (' + (target.dates || 'TBD') + ').', ['Confirm more', 'Show orders', 'Back to menu']);
           chatState.flow = null; chatState.step = 0;
           return;
         }
@@ -2126,9 +2175,9 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
             const t = chatState.data.target;
             const idx = orders.findIndex(o => o.id === t.id || (o.name === t.name && o.item === t.item && o.dates === t.dates));
             if (idx !== -1) { orders[idx].status = 'Cancelled'; saveOrders(orders); loadDashboard(); }
-            aiChatReply('Cancelled <strong>' + t.name + '</strong>' + (t.item ? ' — ' + t.item : '') + '. ✓', ['Cancel another', 'Show orders', 'Back to menu']);
+            aiChatReply('Cancelled <strong>' + t.name + '</strong>' + (t.item ? ' — ' + t.item : '') + '.', ['Cancel another', 'Show orders', 'Back to menu']);
           } else {
-            aiChatReply('Booking kept. ✓', ['Cancel a booking', 'Show orders', 'Back to menu']);
+            aiChatReply('Booking kept.', ['Cancel a booking', 'Show orders', 'Back to menu']);
           }
           chatState.flow = null; chatState.step = 0;
           return;
@@ -2195,9 +2244,9 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           if (msg.includes('yes')) {
             deleteReview(chatState.data.target.id);
             loadDashboard();
-            aiChatReply('Review deleted. ✓', ['Manage more reviews', 'Back to menu']);
+            aiChatReply('Review deleted.', ['Manage more reviews', 'Back to menu']);
           } else {
-            aiChatReply('Review kept. ✓', ['Manage more reviews', 'Back to menu']);
+            aiChatReply('Review kept.', ['Manage more reviews', 'Back to menu']);
           }
           chatState.flow = null; chatState.step = 0;
           return;
@@ -2214,7 +2263,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         }
         if (chatState.step === 2) {
           sendMessage('admin', chatState.data.to, input);
-          aiChatReply('Broadcast sent to ' + (chatState.data.to === 'ALL' ? 'all users' : chatState.data.to) + '. ✓', ['Send another', 'Back to menu']);
+          aiChatReply('Broadcast sent to ' + (chatState.data.to === 'ALL' ? 'all users' : chatState.data.to) + '.', ['Send another', 'Back to menu']);
           chatState.flow = null; chatState.step = 0;
           return;
         }
@@ -2241,7 +2290,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         }
         if (chatState.step === 2) {
           sendMessage('admin', chatState.data.to, input);
-          aiChatReply('Reply sent to <strong>' + chatState.data.to + '</strong>. ✓', ['Reply to another', 'Send broadcast', 'Back to menu']);
+          aiChatReply('Reply sent to <strong>' + chatState.data.to + '</strong>.', ['Reply to another', 'Send broadcast', 'Back to menu']);
           chatState.flow = null; chatState.step = 0; chatState.data = {};
           return;
         }
@@ -2261,7 +2310,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           if (window.ADMIN && window.ADMIN.server) {
             // Server mode: Supabase holds the password, so change it there (admin skips old-password check).
             ADMIN.changePass('', chatState.data.np).then(ok => {
-              if (ok) aiChatReply('Password badal diya. ✓ Purana password ab valid nahi hai.', ['Back to menu']);
+              if (ok) aiChatReply('Password badal diya. Purana password ab valid nahi hai.', ['Back to menu']);
               else aiChatReply('Password change nahi hua — Supabase ne reject kar diya.', ['Try again', 'Back to menu']);
             });
             chatState.flow = null; chatState.step = 0; chatState.data = {};
@@ -2269,7 +2318,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           }
           if (input.trim() === getPass()) {
             setPass(chatState.data.np);
-            aiChatReply('Password changed. ✓ Remember it — this unlocks the admin panel.', ['Back to menu']);
+            aiChatReply('Password changed. Remember it — this unlocks the admin panel.', ['Back to menu']);
           } else {
             aiChatReply("Current password didn't match — nothing was changed.", ['Try again', 'Back to menu']);
           }
@@ -2336,7 +2385,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           else if (field.includes('active')) allProducts[idx].active = /show|visible|yes|active/.test(val.toLowerCase());
           saveProducts(allProducts);
           loadDashboard();
-          aiChatReply('Updated <strong>' + allProducts[idx].name + '</strong> successfully! ✓', ['Edit another', 'Delete product', 'Back to menu']);
+          aiChatReply('Updated <strong>' + allProducts[idx].name + '</strong> successfully!', ['Edit another', 'Delete product', 'Back to menu']);
           chatState.flow = null; chatState.step = 0; chatState.data = {};
           return;
         }
@@ -2369,9 +2418,9 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
             let allProducts = getProducts();
             const idx = allProducts.findIndex(p => p.id === chatState.data.product.id);
             if (idx !== -1) { allProducts[idx].active = false; saveProducts(allProducts); loadDashboard(); }
-            aiChatReply('Deleted <strong>' + chatState.data.product.name + '</strong>. ✓', ['Delete another', 'Edit product', 'Back to menu']);
+            aiChatReply('Deleted <strong>' + chatState.data.product.name + '</strong>.', ['Delete another', 'Edit product', 'Back to menu']);
           } else {
-            aiChatReply('Cancelled. ✓', ['Delete another', 'Edit product', 'Back to menu']);
+            aiChatReply('Cancelled.', ['Delete another', 'Edit product', 'Back to menu']);
           }
           chatState.flow = null; chatState.step = 0; chatState.data = {};
           return;
@@ -2412,7 +2461,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           });
           saveProducts(allProducts);
           loadDashboard();
-          aiChatReply('Added <strong>' + d.name + '</strong> — ₹' + d.price + '/day, ' + d.category + ', ' + d.gender + '. ✓', ['Add another', 'Edit product', 'Back to menu']);
+          aiChatReply('Added <strong>' + d.name + '</strong> — ₹' + d.price + '/day, ' + d.category + ', ' + d.gender + '.', ['Add another', 'Edit product', 'Back to menu']);
           chatState.flow = null; chatState.step = 0; chatState.data = {};
           return;
         }
@@ -2435,7 +2484,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       const orders = getOrders();
       if (kind === 'confirm') {
         const pending = orders.filter(o => o.status === 'Pending');
-        if (!pending.length) { aiChatReply('No pending bookings — all confirmed or cancelled. ✓', ['Show orders', 'Back to menu']); chatState.flow = null; return; }
+        if (!pending.length) { aiChatReply('No pending bookings — all confirmed or cancelled.', ['Show orders', 'Back to menu']); chatState.flow = null; return; }
         aiChatReply('Pending bookings (' + pending.length + ') — pick a number or say "All":', pending.map((o, i) => (i + 1) + ' ' + o.name + ' — ' + o.item + ' (' + (o.dates || 'TBD') + ')'));
       } else {
         const active = orders.filter(o => o.status !== 'Cancelled');
@@ -2476,7 +2525,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
     function startReviewFlow() {
       chatState.flow = 'reviews'; chatState.step = 1; chatState.data = {};
       const all = getReviewsAll();
-      if (!all.length) { aiChatReply('No reviews yet. Ask customers to leave reviews after a rental. ✓', ['Back to menu']); chatState.flow = null; return; }
+      if (!all.length) { aiChatReply('No reviews yet. Ask customers to leave reviews after a rental.', ['Back to menu']); chatState.flow = null; return; }
       aiChatReply('You have ' + all.length + ' review(s). Which list?', ['Website reviews', 'Product reviews']);
     }
 
@@ -2490,7 +2539,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
     function startInboxFlow() {
       chatState.flow = 'inbox'; chatState.step = 1; chatState.data = {};
       const msgs = getMessages().slice(-10).reverse();
-      if (!msgs.length) { aiChatReply('Your inbox is empty. ✓', ['Send broadcast', 'Back to menu']); chatState.flow = null; return; }
+      if (!msgs.length) { aiChatReply('Your inbox is empty.', ['Send broadcast', 'Back to menu']); chatState.flow = null; return; }
       aiChatReply('Inbox (' + msgs.length + ' recent) — reply to whom?', msgs.map((m, i) => (i + 1) + ' ' + (m.from === 'admin' ? '→ ' + m.to : m.from + ' → you') + ' : ' + String(m.body || '').slice(0, 32)));
     }
 
@@ -2502,7 +2551,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
     function showUsers() {
       const users = getUsers();
       const orders = getOrders();
-      if (!users.length) { aiChatReply('No registered customers yet. ✓', ['Send broadcast', 'Back to menu']); return; }
+      if (!users.length) { aiChatReply('No registered customers yet.', ['Send broadcast', 'Back to menu']); return; }
       const rows = users.map(u => {
         const oo = orders.filter(o => String(o.name || '').toLowerCase().split(/\s+/)[0] === String(u.first || '').toLowerCase());
         const spend = oo.reduce((s, x) => s + (x.total || 0), 0);

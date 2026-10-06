@@ -359,6 +359,31 @@ const added = addToCart({
       }
     });
 
+    // Purchase option — only for pieces the admin marked for sale
+    if (prod.for_sale && Number(prod.sale_price) > 0) {
+      const buyBtn = document.createElement('button');
+      buyBtn.className = 'btn-primary';
+      buyBtn.style.cssText = 'width:100%;margin-top:12px;';
+      const buyLabel = () => 'Buy Now — ₹' + Number(prod.sale_price).toLocaleString('en-IN');
+      buyBtn.textContent = Number(prod.stock) > 0 ? buyLabel() : 'Sold Out';
+      if (Number(prod.stock) > 0) {
+        buyBtn.addEventListener('click', () => {
+          const item = { id: PRODUCT_ID, name: prod.name, category: prod.category, price: prod.sale_price, img: prod.img, type: 'buy' };
+          if (addToCart(item)) {
+            buyBtn.textContent = 'Added to Cart!'; buyBtn.style.background = '#4CAF50';
+            flyToCart(item, buyBtn);
+            setTimeout(() => { buyBtn.textContent = buyLabel(); buyBtn.style.background = ''; }, 1500);
+          } else {
+            window.location.href = '/cart?item=' + PRODUCT_ID + '&type=buy';
+          }
+        });
+      } else {
+        buyBtn.disabled = true; buyBtn.style.opacity = 0.5;
+      }
+      const buyRow = addBtn.closest('div');
+      buyRow.parentNode.insertBefore(buyBtn, buyRow.nextSibling);
+    }
+
 // Real, listed similar pieces: same category first, exclude current product, only active
     (function buildSimilar() {
       var catLabels = { evening: 'Evening Wear', formal: 'Formal', cocktail: 'Cocktail', outerwear: 'Outerwear', accessories: 'Accessories' };
@@ -422,6 +447,25 @@ const added = addToCart({
         });
 
         actions.prepend(wishB);
+        // Buy — only when this piece is for sale
+        if (p.for_sale && Number(p.sale_price) > 0) {
+          var buyB = document.createElement('button');
+          buyB.className = 'card-btn filled';
+          var buyTxt = function () { return 'Buy ₹' + Number(p.sale_price).toLocaleString('en-IN'); };
+          buyB.textContent = buyTxt();
+          buyB.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var item = { id: p.id, name: p.name, category: p.category, price: p.sale_price, img: p.img, type: 'buy' };
+            if (addToCart(item)) {
+              buyB.textContent = 'Added!'; buyB.style.background = '#4CAF50';
+              flyToCart(item, buyB);
+              setTimeout(function () { buyB.textContent = buyTxt(); buyB.style.background = ''; }, 1500);
+            } else {
+              window.location.href = '/cart?item=' + p.id + '&type=buy';
+            }
+          });
+          actions.prepend(buyB);
+        }
         actions.prepend(addB);
         card.style.cursor = 'pointer';
         grid.appendChild(card);

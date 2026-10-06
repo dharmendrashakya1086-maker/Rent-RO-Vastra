@@ -92,7 +92,9 @@ function productRow(p) {
     budget: String(p.budget || ''), img: String(p.img || ''), images: JSON.stringify(p.images || [p.img].filter(Boolean)),
     price: Math.round(Number(p.price) || 0), discount: Math.min(90, Math.max(0, Math.round(Number(p.discount) || 0))),
     stock: Number(p.stock != null ? p.stock : 3),
-    active: p.active !== false
+    active: p.active !== false,
+    for_sale: p.for_sale === true || p.for_sale === 'true' || p.for_sale === 1,
+    sale_price: Math.max(0, Math.round(Number(p.sale_price) || 0))
   };
 }
 function productOut(r) {
@@ -104,7 +106,8 @@ function productOut(r) {
     id: r.id, name: r.name, category: r.category, gender: r.gender,
     occasion: polish(r.occasion), style: polish(r.style), budget: r.budget,
     img: r.img, images: r.images || [r.img].filter(Boolean),
-    price: r.price, discount: Number(r.discount) || 0, stock: r.stock, active: r.active !== false, link: '/piece/' + r.id
+    price: r.price, discount: Number(r.discount) || 0, stock: r.stock, active: r.active !== false,
+    for_sale: r.for_sale === true, sale_price: Number(r.sale_price) || 0, link: '/piece/' + r.id
   };
 }
 
@@ -125,10 +128,10 @@ async function allProducts() {
 }
 async function updateProduct(id, p) {
   const row = productRow(p);
-  await q(`INSERT INTO products (id,name,category,gender,occasion,style,budget,img,images,price,discount,stock,active)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12,$13)
-           ON CONFLICT (id) DO UPDATE SET name=$2,category=$3,gender=$4,occasion=$5,style=$6,budget=$7,img=$8,images=$9::jsonb,price=$10,discount=$11,stock=$12,active=$13`,
-    [row.id, row.name, row.category, row.gender, row.occasion, row.style, row.budget, row.img, row.images, row.price, row.discount, row.stock, row.active]);
+  await q(`INSERT INTO products (id,name,category,gender,occasion,style,budget,img,images,price,discount,stock,active,for_sale,sale_price)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12,$13,$14,$15)
+           ON CONFLICT (id) DO UPDATE SET name=$2,category=$3,gender=$4,occasion=$5,style=$6,budget=$7,img=$8,images=$9::jsonb,price=$10,discount=$11,stock=$12,active=$13,for_sale=$14,sale_price=$15`,
+    [row.id, row.name, row.category, row.gender, row.occasion, row.style, row.budget, row.img, row.images, row.price, row.discount, row.stock, row.active, row.for_sale, row.sale_price]);
 }
 async function bookedQty(productId, startDate, endDate) {
   if (!startDate || !endDate) return 0;
@@ -443,6 +446,7 @@ function rowToOrder(r) {
     id: r.id, name: r.name, email: r.email, phone: r.phone, addr: r.addr, city: r.city, zip: r.zip,
     item: r.item, img: r.img, productId: r.product_id, startDate: r.start_date, endDate: r.end_date,
     qty: r.qty, size: r.size, occasion: r.occasion, dates: r.dates, total: r.total, status: r.status,
+    type: r.type || 'rent',
     refund: r.refund, userEmail: r.user_email, time: r.created_at
   };
 }
@@ -452,33 +456,52 @@ app.post('/api/orders', authReq, async (req, res) => {
   if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'Empty order' });
   if (!email || !/.*@.*/.test(String(email))) return res.status(400).json({ error: 'A valid email is required' });
   const u = req.user;
-  // availability check per product (batch same-product items) + authoritative price for the total
-  const dbPrice = {};
+  const isBuy = it => it.type === 'buy';
+  // authoritative product data once; buy lines check for_sale/sale_price/stock, rent lines check live availability
+  const dbProd = {};
   for (const productId of [...new Set(items.map(i => Number(i.productId)))]) {
-    const batch = items.filter(i => Number(i.productId) === productId);
+    const p = (await q('SELECT name,price,for_sale,sale_price,stock FROM products WHERE id=$1', [productId])).rows[0];
+    if (!p) return res.status(400).json({ error: 'Unknown product in order' });
+    dbProd[productId] = p;
+  }
+  for (const it of items) {
+    if (!isBuy(it)) continue;
+    const p = dbProd[Number(it.productId)];
+    const need = Math.max(Number(it.qty) || 1, 1);
+    if (!(p.for_sale && Number(p.sale_price) > 0)) return res.status(400).json({ error: p.name + ' is not available for purchase' });
+    if (Number(p.stock) < need) return res.status(409).json({ error: 'Only ' + Number(p.stock) + ' left in stock for ' + p.name });
+  }
+  // rent availability check (batch same-product items)
+  for (const productId of [...new Set(items.filter(i => !isBuy(i)).map(i => Number(i.productId)))]) {
+    const batch = items.filter(i => Number(i.productId) === productId && !isBuy(i));
     const need = batch.reduce((s, i) => s + Math.max(Number(i.qty) || 1, 1), 0);
     const av = await bookedQty(productId, batch[0].startDate, batch[0].endDate);
-    const p = (await q('SELECT name,price FROM products WHERE id=$1', [productId])).rows[0];
-    if (!p) return res.status(400).json({ error: 'Unknown product in order' });
-    dbPrice[productId] = Number(p.price) || 0;
     if (!av.enough || av.available < need) {
-      return res.status(409).json({ error: p.name + ' is no longer available for the selected dates' });
+      return res.status(409).json({ error: dbProd[productId].name + ' is no longer available for the selected dates' });
     }
   }
   // member = signed in. Every order passes authReq, so members always get the 10%.
   const isMember = true;
   const created = [];
   for (const it of items) {
+    const buy = isBuy(it);
+    const p = dbProd[Number(it.productId)];
+    const qty = Math.max(Number(it.qty) || 1, 1);
     const days = Math.max(Math.round((new Date(it.endDate) - new Date(it.startDate)) / 86400000) + 1 || Number(it.days) || 1, 1);
-    const total = rentalTotal(dbPrice[Number(it.productId)], days, Number(it.qty) || 1, isMember);
+    // buy = one-time sale price, no day/member discount
+    const total = buy ? Number(p.sale_price) * qty : rentalTotal(Number(p.price), days, qty, isMember);
+    const start = buy ? '' : String(it.startDate || '');
+    const end = buy ? '' : String(it.endDate || '');
+    const dates = buy ? 'Purchase' : String((it.startDate || 'TBD') + ' — ' + (it.endDate || 'TBD'));
     const r = await q(`INSERT INTO orders (user_id,user_email,name,email,phone,addr,city,zip,item,img,product_id,
-                       start_date,end_date,qty,size,occasion,dates,total,status,created_at)
-                       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING id`,
+                       start_date,end_date,qty,size,occasion,dates,total,status,type,created_at)
+                       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21) RETURNING id`,
       [u.id, u.email, String(name), String(email), String(phone || ''), String(addr || ''), String(city || ''),
         String(zip || ''), String(it.name || ''), String(it.img || ''), Number(it.productId),
-        String(it.startDate || ''), String(it.endDate || ''), Math.max(Number(it.qty) || 1, 1),
-        String(it.size || ''), String(it.occasion || ''), String((it.startDate || 'TBD') + ' — ' + (it.endDate || 'TBD')),
-        Math.round(total), 'Pending', now()]);
+        start, end, qty, String(it.size || ''), String(it.occasion || ''), dates,
+        Math.round(total), 'Pending', buy ? 'buy' : 'rent', now()]);
+    // a sold piece leaves the shelf; cancelling puts it back
+    if (buy) await q('UPDATE products SET stock=GREATEST(stock-$1,0) WHERE id=$2', [qty, Number(it.productId)]);
     created.push(r.rows[0].id);
   }
   res.json({ ids: created });
@@ -499,6 +522,7 @@ app.post('/api/orders/:id/cancel', authReq, async (req, res) => {
   if (u.role !== 'admin' && r.user_email !== u.email && r.user_id !== u.id) return res.status(403).json({ error: 'Not your order' });
   if (r.status !== 'Cancelled') {
     await q('UPDATE orders SET status=$1, refund=$2 WHERE id=$3', ['Cancelled', cancelRefund(r.start_date), r.id]);
+    if ((r.type || 'rent') === 'buy') await q('UPDATE products SET stock=stock+$1 WHERE id=$2', [Number(r.qty) || 1, Number(r.product_id)]);
   }
   res.json({ ok: true });
 });

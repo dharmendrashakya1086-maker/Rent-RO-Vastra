@@ -372,7 +372,25 @@
           showToast('Removed from wishlist');
         }
       });
-acts.prepend(wBtn);
+      // Buy — featured cards are view/wishlist only, but a piece for sale still gets a Buy button
+      if (prod && prod.for_sale && Number(prod.sale_price) > 0) {
+        var bBtn = document.createElement('button');
+        bBtn.className = 'card-btn filled';
+        var bTxt = function () { return 'Buy ₹' + Number(prod.sale_price).toLocaleString('en-IN'); };
+        bBtn.textContent = bTxt();
+        bBtn.addEventListener('click', function () {
+          var item = { id: prod.id, name: title, category: prod.category, price: prod.sale_price, img: card.querySelector('.card-img').src, type: 'buy' };
+          if (addToCart(item)) {
+            bBtn.textContent = 'Added!'; bBtn.style.background = '#4CAF50';
+            flyToCart(item, bBtn);
+            setTimeout(function () { bBtn.textContent = bTxt(); bBtn.style.background = ''; }, 1500);
+          } else {
+            window.location.href = '/cart?item=' + prod.id + '&type=buy';
+          }
+        });
+        acts.prepend(bBtn);
+      }
+      acts.prepend(wBtn);
     });
   });
   </script>

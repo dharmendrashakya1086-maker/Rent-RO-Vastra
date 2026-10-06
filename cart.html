@@ -93,18 +93,23 @@
 let subtotal = 0, listTotal = 0;
       let conflictItems = 0;
       const itemsHtml = cart.map((item, i) => {
+        const buy = item.type === 'buy';
         const days = item.days || 1;
         const qty = item.qty || 1;
-        const total = rentalTotal(item.price, days, qty);
-        subtotal += total; listTotal += item.price * days * qty;
+        const total = buy ? item.price * qty : rentalTotal(item.price, days, qty);
+        subtotal += total; listTotal += buy ? item.price * qty : item.price * days * qty;
         let availNote = '';
         if (item.id && item.startDate && item.endDate) {
           const a = stockAvailability(item.id, item.startDate, item.endDate);
           if (!a.enough || a.available < qty) { conflictItems++; availNote = '<div style="color:#ff8a80;font-size:0.75rem;margin-top:6px;">✗ Only ' + a.available + ' available for these dates</div>'; }
         }
-        const offPct = Math.round((1 - total / (item.price * days * qty)) * 100);
-        const note = offPct > 0 ? '<div style="color:#4CAF50;font-size:0.75rem;margin-top:2px;">' + days + ' day' + (days > 1 ? 's' : '') + ' — ' + offPct + '% off' + (isMember() ? ' (incl. member 10%)' : '') + '</div>' : '';
-        return '<div class="cart-item" data-id="' + (item.id || '') + '"><img src="' + item.img + '" alt="" class="cart-item-img"><div class="cart-item-info"><div class="cart-item-cat">' + item.category + '</div><div class="cart-item-name">' + item.name + '</div><div class="cart-item-price"><strong>₹' + item.price + '</strong> / day' + note + '</div><div class="cart-item-dates"><input type="date" value="' + (item.startDate || '') + '" data-idx="' + i + '" data-field="startDate" class="cart-date" aria-label="' + item.name + ' rental start date"><input type="date" value="' + (item.endDate || '') + '" data-idx="' + i + '" data-field="endDate" class="cart-date" aria-label="' + item.name + ' rental end date"></div><div class="cart-qty"><span>Qty</span><button class="qty-btn" data-idx="' + i + '" data-delta="-1" aria-label="Decrease quantity of ' + item.name + '">−</button><span class="qty-val">' + qty + '</span><button class="qty-btn" data-idx="' + i + '" data-delta="1" aria-label="Increase quantity of ' + item.name + '">+</button></div>' + availNote + '<div style="display:flex;gap:10px;"><a class="card-btn filled" style="text-decoration:none;flex:0 0 auto;padding:10px 18px;" href="' + checkoutHref + (item.id ? '?item=' + item.id : '') + '">Rent This</a><button class="cart-item-remove" data-idx="' + i + '" aria-label="Remove ' + item.name + ' from cart"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg><span>Remove</span></button></div></div></div>';
+        const offPct = buy ? 0 : Math.round((1 - total / (item.price * days * qty)) * 100);
+        const note = !buy && offPct > 0 ? '<div style="color:#4CAF50;font-size:0.75rem;margin-top:2px;">' + days + ' day' + (days > 1 ? 's' : '') + ' — ' + offPct + '% off' + (isMember() ? ' (incl. member 10%)' : '') + '</div>' : '';
+        const priceLine = '<div class="cart-item-price"><strong>₹' + item.price + '</strong> ' + (buy ? 'one-time' : '/ day') + note + '</div>';
+        const dates = buy ? '<div style="color:var(--text-muted);font-size:0.75rem;margin-top:6px;">Purchase — no rental dates needed</div>'
+          : '<div class="cart-item-dates"><input type="date" value="' + (item.startDate || '') + '" data-idx="' + i + '" data-field="startDate" class="cart-date" aria-label="' + item.name + ' rental start date"><input type="date" value="' + (item.endDate || '') + '" data-idx="' + i + '" data-field="endDate" class="cart-date" aria-label="' + item.name + ' rental end date"></div>';
+        const cta = '<a class="card-btn filled" style="text-decoration:none;flex:0 0 auto;padding:10px 18px;" href="' + checkoutHref + (item.id ? '?item=' + item.id + (buy ? '&type=buy' : '') : '') + '">' + (buy ? 'Buy This' : 'Rent This') + '</a>';
+        return '<div class="cart-item" data-id="' + (item.id || '') + '"><img src="' + item.img + '" alt="" class="cart-item-img"><div class="cart-item-info"><div class="cart-item-cat">' + item.category + '</div><div class="cart-item-name">' + item.name + '</div>' + priceLine + dates + '<div class="cart-qty"><span>Qty</span><button class="qty-btn" data-idx="' + i + '" data-delta="-1" aria-label="Decrease quantity of ' + item.name + '">−</button><span class="qty-val">' + qty + '</span><button class="qty-btn" data-idx="' + i + '" data-delta="1" aria-label="Increase quantity of ' + item.name + '">+</button></div>' + availNote + '<div style="display:flex;gap:10px;">' + cta + '<button class="cart-item-remove" data-idx="' + i + '" aria-label="Remove ' + item.name + ' from cart"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg><span>Remove</span></button></div></div></div>';
       }).join('');
 
       const saved = listTotal - subtotal;
@@ -136,7 +141,10 @@ document.querySelectorAll('.cart-item-remove').forEach(btn => {
             renderCart();
             return;
           }
-          if (item.id && item.startDate && item.endDate) {
+          if ((item.type || 'rent') === 'buy') {
+            const p = getProducts().find(x => x.id === item.id);
+            if (p && next > (Number(p.stock) || 1)) { showToast('Only ' + p.stock + ' in stock'); return; }
+          } else if (item.id && item.startDate && item.endDate) {
             const a = stockAvailability(item.id, item.startDate, item.endDate);
             if (next > a.available) {
               showToast('Only ' + a.available + ' available for these dates');

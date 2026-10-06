@@ -185,7 +185,8 @@
             const id = parseFloat(btn.dataset.cancel);
           const order = getOrders().find(o => o.id === id);
           const late = cancelRefund(order) === 50;
-          if (confirm('Cancel this booking?' + (late ? '\n\nDeliveries fall within 48 hours of this rental, so a 50% charge applies.' : '\n\nFree cancellation — 48+ hours before delivery.') + '\n\nYour dates will be freed for other renters.')) {
+          const isBuy = (order.type || 'rent') === 'buy';
+          if (confirm('Cancel this ' + (isBuy ? 'purchase' : 'booking') + '?' + (late ? '\n\nDeliveries fall within 48 hours of this rental, so a 50% charge applies.' : '\n\nFree cancellation — 48+ hours before delivery.') + (isBuy ? '\n\nThe piece goes back in stock.' : '\n\nYour dates will be freed for other renters.'))) {
             cancelOrder(id);
             showToast(late ? 'Cancelled — 50% charge applies' : 'Cancelled — full refund');
             renderRentals();

@@ -376,7 +376,26 @@ const btn = document.createElement('button');
           showToast('Removed from wishlist');
         }
       });
-actions.prepend(wishBtn);
+      // Buy — only when the admin has this piece for sale
+      if (product && product.for_sale && Number(product.sale_price) > 0) {
+        const buyBtn = document.createElement('button');
+        buyBtn.className = 'card-btn filled';
+        const buyTxt = () => 'Buy ₹' + Number(product.sale_price).toLocaleString('en-IN');
+        buyBtn.textContent = Number(product.stock) > 0 ? buyTxt() : 'Sold Out';
+        buyBtn.addEventListener('click', () => {
+          const item = { id: product.id, name: title, category: card.querySelector('.card-category').textContent, price: product.sale_price, img: card.querySelector('.card-img').src, type: 'buy' };
+          if (addToCart(item)) {
+            buyBtn.textContent = 'Added!'; buyBtn.style.background = '#4CAF50';
+            flyToCart(item, buyBtn);
+            setTimeout(() => { buyBtn.textContent = buyTxt(); buyBtn.style.background = ''; }, 1500);
+          } else {
+            window.location.href = '/cart?item=' + product.id + '&type=buy';
+          }
+        });
+        if (!(Number(product.stock) > 0)) { buyBtn.disabled = true; buyBtn.style.opacity = 0.5; }
+        actions.prepend(buyBtn);
+      }
+      actions.prepend(wishBtn);
       actions.prepend(btn);
 });
   });

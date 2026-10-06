@@ -51,9 +51,13 @@ async function migrate() {
     price INT DEFAULT 0,
     discount INT DEFAULT 0,
     stock INT DEFAULT 1,
-    active BOOLEAN DEFAULT TRUE
+    active BOOLEAN DEFAULT TRUE,
+    for_sale BOOLEAN DEFAULT FALSE,
+    sale_price INT DEFAULT 0
   )`);
   await q(`ALTER TABLE products ADD COLUMN IF NOT EXISTS discount INT DEFAULT 0`);
+  await q(`ALTER TABLE products ADD COLUMN IF NOT EXISTS for_sale BOOLEAN DEFAULT FALSE`);
+  await q(`ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_price INT DEFAULT 0`);
   await q(`CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     user_id TEXT DEFAULT '',
@@ -75,9 +79,11 @@ async function migrate() {
     dates TEXT DEFAULT '',
     total INT DEFAULT 0,
     status TEXT DEFAULT 'Pending',
+    type TEXT DEFAULT 'rent',
     refund INT DEFAULT 0,
     created_at BIGINT DEFAULT 0
   )`);
+  await q(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'rent'`);
   await q(`CREATE TABLE IF NOT EXISTS reviews (
     id SERIAL PRIMARY KEY,
     user_id TEXT DEFAULT '',
