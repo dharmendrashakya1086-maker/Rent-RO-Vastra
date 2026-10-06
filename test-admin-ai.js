@@ -58,8 +58,7 @@ A.aiProcessInput('Yes, delete it');
 eq('review deleted', A.getReviewsAll().length, 0);
 
 A.aiProcessInput('Delete product');
-A.aiProcessInput('formal');
-A.aiProcessInput('1');
+A.aiProcessInput('Delete sherwani');
 A.aiProcessInput('Yes, delete it');
 eq('product hidden', A.getProducts().find(p => p.id === 2).active, false);
 
