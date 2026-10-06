@@ -20,6 +20,26 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const sb = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
   ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } })
   : null;
+// Optional direct email sender (Resend). Fees badhane ke liye: resend.com → API Keys → key ko
+// Render env me RESEND_API_KEY naam se rakho. Yah set ho to OTP emails khud bheji jaati hain,
+// Supabase ki flaky shared email service par depend nahi rahna padta.
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const MAIL_FROM = process.env.MAIL_FROM || 'Rent-RO-Vastra <onboarding@resend.dev>';
+async function sendOtpEmail(to, code) {
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: MAIL_FROM,
+      to,
+      subject: 'Rent-RO-Vastra login code',
+      text: 'Your verification code is ' + code + '. Valid for 10 minutes.',
+      html: '<p>Your Rent-RO-Vastra verification code is <strong style="font-size:20px;letter-spacing:3px;">' + code + '</strong>.</p><p>Valid for 10 minutes.</p>'
+    })
+  });
+  if (!r.ok) throw new Error('resend ' + r.status);
+  return true;
+}
 
 const app = express();
 app.disable('x-powered-by');              // do not advertise the stack
@@ -298,7 +318,11 @@ app.post('/api/auth/otp/send', async (req, res) => {
 if (!sb) return authUnavailable(res);
   const wait = cooldown('otp:' + email, 60 * 1000);
   if (wait) return res.status(429).json({ error: 'Resend karne se pehle ' + wait + ' second ruko.' });
-  issueOtp(email); // backup code hamesha store — email service fail ho to admin panel se batao, flow phir bhi chalta hai
+  const code = issueOtp(email); // apna code hamesha store
+  if (RESEND_API_KEY) {
+    try { await sendOtpEmail(email, code); return res.json({ sent: true, delivery: 'email' }); }
+    catch (e) { console.error('resend fail:', e.message); }
+  }
   const { error } = await sb.auth.signInWithOtp({ email });
   if (error) return res.json({ sent: true, delivery: 'manual' });
   res.json({ sent: true, delivery: 'email' });
@@ -341,7 +365,11 @@ app.post('/api/auth/forgot', async (req, res) => {
   if (!exists) return res.status(404).json({ error: 'No account found with this email' });
   const wait = cooldown('otp:' + email, 60 * 1000);
   if (wait) return res.status(429).json({ error: 'Resend karne se pehle ' + wait + ' second ruko.' });
-  issueOtp(email); // backup code — email fail ho to admin panel se batao
+  const code = issueOtp(email); // apna code hamesha store
+  if (RESEND_API_KEY) {
+    try { await sendOtpEmail(email, code); return res.json({ sent: true, delivery: 'email' }); }
+    catch (e) { console.error('resend fail:', e.message); }
+  }
   const { error } = await sb.auth.signInWithOtp({ email });
   if (error) return res.json({ sent: true, delivery: 'manual' });
   res.json({ sent: true, delivery: 'email' });
