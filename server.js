@@ -220,15 +220,22 @@ app.post('/api/auth/register', async (req, res) => {
   if (ip.blocked) return res.status(429).json({ error: 'Too many sign-ups from this device. 1 ghanta baad try karo.' });
   if (!(await usernameFree(un))) return res.status(409).json({ error: 'Ye username already taken hai — koi aur try karo' });
   // OTP proves inbox ownership first; Supabase creates the auth user on verify.
-  const { data, error } = await sb.auth.verifyOtp({ email: em, token: String(code || '').trim(), type: 'email' });
-  if (error || !data || !data.user) return res.status(401).json({ error: 'Invalid or expired code. Send a new code and try again.' });
+  let uid;
+  if (otpMatches(em, String(code || '').trim())) {
+    const { data: cu, error: cerr } = await sb.auth.admin.createUser({ email: em, password, email_confirm: true });
+    if (cerr) return res.status(409).json({ error: 'Ye email pehle se registered hai' });
+    uid = cu.user.id;
+  } else {
+    const { data, error } = await sb.auth.verifyOtp({ email: em, token: String(code || '').trim(), type: 'email' });
+    if (error || !data || !data.user) return res.status(401).json({ error: 'Invalid or expired code. Send a new code and try again.' });
+    uid = data.user.id;
+  }
   const dup = await q('SELECT id,password_hash FROM users WHERE email=$1', [em]);
   if (dup.rows.length) {
     // A profile created via email-OTP already proved inbox ownership: never let someone else claim it.
     if (!dup.rows[0].password_hash) return res.status(409).json({ error: 'Ye email pehle se account hai — login karein ya OTP se OTP login karein' });
     return res.status(409).json({ error: 'Email already registered' });
   }
-  const uid = data.user.id;
   // Give the OTP-created auth user a password so email+password login works too.
   await sb.auth.admin.updateUserById(uid, { password, email_confirm: true });
   const role = em === ADMIN_EMAIL ? 'admin' : 'user';
@@ -265,6 +272,22 @@ app.post('/api/auth/login', async (req, res) => {
   res.json({ user: loginUser(req, res, u, !!remember) });
 });
 
+// ---- Self-contained OTP fallback ----
+// Supabase ki shared email service kabhi kabhi fail ho jaati hai (rate limit / gateway timeout).
+// Tab bhi flow chalna chahiye: apna 6-digit code store hota hai, admin panel ("OTP Relay") me dikhta hai,
+// aur owner WhatsApp/phone se customer ko bata deta hai. Verify hamesha pehle hamara code check karta hai.
+const otps = new Map();
+function issueOtp(email) {
+  const code = String(crypto.randomInt(100000, 1000000));
+  otps.set(email, { code, exp: Date.now() + 10 * 60 * 1000 });
+  return code;
+}
+function otpMatches(email, token) {
+  const r = otps.get(email);
+  if (r && r.code === token && Date.now() < r.exp) { otps.delete(email); return true; }
+  return false;
+}
+
 // ---- Email OTP auth (Supabase) ----
 // ponytail: emails are sent by Supabase Auth itself (their verified sender,
 // delivers to any recipient). Restyle the template in the Supabase dashboard;
@@ -275,27 +298,35 @@ app.post('/api/auth/otp/send', async (req, res) => {
 if (!sb) return authUnavailable(res);
   const wait = cooldown('otp:' + email, 60 * 1000);
   if (wait) return res.status(429).json({ error: 'Resend karne se pehle ' + wait + ' second ruko.' });
+  issueOtp(email); // backup code hamesha store — email service fail ho to admin panel se batao, flow phir bhi chalta hai
   const { error } = await sb.auth.signInWithOtp({ email });
-  if (error) {
-    sentAt.delete('otp:' + email); // failed send = kuch bheja nahi, cooldown burn mat karo
-    if (/rate|limit|throttl/i.test(error.message))
-      return res.status(429).json({ error: 'Email service ka rate limit hit ho gaya hai. 30-60 minute baad try karo, ya Supabase → Authentication → Rate Limits me Email OTP ki limit badha do.' });
-    return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
-  }
-  res.json({ sent: true });
+  if (error) return res.json({ sent: true, delivery: 'manual' });
+  res.json({ sent: true, delivery: 'email' });
 });
 
 app.post('/api/auth/otp/verify', async (req, res) => {
   const email = String((req.body || {}).email || '').trim().toLowerCase();
   const code = String((req.body || {}).code || '').trim();
   if (!sb) return authUnavailable(res);
-  const { data, error } = await sb.auth.verifyOtp({ email, token: code, type: 'email' });
-  if (error || !data || !data.user) return res.status(401).json({ error: 'Invalid or expired code' });
+  let uid;
+  if (otpMatches(email, code)) {
+    const existing = (await q('SELECT id FROM users WHERE email=$1', [email])).rows[0];
+    if (existing) uid = existing.id;
+    else {
+      const { data: cu, error: cerr } = await sb.auth.admin.createUser({ email, email_confirm: true, password: crypto.randomBytes(12).toString('base64url') });
+      if (cerr) return res.status(500).json({ error: 'Account setup fail. Try again.', detail: cerr.message });
+      uid = cu.user.id;
+    }
+  } else {
+    const { data, error } = await sb.auth.verifyOtp({ email, token: code, type: 'email' });
+    if (error || !data || !data.user) return res.status(401).json({ error: 'Invalid or expired code' });
+    uid = data.user.id;
+  }
   let u = (await q('SELECT * FROM users WHERE email=$1', [email])).rows[0];
   if (!u) {
     // ponytail: OTP-first user has a real Supabase auth id but no password row yet.
     u = (await q('INSERT INTO users (id,email,name,phone,role,created_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-[data.user.id, email, email.split('@')[0], '', 'user', now()])).rows[0];
+[uid, email, email.split('@')[0], '', 'user', now()])).rows[0];
   }
   if (u.blocked) return res.status(403).json({ error: 'Ye account block kiya gaya hai. Support se baat karo.' });
   res.json({ user: loginUser(req, res, u, true) });
@@ -310,14 +341,10 @@ app.post('/api/auth/forgot', async (req, res) => {
   if (!exists) return res.status(404).json({ error: 'No account found with this email' });
   const wait = cooldown('otp:' + email, 60 * 1000);
   if (wait) return res.status(429).json({ error: 'Resend karne se pehle ' + wait + ' second ruko.' });
+  issueOtp(email); // backup code — email fail ho to admin panel se batao
   const { error } = await sb.auth.signInWithOtp({ email });
-  if (error) {
-    sentAt.delete('otp:' + email);
-    if (/rate|limit|throttl/i.test(error.message))
-      return res.status(429).json({ error: 'Email service ka rate limit hit ho gaya hai. 30-60 minute baad try karo, ya Supabase → Authentication → Rate Limits me Email OTP ki limit badha do.' });
-    return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
-  }
-  res.json({ sent: true });
+  if (error) return res.json({ sent: true, delivery: 'manual' });
+  res.json({ sent: true, delivery: 'email' });
 });
 
 app.post('/api/auth/reset', async (req, res) => {
@@ -326,9 +353,16 @@ app.post('/api/auth/reset', async (req, res) => {
   const password = String((req.body || {}).password || '');
   if (!email || !code || password.length < 8) return res.status(400).json({ error: 'Email, code and password (8+ chars) required' });
   if (!sb) return authUnavailable(res);
-  const { data, error } = await sb.auth.verifyOtp({ email, token: code, type: 'email' });
-  if (error || !data || !data.user) return res.status(401).json({ error: 'Invalid or expired code. Send a new code and try again.' });
-  await sb.auth.admin.updateUserById(data.user.id, { password, email_confirm: true });
+  let uid;
+  if (otpMatches(email, code)) {
+    const existing = (await q('SELECT id FROM users WHERE email=$1', [email])).rows[0];
+    uid = existing ? existing.id : (await sb.auth.admin.createUser({ email, email_confirm: true, password })).data.user.id;
+  } else {
+    const { data, error } = await sb.auth.verifyOtp({ email, token: code, type: 'email' });
+    if (error || !data || !data.user) return res.status(401).json({ error: 'Invalid or expired code. Send a new code and try again.' });
+    uid = data.user.id;
+  }
+  await sb.auth.admin.updateUserById(uid, { password, email_confirm: true }).catch(() => {});
   let u = (await q('SELECT * FROM users WHERE email=$1', [email])).rows[0];
   if (!u) {
     // ponytail: OTP-created profile with no password yet — attach one on reset.
@@ -569,6 +603,15 @@ app.delete('/api/admin/users/:id', adminReq, async (req, res) => {
   await q('DELETE FROM users WHERE id=$1 AND role=$2', [target, 'user']);
   if (sb && !String(target).startsWith('otp-')) sb.auth.admin.deleteUser(String(target)).catch(() => {});
   res.json({ ok: true });
+});
+
+// Self-OTP relay: live pending codes for the owner to deliver by WhatsApp/phone when email is down.
+app.get('/api/admin/otpcodes', adminReq, (req, res) => {
+  const codes = [];
+  const t = Date.now();
+  for (const [email, o] of otps) if (o.exp > t) codes.push({ email, code: o.code, exp: new Date(o.exp).toLocaleTimeString('en-IN') });
+  codes.sort((a, b) => a.email.localeCompare(b.email));
+  res.json({ codes });
 });
 
 // ---------------- messages ----------------

@@ -234,12 +234,12 @@ async function login(idOrEmail, pass) {
   return null;
 }
 async function sendOtp(email) {
-  if (SERVER.on) { const r = await api('POST', '/api/auth/otp/send', { body: { email } }); return r.sent === true; }
-  return true;
+  if (SERVER.on) { const r = await api('POST', '/api/auth/otp/send', { body: { email } }); if (!r || !r.sent) return null; return r; }
+  return { sent: true, delivery: 'client' };
 }
 async function forgot(email) {
-  if (SERVER.on) { const r = await api('POST', '/api/auth/forgot', { body: { email } }); return r.sent === true; }
-  return true;
+  if (SERVER.on) { const r = await api('POST', '/api/auth/forgot', { body: { email } }); if (!r || !r.sent) return null; return r; }
+  return { sent: true, delivery: 'client' };
 }
 async function resetPass(email, code, pass) {
   if (SERVER.on) {

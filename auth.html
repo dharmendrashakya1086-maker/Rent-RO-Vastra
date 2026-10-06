@@ -266,9 +266,10 @@
       hint.style.color = 'var(--text-muted)';
       hint.textContent = 'Sending code...';
       try {
-        await forgot(em);
+        const r = await forgot(em);
+        if (!r) throw new Error('Could not send code');
         hint.style.color = '#4CAF50';
-        hint.textContent = 'Check your Gmail for the OTP';
+        hint.textContent = r.delivery === 'manual' ? 'Code ready — email service slow hai, shop owner (WhatsApp/Phone) se code le lo. 10 min valid.' : 'Check your Gmail for the OTP';
         lockSendBtn(document.getElementById('forgotSend'));
       } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send code'; }
     });
@@ -296,9 +297,10 @@
       hint.style.color = 'var(--text-muted)';
       hint.textContent = 'Sending code...';
       try {
-        await sendOtp(em);
+        const r = await sendOtp(em);
+        if (!r) throw new Error('Could not send code');
         hint.style.color = '#4CAF50';
-        hint.textContent = 'Check your Gmail for the OTP';
+        hint.textContent = r.delivery === 'manual' ? 'Code ready — email service slow hai, shop owner (WhatsApp/Phone) se code le lo. 10 min valid.' : 'Check your Gmail for the OTP';
         lockSendBtn(document.getElementById('regOtpSend'));
       } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send code'; }
     });
@@ -343,11 +345,10 @@
       if (!em) { otpMsg.textContent = 'Enter your email first.'; return; }
       otpMsg.textContent = 'Sending code...';
       try {
-        const r = await fetch('/api/auth/otp/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: em }) });
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error || 'Could not send code');
+        const r = await sendOtp(em);
+        if (!r) throw new Error('Could not send code');
         otpMsg.style.color = '#4CAF50';
-        otpMsg.textContent = 'Code sent to ' + em + '. Check your inbox.';
+        otpMsg.textContent = r.delivery === 'manual' ? 'Code ready — email service slow hai, shop owner (WhatsApp/Phone) se code le lo. 10 min valid.' : 'Code sent to ' + em + '. Check your inbox.';
         document.getElementById('otpCodeWrap').style.display = '';
         document.getElementById('otpVerify').style.display = '';
         document.getElementById('otpSend').textContent = 'Resend code';
