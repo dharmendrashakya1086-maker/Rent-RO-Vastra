@@ -276,7 +276,12 @@ if (!sb) return authUnavailable(res);
   const wait = cooldown('otp:' + email, 60 * 1000);
   if (wait) return res.status(429).json({ error: 'Resend karne se pehle ' + wait + ' second ruko.' });
   const { error } = await sb.auth.signInWithOtp({ email });
-  if (error) return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
+  if (error) {
+    sentAt.delete('otp:' + email); // failed send = kuch bheja nahi, cooldown burn mat karo
+    if (/rate|limit|throttl/i.test(error.message))
+      return res.status(429).json({ error: 'Email service ka rate limit hit ho gaya hai. 30-60 minute baad try karo, ya Supabase → Authentication → Rate Limits me Email OTP ki limit badha do.' });
+    return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
+  }
   res.json({ sent: true });
 });
 
@@ -306,7 +311,12 @@ app.post('/api/auth/forgot', async (req, res) => {
   const wait = cooldown('otp:' + email, 60 * 1000);
   if (wait) return res.status(429).json({ error: 'Resend karne se pehle ' + wait + ' second ruko.' });
   const { error } = await sb.auth.signInWithOtp({ email });
-  if (error) return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
+  if (error) {
+    sentAt.delete('otp:' + email);
+    if (/rate|limit|throttl/i.test(error.message))
+      return res.status(429).json({ error: 'Email service ka rate limit hit ho gaya hai. 30-60 minute baad try karo, ya Supabase → Authentication → Rate Limits me Email OTP ki limit badha do.' });
+    return res.status(500).json({ error: 'Could not send code. Try again in a minute.', detail: error.message });
+  }
   res.json({ sent: true });
 });
 
