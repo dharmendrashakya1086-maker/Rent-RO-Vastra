@@ -251,6 +251,9 @@ async function googleLogin() {
   await adoptGuestData();
   return user;
 }
+async function sendOtp(email) {
+  return api('/api/auth/otp/send', { method: 'POST', body: { email } });
+}
 async function forgot(email) {
   const auth = await fbReady();
   try { await auth.sendPasswordResetEmail(String(email).trim()); }
@@ -258,12 +261,13 @@ async function forgot(email) {
   return { sent: true };
 }
 async function register(data) {
+  // The emailed 6-digit code is the signup verification gate (Brevo sends it).
+  if (data.code) await api('/api/auth/otp/check', { method: 'POST', body: { email: data.email, code: data.code } });
   const auth = await fbReady();
   let cred;
   try { cred = await auth.createUserWithEmailAndPassword(data.email, data.pass); }
   catch (e) { throw new Error(fbMsg(e)); }
   try { await cred.user.updateProfile({ displayName: (data.first + ' ' + data.last).trim() }); } catch (e) {}
-  try { await cred.user.sendEmailVerification(); } catch (e) {}
   await fbExchange();
   const d = await api('/api/me', { method: 'PATCH', body: { first: data.first, last: data.last, username: data.username, phone: data.phone } });
   const user = cacheUser(d.user);

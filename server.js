@@ -12,6 +12,9 @@ const PORT = Number(process.env.PORT) || 3010;
 // Firebase web config is public by design; the server needs the key only to verify ID tokens.
 let FIREBASE_KEY = '';
 try { FIREBASE_KEY = JSON.parse(fs.readFileSync(path.join(ROOT, 'firebase-config.json'), 'utf8')).apiKey || ''; } catch (e) {}
+// Brevo sends the 6-digit signup code. Without these the server logs the code instead (local testing only).
+const BREVO_KEY = process.env.BREVO_API_KEY || '';
+const BREVO_FROM = process.env.BREVO_FROM || '';
 const COOKIE = 'rv_sid';
 const SESSION_MS = 30 * 24 * 3600 * 1000;
 const OTP_MS = 10 * 60 * 1000;
@@ -96,8 +99,36 @@ function issueOtp(email) {
   const code = String(crypto.randomInt(100000, 1000000));
   db.otps[email] = { code, exp: Date.now() + OTP_MS };
   persist();
-  console.log('[auth] demo OTP for ' + email + ': ' + code + ' (no email service in this piece)');
   return code;
+}
+// Returns 'email' (Brevo delivered), 'dev' (no key — code logged for local testing), or 'error'.
+async function sendOtpEmail(email, code) {
+  if (!BREVO_KEY || !BREVO_FROM) {
+    console.log('[auth] dev OTP for ' + email + ': ' + code + ' (set BREVO_API_KEY + BREVO_FROM for real delivery)');
+    return 'dev';
+  }
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { accept: 'application/json', 'api-key': BREVO_KEY, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        sender: { name: 'Rent-RO-Vastra', email: BREVO_FROM },
+        to: [{ email }],
+        subject: 'Your Rent-RO-Vastra verification code',
+        htmlContent: '<div style="font-family:Arial,sans-serif;background:#100D0B;color:#f5efe6;padding:24px;border-radius:12px;">' +
+          '<h2 style="color:#C9A96E;margin-top:0;">Verify your email</h2>' +
+          '<p>Enter this 6-digit code on the sign-up page:</p>' +
+          '<div style="font-size:34px;letter-spacing:8px;font-weight:700;color:#C9A96E;padding:12px 0;">' + code + '</div>' +
+          '<p style="color:#a89f94;font-size:12px;">This code expires in 10 minutes. If you did not sign up, ignore this email.</p></div>'
+      })
+    });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      console.error('[auth] Brevo send failed:', r.status, d.message || d);
+      return 'error';
+    }
+    return 'email';
+  } catch (e) { console.error('[auth] Brevo send error:', e.message); return 'error'; }
 }
 function otpOk(email, code) {
   const r = db.otps[clean(email).toLowerCase()];
@@ -179,7 +210,10 @@ async function handle(req, res) {
     const wait = throttle('otp:' + ip(req) + email, 5, 10 * 60 * 1000);
     if (wait) return json(res, 429, { error: 'Wait ' + wait + ' seconds before requesting another code' });
     const code = issueOtp(email);
-    return json(res, 200, { sent: true, delivery: 'dev', code });
+    const delivery = await sendOtpEmail(email, code);
+    if (delivery === 'error') return json(res, 502, { error: 'Could not send the code right now. Please try again.' });
+    // Never expose the code once real email delivery is on — only dev mode returns it.
+    return json(res, 200, delivery === 'email' ? { sent: true, delivery } : { sent: true, delivery, code });
   }
 
   const b = (req.method === 'POST' || req.method === 'PATCH') ? await body(req) : {};
@@ -192,6 +226,8 @@ async function handle(req, res) {
     if (clean(b.pass).length < 8) return json(res, 400, { error: 'Password must be at least 8 characters' });
     if (db.users.some(x => x.email === email)) return json(res, 409, { error: 'Email already registered' });
     if (db.users.some(x => (x.username || '').toLowerCase() === username)) return json(res, 409, { error: 'Username already taken' });
+    const wait = throttle('otpcheck:' + ip(req) + email, 10, 10 * 60 * 1000);
+    if (wait) return json(res, 429, { error: 'Too many attempts. Try again in ' + wait + ' seconds' });
     if (!otpOk(email, b.code)) return json(res, 400, { error: 'Wrong or expired code' });
     const user = newUser({ first: clean(b.first), last: clean(b.last), username, email,
       phone: clean(b.phone), pass: hash(clean(b.pass)) });
@@ -205,6 +241,15 @@ async function handle(req, res) {
     const user = db.users.find(x => x.email === key || (x.phone || '') === key || (x.first || '').toLowerCase() === key);
     if (!user || !passOk(b.pass, user.pass)) return json(res, 401, { error: 'Wrong email or password' });
     return json(res, 200, { user: signIn(res, user, req) });
+  }
+  // Registration gate: consume the emailed code without creating a session (Firebase creates the account).
+  if (p === '/api/auth/otp/check' && req.method === 'POST') {
+    const email = clean(b.email).toLowerCase();
+    const wait = throttle('otpcheck:' + ip(req) + email, 10, 10 * 60 * 1000);
+    if (wait) return json(res, 429, { error: 'Too many attempts. Try again in ' + wait + ' seconds' });
+    if (!otpOk(email, b.code)) return json(res, 400, { error: 'Wrong or expired code' });
+    delete db.otps[email]; persist();
+    return json(res, 200, { ok: true });
   }
   if (p === '/api/auth/otp/verify' && req.method === 'POST') {
     const email = clean(b.email).toLowerCase();

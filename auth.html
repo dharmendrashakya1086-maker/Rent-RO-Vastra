@@ -129,9 +129,16 @@
         </div>
         <div class="form-group">
           <label for="regEmail">Email</label>
-          <input type="email" id="regEmail" placeholder="you@example.com" required>
+          <div style="display:flex;gap:8px;">
+            <input type="email" id="regEmail" placeholder="you@example.com" required style="flex:1;min-width:0;">
+            <button type="button" class="btn-outline" id="regOtpSend" style="padding:0 14px;white-space:nowrap;">Send OTP</button>
+          </div>
+          <p id="regOtpHint" style="margin-top:6px;font-size:0.72rem;color:var(--text-muted);min-height:1em;">We'll email you a 6-digit code to verify this address.</p>
         </div>
-        <p style="margin:0 0 14px;font-size:0.72rem;color:var(--text-muted);">Google will send a verification email to this address after signup.</p>
+        <div class="form-group">
+          <label for="regCode">Email code <span style="color:var(--text-muted);font-weight:400;">(required)</span></label>
+          <input type="text" id="regCode" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required autocomplete="one-time-code">
+        </div>
         <div class="form-group">
           <label for="regPhone">Phone</label>
           <input type="tel" id="regPhone" placeholder="+91 00000 00000">
@@ -149,6 +156,9 @@
           I agree to the <a href="/terms" style="color:var(--gold);text-decoration:underline;" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="/privacy" style="color:var(--gold);text-decoration:underline;" target="_blank" rel="noopener">Privacy Policy</a>, and I consent to my details being used to manage my rentals.
         </label>
 <button type="submit" class="btn-primary" style="width:100%;text-align:center;">Create Account</button>
+        <div class="auth-divider">or sign up with</div>
+        <button type="button" class="btn-outline" id="regGoogleBtn" style="width:100%;text-align:center;">Continue with Google</button>
+        <p id="regGoogleMsg" style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);text-align:center;min-height:1em;"></p>
       </form>
       <div class="lock-error" id="authError" style="margin-top:16px;text-align:center;"></div>
     </div>
@@ -246,6 +256,32 @@
       } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send reset link'; }
     });
 
+    // Signup: email the 6-digit code (Brevo on the server; dev fallback logs it)
+    document.getElementById('regOtpSend').addEventListener('click', async () => {
+      const hint = document.getElementById('regOtpHint');
+      const em = document.getElementById('regEmail').value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { hint.style.color = '#ff8a80'; hint.textContent = 'Enter a valid email first.'; return; }
+      hint.style.color = 'var(--text-muted)'; hint.textContent = 'Sending code...';
+      try {
+        const r = await sendOtp(em);
+        hint.style.color = '#4CAF50';
+        hint.textContent = r.code
+          ? 'Demo code: ' + r.code + ' — isi se verify karo (set BREVO_API_KEY for real email).'
+          : 'Code sent to ' + em + '. Check your inbox (and spam).';
+      } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send code'; }
+    });
+
+    // Google sign-up (same as login — Firebase handles it, then our session)
+    document.getElementById('regGoogleBtn').addEventListener('click', () => {
+      const gmsg = document.getElementById('regGoogleMsg');
+      const err = document.getElementById('authError');
+      gmsg.style.color = 'var(--text-muted)'; gmsg.textContent = 'Opening Google...'; err.textContent = '';
+      googleLogin().then(() => {
+        gmsg.textContent = 'Signed in! Redirecting...';
+        setTimeout(() => { window.location.href = '/account'; }, 800);
+      }).catch(e => { gmsg.style.color = '#ff8a80'; gmsg.textContent = e.message || 'Google sign-in failed'; });
+    });
+
     // Register
     document.getElementById('registerForm').addEventListener('submit', e => {
       e.preventDefault();
@@ -254,19 +290,21 @@
       const last = document.getElementById('regLast').value.trim();
       const username = document.getElementById('regUsername').value.trim().toLowerCase();
       const email = document.getElementById('regEmail').value.trim();
+      const code = document.getElementById('regCode').value.trim();
       const phone = document.getElementById('regPhone').value.trim();
       const pass = document.getElementById('regPass').value;
       const confirm = document.getElementById('regPassConfirm').value;
 
       if (pass !== confirm) { err.style.color = '#ff8a80'; err.textContent = 'Passwords do not match'; return; }
       if (pass.length < 8) { err.style.color = '#ff8a80'; err.textContent = 'Password must be at least 8 characters'; return; }
+      if (!/^\d{6}$/.test(code)) { err.style.color = '#ff8a80'; err.textContent = 'Enter the 6-digit code sent to your email'; return; }
       if (!username) { err.style.color = '#ff8a80'; err.textContent = 'Pick a username first'; return; }
       if (unState !== 'ok') { err.style.color = '#ff8a80'; err.textContent = 'Username available hona chahiye — upar dekho'; return; }
       if (!document.getElementById('regConsent').checked) { err.style.color = '#ff8a80'; err.textContent = 'Please accept the Terms & Conditions and Privacy Policy.'; return; }
 
-      register({ first, last, username, email, phone, pass }).then(() => {
+      register({ first, last, username, email, phone, pass, code }).then(() => {
         err.style.color = '#4CAF50';
-        err.textContent = 'Account created! Check your email for the verification link. Redirecting...';
+        err.textContent = 'Email verified! Account created. Redirecting...';
         setTimeout(() => { window.location.href = '/account'; }, 800);
       }).catch(e => {
         err.style.color = '#ff8a80';

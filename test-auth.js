@@ -10,7 +10,7 @@ const base = 'http://127.0.0.1:' + port;
 const dataFile = path.join(os.tmpdir(), 'rv-auth-test-' + process.pid + '.json');
 const child = cp.spawn(process.execPath, [path.join(__dirname, 'server.js')], {
   cwd: __dirname,
-  env: Object.assign({}, process.env, { PORT: String(port), AUTH_DATA_FILE: dataFile }),
+  env: Object.assign({}, process.env, { PORT: String(port), AUTH_DATA_FILE: dataFile, BREVO_API_KEY: '', BREVO_FROM: '' }),
   stdio: ['ignore', 'pipe', 'pipe']
 });
 let log = '';
@@ -51,6 +51,18 @@ function check(name, cond) { assert.ok(cond, name); console.log('PASS ' + name);
   r = await call('POST', '/api/auth/otp/send', { email });
   check('otp send returns a code', r.status === 200 && /^\d{6}$/.test(r.data.code || ''));
   const code = r.data.code;
+  check('otp send reports dev delivery', r.data.delivery === 'dev');
+
+  // Signup OTP gate (check-only: does not create a session, code is consumed)
+  const checkEmail = 'check' + Date.now() + '@example.com';
+  r = await call('POST', '/api/auth/otp/send', { email: checkEmail });
+  const checkCode = r.data.code;
+  r = await call('POST', '/api/auth/otp/check', { email: checkEmail, code: '000000' });
+  check('otp check rejects wrong code', r.status === 400);
+  r = await call('POST', '/api/auth/otp/check', { email: checkEmail, code: checkCode });
+  check('otp check accepts and consumes code', r.status === 200 && r.data.ok === true);
+  r = await call('POST', '/api/auth/otp/check', { email: checkEmail, code: checkCode });
+  check('otp cannot be reused', r.status === 400);
 
   r = await call('GET', '/api/auth/username?u=testuser');
   check('username available', r.data.available === true);

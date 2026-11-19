@@ -23,7 +23,8 @@ Tests: `npm test` (starts the server on a throwaway port and data file).
 `auth.html` uses the Firebase Auth client SDK (loaded from CDN, no npm install)
 for **Google sign-in** and **email/password**:
 
-- signup creates a Firebase user and sends a **real verification email**
+- **signup requires a 6-digit email OTP** (Brevo) before the Firebase account is created;
+  both the Login and Register tabs also offer **Google sign-in**
 - forgot password sends a **real reset link** via Google
 - login accepts email (or your username / phone / first name, mapped locally)
 
@@ -41,8 +42,25 @@ Settings → Authorized domains.
 
 `store.js` keeps a `localStorage` copy of the user list so the pages'
 synchronous `currentUser()` / `getUsers()` keep working. Cart/wishlist/orders
-remain in the browser for now. The old `/api/auth/*` password + OTP endpoints
-still exist for the tests but are no longer used by the UI.
+remain in the browser for now. The old `/api/auth/*` password endpoints still
+exist for the tests but are no longer used by the UI.
+
+### Email OTP (signup only)
+
+`POST /api/auth/otp/send` generates a 6-digit code, stores it for 10 minutes and
+emails it through Brevo. `POST /api/auth/otp/check` validates and consumes that
+code before Firebase creates the account — the code is never returned to the
+browser once email delivery is configured. Set these Render environment
+variables (Brevo free tier allows 300 emails/day):
+
+```
+BREVO_API_KEY=your-brevo-api-key
+BREVO_FROM=your-verified-sender@example.com
+```
+
+Without them the server logs the code to its console and returns it in the
+response for local testing only (`delivery: "dev"`). Verify `BREVO_FROM` as a
+sender in Brevo first, otherwise sends fail with a 502.
 
 ## Still to add (one piece at a time)
 
