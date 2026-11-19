@@ -958,7 +958,8 @@ footer {
 /* AUTH PAGE */
 body#auth-body .main-header, body#auth-body nav:not(.account-nav) { display: none; }
 body#auth-body .auth-page { min-height: 100dvh; padding: 24px 16px; }
-.auth-page { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 120px 16px 24px; box-sizing: border-box; }
+/* Extra bottom padding keeps form buttons scrollable above the fixed consent banner */
+.auth-page { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 120px 16px 80px; box-sizing: border-box; }
 .auth-box {
   width: min(400px, 92vw); background: var(--dark); border: 1px solid rgba(201,169,110,0.15);
   padding: 20px 24px;
