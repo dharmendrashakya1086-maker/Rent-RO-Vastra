@@ -89,6 +89,10 @@ function storeReady(fn) {
     _ready = api('/api/auth/me').then(d => {
       if (d.user) sessionStorage.setItem('luxe_current_user', d.user.email);
       else sessionStorage.removeItem('luxe_current_user');
+      // the header account icon follows login state (it used to always point to /login)
+      document.querySelectorAll('a.header-account').forEach(a => {
+        a.href = sessionStorage.getItem('luxe_current_user') ? '/account' : '/login';
+      });
       return api('/api/users').then(x => {
         if (x.users) localStorage.setItem('luxe_users', JSON.stringify(x.users));
       }).catch(() => {});

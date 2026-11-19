@@ -109,6 +109,8 @@ nav.account-nav {
   border-radius: 0; overflow: visible; box-shadow: none;
 }
 nav.account-nav::before, nav.account-nav::after { display: none; }
+/* Account page has its own side nav — hide the floating liquid-glass bar */
+body.no-glass-nav > nav:not(.account-nav) { display: none; }
 .nav-inner {
   display: flex; align-items: center;
   padding: 8px 12px; height: auto; gap: 8px;
