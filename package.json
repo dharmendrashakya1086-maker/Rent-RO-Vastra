@@ -2,22 +2,9 @@
   "name": "rent-ro-vastra",
   "version": "1.0.0",
   "private": true,
-  "description": "Rent-RO-Vastra rental store — Node + Postgres backend",
+  "description": "Rent-RO-Vastra — static frontend with an incremental backend (auth first)",
   "scripts": {
     "start": "node server.js",
-    "test": "node test-api.mjs"
-  },
-  "dependencies": {
-    "@neon/config": "^1.8.2",
-    "@neon/env": "^1.4.7",
-    "@supabase/supabase-js": "^2.117.2",
-    "bcryptjs": "^2.4.3",
-    "compression": "^1.8.2",
-    "cookie-parser": "^1.4.7",
-    "express": "^4.21.2",
-    "pg": "^8.13.1"
-  },
-  "devDependencies": {
-    "pg-mem": "^3.0.1"
+    "test": "node test-auth.js"
   }
 }

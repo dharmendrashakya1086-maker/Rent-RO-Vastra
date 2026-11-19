@@ -7,8 +7,21 @@ function effPrice(p) { return Math.round((Number(p && p.price) || 0) * (1 - disc
 // ---------------- CLIENT LOOKS (real customers in our outfits) ----------------
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 let _looks;
+const DEFAULT_LOOKS = [
+  { id: 1, name: 'Ananya Sharma', city: 'Jaipur', caption: 'Demo look - Sabyasachi lehenga for her sangeet', media: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=700&q=80', kind: 'image', active: true },
+  { id: 2, name: 'Riya Kapoor', city: 'Mumbai', caption: 'Demo look - Kundan jewellery set on her reception', media: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=700&q=80', kind: 'image', active: true },
+  { id: 3, name: 'Meera Joshi', city: 'Lucknow', caption: 'Demo look - Bridal lehenga, day one', media: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=700&q=80', kind: 'image', active: true },
+  { id: 4, name: 'Sneha Iyer', city: 'Chennai', caption: 'Demo look - silk saree for the family function', media: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=700&q=80', kind: 'image', active: true },
+  { id: 5, name: 'Aditi Verma', city: 'Delhi', caption: 'Demo look - groom sherwani, baraat night', media: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=700&q=80', kind: 'image', active: true },
+  { id: 6, name: 'Kavya Nair', city: 'Bengaluru', caption: 'Demo look - cocktail gown, 40th birthday', media: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=700&q=80', kind: 'image', active: true },
+  { id: 7, name: 'Priya Menon', city: 'Kochi', caption: 'Demo look - reel from the wedding', media: 'https://www.w3schools.com/html/mov_bbb.mp4', kind: 'video', active: true }
+];
+function getLooksLocal() {
+  try { const v = JSON.parse(localStorage.getItem('luxe_looks') || 'null'); return Array.isArray(v) ? v.filter(x => x.active !== false) : DEFAULT_LOOKS; }
+  catch (e) { return DEFAULT_LOOKS; }
+}
 function getLooks() {
-  if (!_looks) _looks = api('/api/ugc').then(d => d.ugc || []).catch(() => []);
+  if (!_looks) _looks = Promise.resolve(getLooksLocal());
   return _looks;
 }
 function ytId(url) {
@@ -54,73 +67,48 @@ function renderLooks(elId, mode) {
 }
 
 // ============================================================
-// SERVER-BACKED DATA LAYER (full backend). When this page is
-// served by the Node/Render backend, everything lives in
-// Postgres behind /api/*. When opened over file:// with no
-// server running, it falls back to the legacy localStorage
-// behaviour (demo mode). All public function names are kept.
+// BACKEND piece 1: auth. localStorage is a cache of server data —
+// it keeps currentUser() synchronous for the pages. Other data stays
+// browser-local until its own backend piece is added.
 // ============================================================
-let SERVER = { on: false, user: null, products: [], orders: [], reviews: [], messages: [], cart: [], wishlist: [] };
-var SERVER_MODE = false;
-let booted = false; const pending = [];
-
-function storeReady(fn) { if (booted) fn(); else pending.push(fn); }
-
-  // call sites use both api('POST', path, opts) and api(path) / api(path, opts) — accept either
-  async function api(a, b, c) {
-    let path = a, opts = b || {};
-    if (/^(GET|POST|PUT|PATCH|DELETE)$/i.test(a)) { path = b; opts = Object.assign({ method: a }, c); }
-    const res = await fetch(path, {
+function api(path, opts) {
+  opts = opts || {};
+  return fetch(path, {
     method: opts.method || 'GET',
     credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
-    body: opts.body === undefined ? undefined : JSON.stringify(opts.body)
-  });
-  let data = {};
-  try { data = await res.json(); } catch (e) {}
-  if (!res.ok) { const err = new Error(data.error || 'Request failed (' + res.status + ')'); err.status = res.status; throw err; }
-  return data;
+    headers: opts.body ? { 'Content-Type': 'application/json' } : {},
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  }).then(r => r.json().catch(() => ({})).then(d => {
+    if (!r.ok) throw new Error(d.error || 'Request failed (' + r.status + ')');
+    return d;
+  }));
 }
-
+let _ready;
+function storeReady(fn) {
+  if (!_ready) {
+    _ready = api('/api/auth/me').then(d => {
+      if (d.user) sessionStorage.setItem('luxe_current_user', d.user.email);
+      else sessionStorage.removeItem('luxe_current_user');
+      return api('/api/users').then(x => {
+        if (x.users) localStorage.setItem('luxe_users', JSON.stringify(x.users));
+      }).catch(() => {});
+    }).catch(() => {});
+  }
+  _ready.then(fn);
+}
 function norm(u) {
   if (!u) return null;
   const parts = String(u.name || '').split(' ');
   return { id: u.id, first: parts[0], last: parts.slice(1).join(' '), username: u.username || '', email: u.email, phone: u.phone || '', created: u.created, role: u.role };
 }
 
-async function boot() {
-  try {
-    const b = await api('/api/bootstrap');
-    SERVER.on = true;
-    SERVER_MODE = true;
-    SERVER.user = norm(b.user);
-    SERVER.products = b.products || [];
-    SERVER.orders = b.orders || [];
-    SERVER.reviews = b.reviews || [];
-    SERVER.messages = b.messages || [];
-    SERVER.cart = b.cart || [];
-    SERVER.wishlist = b.wishlist || [];
-  } catch (e) { SERVER.on = false; }
-  booted = true;
-  pending.forEach(f => { try { f(); } catch (e) { console.error(e); } });
-  pending.length = 0;
-}
-boot();
-
 // Logged-in users have their own cart/wishlist ("luxe_cart:<email>"); guests share the global keys.
 function cartKey() { const u = currentUser(); return u ? 'luxe_cart_' + u.email : 'luxe_cart'; }
 function getCart() {
-  if (SERVER.on) return currentUser() ? SERVER.cart : JSON.parse(localStorage.getItem('luxe_cart') || '[]');
   return JSON.parse(localStorage.getItem(cartKey()) || '[]');
 }
 function saveCart(c) {
-  if (SERVER.on) {
-    SERVER.cart = c;
-    if (currentUser()) api('PUT', '/api/me/cart', { body: c }).catch(() => {});
-    else localStorage.setItem('luxe_cart', JSON.stringify(c));
-    updateCartCount();
-    return;
-  }
+  
   localStorage.setItem(cartKey(), JSON.stringify(c)); updateCartCount();
 }
 function addToCart(item) {
@@ -158,17 +146,10 @@ function updateCartCount() {
 // WISHLIST
 function wishKey() { const u = currentUser(); return u ? 'luxe_wish_' + u.email : 'luxe_wishlist'; }
 function getWishlist() {
-  if (SERVER.on) return currentUser() ? SERVER.wishlist : JSON.parse(localStorage.getItem('luxe_wishlist') || '[]');
   return JSON.parse(localStorage.getItem(wishKey()) || '[]');
 }
 function saveWishlist(w) {
-  if (SERVER.on) {
-    SERVER.wishlist = w;
-    if (currentUser()) api('PUT', '/api/me/wishlist', { body: w }).catch(() => {});
-    else localStorage.setItem('luxe_wishlist', JSON.stringify(w));
-    updateWishCount();
-    return;
-  }
+  
   localStorage.setItem(wishKey(), JSON.stringify(w)); updateWishCount();
 }
 function inWishlist(id) { return getWishlist().some(w => w.id === id); }
@@ -195,106 +176,111 @@ function updateWishCount() {
 
 // AUTH
 function getUsers() {
-  if (SERVER.on) return currentUser() ? [SERVER.user] : [];
   return JSON.parse(localStorage.getItem('luxe_users') || '[]');
 }
-function saveUsers(u) { if (!SERVER.on) localStorage.setItem('luxe_users', JSON.stringify(u)); }
+function saveUsers(u) { localStorage.setItem('luxe_users', JSON.stringify(u)); }
 function currentUser() {
-  if (SERVER.on) return SERVER.user;
   const email = sessionStorage.getItem('luxe_current_user');
   if (!email) return null;
   return getUsers().find(u => u.email === email) || null;
 }
-// Ponytail note: browser-side auth is never real security. We avoid plaintext storage
-// (SHA-256 when crypto.subtle exists); file:// has no secure context so it stays plaintext.
-function hashPass(pass) {
-  if (window.crypto && crypto.subtle) {
-    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass))
-      .then(buf => Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join(''));
+// keep the local cache in step with the server's answer
+function cacheUser(u) {
+  if (!u) return null;
+  const all = getUsers().filter(x => x.email !== u.email);
+  all.push(u);
+  localStorage.setItem('luxe_users', JSON.stringify(all));
+  sessionStorage.setItem('luxe_current_user', u.email);
+  return u;
+}
+// Firebase Auth owns the credentials (Google popup or email/password + real emails).
+// Our server only exchanges the Firebase ID token for this site's session cookie.
+let _fb;
+function fbReady() {
+  if (!_fb) {
+    _fb = fetch('/firebase-config.json').then(r => r.json()).then(cfg => {
+      if (!window.firebase) throw new Error('Firebase SDK could not load — check your connection');
+      if (!firebase.apps.length) firebase.initializeApp(cfg);
+      return firebase.auth();
+    });
   }
-  return Promise.resolve(pass);
+  return _fb;
+}
+function fbMsg(e) {
+  const c = String((e && e.code) || '');
+  if (c.includes('email-already-in-use')) return 'Email already registered';
+  if (c.includes('account-exists-with-different-credential')) return 'This email already has a password — sign in with email and password instead';
+  if (c.includes('weak-password')) return 'Password must be at least 6 characters';
+  if (c.includes('invalid-email')) return 'Enter a valid email';
+  if (c.includes('wrong-password') || c.includes('invalid-credential') || c.includes('user-not-found')) return 'Wrong email or password';
+  if (c.includes('too-many-requests')) return 'Too many attempts — please wait a bit';
+  if (c.includes('popup-closed-by-user')) return 'Sign-in cancelled';
+  if (c.includes('network-request-failed')) return 'Network error — check your connection';
+  return (e && e.message) || 'Sign-in failed';
+}
+async function fbExchange() {
+  const auth = await fbReady();
+  const current = auth.currentUser;
+  if (!current) throw new Error('Please sign in again');
+  const idToken = await current.getIdToken();
+  const d = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
+  return cacheUser(d.user);
 }
 async function login(idOrEmail, pass) {
-  if (SERVER.on) {
-    const r = await api('POST', '/api/auth/login', { body: { login: idOrEmail, password: pass } });
-    SERVER.user = norm(r.user);
-    await adoptGuestData();
-    return SERVER.user;
+  let email = String(idOrEmail || '').trim();
+  if (!email.includes('@')) {
+    const q = email.toLowerCase();
+    const found = getUsers().find(x => (x.username || '').toLowerCase() === q || (x.phone || '') === q || (x.first || '').toLowerCase() === q);
+    if (found) email = found.email;
   }
-  const h = await hashPass(pass);
-  const users = getUsers();
-  const q = String(idOrEmail || '').trim().toLowerCase();
-  const user = users.find(u => (u.email || '').toLowerCase() === q || (u.phone || '') === q || (u.first || '').toLowerCase() === q);
-  if (user && (user.pass === h || user.pass === pass)) {
-    if (user.pass === pass) { user.pass = h; saveUsers(users); }
-    sessionStorage.setItem('luxe_current_user', user.email);
-    adoptGuestData();
-    return user;
-  }
-  return null;
+  const auth = await fbReady();
+  try { await auth.signInWithEmailAndPassword(email, pass); } catch (e) { throw new Error(fbMsg(e)); }
+  const user = await fbExchange();
+  await adoptGuestData();
+  return user;
 }
-async function sendOtp(email) {
-  if (SERVER.on) { const r = await api('POST', '/api/auth/otp/send', { body: { email } }); if (!r || !r.sent) return null; return r; }
-  return { sent: true, delivery: 'client' };
+async function googleLogin() {
+  await fbReady();
+  try { await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+  catch (e) { throw new Error(fbMsg(e)); }
+  const user = await fbExchange();
+  await adoptGuestData();
+  return user;
 }
 async function forgot(email) {
-  if (SERVER.on) { const r = await api('POST', '/api/auth/forgot', { body: { email } }); if (!r || !r.sent) return null; return r; }
-  return { sent: true, delivery: 'client' };
-}
-async function resetPass(email, code, pass) {
-  if (SERVER.on) {
-    const r = await api('POST', '/api/auth/reset', { body: { email, code, password: pass } });
-    SERVER.user = norm(r.user);
-    return !!SERVER.user;
-  }
-  return true;
+  const auth = await fbReady();
+  try { await auth.sendPasswordResetEmail(String(email).trim()); }
+  catch (e) { throw new Error(fbMsg(e)); }
+  return { sent: true };
 }
 async function register(data) {
-  if (SERVER.on) {
-    const r = await api('POST', '/api/auth/register', {
-      body: { name: (data.first || '') + ' ' + (data.last || ''), username: data.username, email: data.email, phone: data.phone || '', password: data.pass, code: data.code }
-    });
-    SERVER.user = norm(r.user);
-    await adoptGuestData();
-    return SERVER.user;
-  }
-  const users = getUsers();
-  if (users.find(u => u.email === data.email)) return null;
-  const user = { first: data.first, last: data.last, email: data.email, phone: data.phone, pass: await hashPass(data.pass), created: Date.now() };
-  users.push(user);
-  saveUsers(users);
-  sessionStorage.setItem('luxe_current_user', user.email);
-  adoptGuestData();
+  const auth = await fbReady();
+  let cred;
+  try { cred = await auth.createUserWithEmailAndPassword(data.email, data.pass); }
+  catch (e) { throw new Error(fbMsg(e)); }
+  try { await cred.user.updateProfile({ displayName: (data.first + ' ' + data.last).trim() }); } catch (e) {}
+  try { await cred.user.sendEmailVerification(); } catch (e) {}
+  await fbExchange();
+  const d = await api('/api/me', { method: 'PATCH', body: { first: data.first, last: data.last, username: data.username, phone: data.phone } });
+  const user = cacheUser(d.user);
+  await adoptGuestData();
   return user;
+}
+async function changePass(oldPass, newPass) {
+  const auth = await fbReady();
+  const current = auth.currentUser;
+  if (!current) throw new Error('Please sign in again');
+  if (!current.providerData.some(x => x.providerId === 'password')) throw new Error('You sign in with Google — there is no password to change');
+  try {
+    await current.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(current.email, oldPass));
+    await current.updatePassword(newPass);
+  } catch (e) { throw new Error(fbMsg(e)); }
 }
 // Move guest cart/wishlist into the just-logged-in account, then wipe the guest keys.
 async function adoptGuestData() {
   const u = currentUser();
   if (!u) return;
-  if (SERVER.on) {
-    const guestCart = JSON.parse(localStorage.getItem('luxe_cart') || '[]');
-    const guestWish = JSON.parse(localStorage.getItem('luxe_wishlist') || '[]');
-    if (guestCart.length) {
-      let mine = SERVER.cart.slice();
-      guestCart.forEach(g => {
-        const ex = mine.find(c => c.id === g.id);
-        if (ex) ex.qty += (g.qty || 1); else mine.push(g);
-      });
-      SERVER.cart = mine;
-      api('PUT', '/api/me/cart', { body: mine }).catch(() => {});
-      updateCartCount();
-    }
-    if (guestWish.length) {
-      let mine = SERVER.wishlist.slice();
-      guestWish.forEach(g => { if (!mine.some(w => w.id === g.id)) mine.push(g); });
-      SERVER.wishlist = mine;
-      api('PUT', '/api/me/wishlist', { body: mine }).catch(() => {});
-      updateWishCount();
-    }
-    localStorage.removeItem('luxe_cart');
-    localStorage.removeItem('luxe_wishlist');
-    return;
-  }
+  
   const guestCart = JSON.parse(localStorage.getItem('luxe_cart') || '[]');
   const guestWish = JSON.parse(localStorage.getItem('luxe_wishlist') || '[]');
   if (guestCart.length) {
@@ -315,25 +301,18 @@ async function adoptGuestData() {
   localStorage.removeItem('luxe_wishlist');
 }
 function saveUser(data) {
-  if (SERVER.on) {
-    const body = {};
-    if (data.name) body.name = data.name;
-    if (data.phone) body.phone = data.phone;
-    if (data.username) body.username = data.username;
-    api('PATCH', '/api/me', { body }).then(r => { SERVER.user = norm(r.user); }).catch(() => {});
-    return;
-  }
   const users = getUsers();
   const idx = users.findIndex(u => u.email === data.email);
   if (idx >= 0) { users[idx] = { ...users[idx], ...data }; saveUsers(users); }
+  api('/api/me', { method: 'PATCH', body: data }).catch(() => {});
 }
 async function deleteUser() {
-  if (SERVER.on) {
-    try { await api('DELETE', '/api/me'); } catch (e) {}
-    SERVER.user = null;
-    return;
-  }
   const user = currentUser();
+  try {
+    const auth = await fbReady();
+    if (auth.currentUser) await auth.currentUser.delete();
+  } catch (e) { throw new Error(fbMsg(e)); }
+  await api('/api/me', { method: 'DELETE' }).catch(() => {});
   if (user) {
     saveUsers(getUsers().filter(u => u.email !== user.email));
     sessionStorage.removeItem('luxe_current_user');
@@ -341,40 +320,29 @@ async function deleteUser() {
     localStorage.removeItem('luxe_wish_' + user.email);
   }
 }
-function logout() {
-  if (SERVER.on) { api('POST', '/api/auth/logout').catch(() => {}); SERVER.user = null; return; }
+async function logout() {
+  try { const auth = await fbReady(); if (auth.currentUser) await auth.signOut(); } catch (e) {}
+  await api('/api/auth/logout', { method: 'POST', body: {} }).catch(() => {});
   sessionStorage.removeItem('luxe_current_user');
 }
 function isLoggedIn() { return !!currentUser(); }
 
 // MESSAGING
 const MSG_KEY = 'luxe_messages';
-async function refreshMessages() {
-  if (!SERVER.on) return;
-  try { SERVER.messages = (await api('GET', '/api/messages')).messages || []; updateMsgCount(); } catch (e) {}
-}
+async function refreshMessages() { /* local-only: messages live in localStorage */ }
 function getMessages() {
-  if (SERVER.on) return SERVER.messages;
   return JSON.parse(localStorage.getItem(MSG_KEY) || '[]');
 }
-function saveMessages(m) { if (!SERVER.on) localStorage.setItem(MSG_KEY, JSON.stringify(m)); }
+function saveMessages(m) { localStorage.setItem(MSG_KEY, JSON.stringify(m)); }
 // to = email | 'admin' | 'ALL' (broadcast). Admin sends as 'admin'.
 function sendMessage(from, to, body) {
-  if (SERVER.on) {
-    api('POST', '/api/messages', { body: { to, body } }).then(refreshMessages).catch(() => {});
-    return;
-  }
+  
   const msgs = getMessages();
   msgs.push({ id: Date.now() + Math.random(), from, to, body, time: Date.now(), readBy: [] });
   saveMessages(msgs);
 }
 function markMessageRead(id, email) {
-  if (SERVER.on) {
-    api('POST', '/api/messages/' + id + '/read').then(refreshMessages).catch(() => {});
-    const m = SERVER.messages.find(x => x.id === id);
-    if (m && !m.readBy.includes(email)) m.readBy.push(email);
-    return;
-  }
+  
   const msgs = getMessages();
   const m = msgs.find(x => x.id === id);
   if (m && !m.readBy.includes(email)) { m.readBy.push(email); saveMessages(msgs); }
@@ -413,13 +381,12 @@ function updateMsgCount() {
 
 // ORDERS (user-scoped)
 function getOrders() {
-  if (SERVER.on) return SERVER.orders;
   return JSON.parse(localStorage.getItem('luxe_orders') || '[]');
 }
-function saveOrders(o) { if (!SERVER.on) localStorage.setItem('luxe_orders', JSON.stringify(o)); }
+function saveOrders(o) { localStorage.setItem('luxe_orders', JSON.stringify(o)); }
 
 // Multi-day pricing: 3+ days = 15% off, 7+ days = 25% off (single source of truth used by cart, checkout, detail calc)
-// Members get an extra 10% off on top of the day discount - they stack. Keep in sync with server.js.
+// Members get an extra 10% off on top of the day discount - they stack.
 function dayDiscount(days) { return days >= 7 ? 0.25 : days >= 3 ? 0.15 : 0; }
 function memberDiscount() { return 0.10; }
 function isMember() { return !!currentUser(); }
@@ -436,14 +403,7 @@ function cancelRefund(o) {
   return 100;
 }
 async function cancelOrder(id) {
-  if (SERVER.on) {
-    try {
-      await api('POST', '/api/orders/' + id + '/cancel');
-      const r = await api('GET', '/api/orders');
-      SERVER.orders = r.orders || [];
-      return SERVER.orders.find(x => x.id === id);
-    } catch (e) { return null; }
-  }
+  
   const orders = getOrders();
   const o = orders.find(x => x.id === id);
   if (o && o.status !== 'Cancelled') {
@@ -456,7 +416,6 @@ async function cancelOrder(id) {
 
 // PRODUCTS + STOCK
 function getProducts() {
-  if (SERVER.on) return SERVER.products;
   const p = JSON.parse(localStorage.getItem('luxe_products') || DEFAULT_PRODUCTS);
   return p.map(prod => {
     if (prod.stock === undefined) prod = Object.assign({}, prod, { stock: 3 });
@@ -467,7 +426,7 @@ function getProducts() {
     return prod;
   });
 }
-function saveProducts(p) { if (!SERVER.on) localStorage.setItem('luxe_products', JSON.stringify(p)); }
+function saveProducts(p) { localStorage.setItem('luxe_products', JSON.stringify(p)); }
 var DEFAULT_PRODUCTS = JSON.stringify([
   { id: 1, name: 'Sabyasachi Silk Lehenga', category: 'evening', price: 7499, img: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', stock: 3, active: true, images: ['https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400&q=80', 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&q=80', 'https://images.unsplash.com/photo-1565483299862-1e4e0b0f45f0?w=400&q=80'] },
   { id: 2, name: 'Tarun Tahiliani Sherwani', category: 'formal', price: 5499, img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', stock: 4, active: true, images: ['https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80', 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&q=80', 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400&q=80'] },
@@ -495,15 +454,7 @@ function rangesOverlap(s1, e1, s2, e2) { return s1 <= e2 && s2 <= e1; }
 // availability = total stock minus active bookings whose [start-10, end+10] window overlaps the requested dates
 const STOCK_STUB_KEY = {};
 function stockAvailability(productId, startDate, endDate) {
-  if (SERVER.on) {
-    const key = String(productId) + '|' + (startDate || '') + '|' + (endDate || '');
-    if (STOCK_STUB_KEY[key]) return STOCK_STUB_KEY[key];
-    const product = getProducts().find(p => Number(p.id) === Number(productId));
-    const total = product ? (product.stock || 1) : 0;
-    const stub = { total: total, booked: 0, available: total, enough: total > 0, exists: !!product, _optimistic: true };
-    refreshAvailability(productId, startDate, endDate);
-    return stub;
-  }
+  
   const product = getProducts().find(p => p.id === productId);
   if (!product) return { total: 0, booked: 0, available: 0, enough: false, exists: false };
   const total = product.stock || 1;
@@ -517,32 +468,14 @@ function stockAvailability(productId, startDate, endDate) {
   const available = Math.max(0, total - booked);
   return { total: total, booked: booked, available: available, enough: available > 0, exists: true };
 }
-async function refreshAvailability(productId, startDate, endDate) {
-  if (!SERVER.on) return;
-  const qs = new URLSearchParams({ productId, startDate: startDate || '', endDate: endDate || '' });
-  try {
-    const r = await api('/api/stock/check?' + qs.toString());
-    STOCK_STUB_KEY[String(productId) + '|' + (startDate || '') + '|' + (endDate || '')] = r;
-    document.dispatchEvent(new CustomEvent('availability-updated'));
-  } catch (e) {}
-}
-
 // REVIEWS (type: 'site' = whole website, 'item' = one product)
 const REVIEWS_KEY = 'luxe_reviews';
 function getReviews(type, itemId) {
-  const all = SERVER.on ? SERVER.reviews : JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]');
+  const all = JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]');
   return all.filter(r => r.type === type && (type === 'site' || r.itemId === itemId));
 }
 function addReview(data) {
-  if (SERVER.on) {
-    api('POST', '/api/reviews', {
-      body: { type: data.type || 'site', itemId: data.itemId || 0, rating: data.rating, text: data.text }
-    }).then(r => {
-      const u = currentUser();
-      SERVER.reviews.push({ id: r.id, type: data.type || 'site', itemId: data.itemId || null, name: data.name, rating: data.rating, text: data.text, email: u ? u.email : null, time: Date.now() });
-    }).catch(() => {});
-    return;
-  }
+  
   const r = JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]');
   const u = currentUser();
   r.push({ id: Date.now() + Math.random(), type: data.type, itemId: data.itemId || null, name: data.name, rating: data.rating, text: data.text, email: u ? u.email : null, time: Date.now() });
@@ -554,15 +487,10 @@ function reviewAvg(type, itemId) {
   return r.length ? (r.reduce((s, x) => s + x.rating, 0) / r.length) : 0;
 }
 function allReviews() {
-  if (SERVER.on) return SERVER.reviews;
   return JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]');
 }
 function deleteReview(id) {
-  if (SERVER.on) {
-    api('DELETE', '/api/reviews/' + id).catch(() => {});
-    SERVER.reviews = SERVER.reviews.filter(r => r.id !== id);
-    return;
-  }
+  
   localStorage.setItem(REVIEWS_KEY, JSON.stringify(allReviews().filter(r => r.id !== id)));
 }
 

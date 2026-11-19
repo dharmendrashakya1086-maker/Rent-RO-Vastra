@@ -568,10 +568,6 @@
           <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
           Client Looks
         </a>
-        <a href="migrate.html">
-          <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-          Migrate Data
-        </a>
       </nav>
       <div class="dash-nav-bottom">
         <a href="#" id="dashLogout">
@@ -961,7 +957,7 @@ https://images.unsplash.com/photo-2?w=600&q=80"></textarea>
     </div>
 </div>
 
-  <script src="admin-backend.js"></script>
+  
   <script>
   (function() {
     const DEFAULT_PASS = 'luxe123';
@@ -1068,32 +1064,7 @@ function getOrders() {
 function tryLogin() {
       const val = lockPass.value.trim();
       if (!val) { lockError.textContent = 'Please enter a password'; return; }
-      if (window.ADMIN && window.ADMIN.server) {
-        const em = (document.getElementById('lockEmail') || { value: '' }).value.trim();
-        if (!em) { lockError.textContent = 'Enter your admin email'; const el = document.getElementById('lockEmail'); if (el) el.focus(); return; }
-        lockBtn.disabled = true;
-        lockError.textContent = 'Signing in…';
-        ADMIN.login(em, val).then(user => {
-          lockBtn.disabled = false;
-          if (user && user.role === 'admin') {
-            lockError.textContent = '';
-            sessionStorage.setItem('luxe_admin_auth', '1');
-            lockScreen.style.display = 'none';
-            dashboard.classList.add('active');
-            loadDashboard();
-          } else {
-            lockError.textContent = 'Not an admin account, or wrong password.';
-            lockPass.value = '';
-            lockPass.focus();
-          }
-        }).catch(err => {
-          lockBtn.disabled = false;
-          lockError.textContent = (err && err.message) || 'Sign-in failed. Please try again.';
-          lockPass.value = '';
-          lockPass.focus();
-        });
-        return;
-      }
+      
       if (val === getPass()) {
         lockError.textContent = '';
         sessionStorage.setItem('luxe_admin_auth', '1');
@@ -1136,7 +1107,6 @@ function tryLogin() {
     // LOGOUT
 document.getElementById('dashLogout').addEventListener('click', e => {
       e.preventDefault();
-      if (window.ADMIN && window.ADMIN.server) ADMIN.logout();
       sessionStorage.removeItem('luxe_admin_auth');
       dashboard.classList.remove('active');
       lockScreen.style.display = 'flex';
@@ -1372,17 +1342,7 @@ renderProducts();
           info.textContent = 'Uploading ' + f.name + ' (' + (n + 1) + '/' + files.length + ')…';
           const dataUrl = await fileToDataURL(f, 900);
           const file = dataUrl.replace(/^data:image\/(png|jpe?g|webp|gif);base64,/, '');
-          let j;
-          if (window.ADMIN && window.ADMIN.api) {
-            j = await window.ADMIN.api('/img/upload', { method: 'POST', body: { file } });
-          } else {
-            const res = await fetch('/api/img/upload', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ file })
-            });
-            j = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(j.error || 'upload failed');
-          }
+          const j = { url: dataUrl };
           if (!j.url) throw new Error(j.error || 'upload failed');
           const lines = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
           if (!lines.includes(j.url)) lines.push(j.url);
@@ -1436,11 +1396,13 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
     });
 
     // ---------------- CLIENT LOOKS (customer photos / videos) ----------------
+    const LOOKS_KEY = 'luxe_looks';
+    function getLocalLooks() { try { return JSON.parse(localStorage.getItem(LOOKS_KEY) || '[]'); } catch (e) { return []; } }
+    function saveLocalLooks(v) { localStorage.setItem(LOOKS_KEY, JSON.stringify(v)); }
     let LOOKS = [];
     async function loadLooks() {
       try {
-        if (window.ADMIN && window.ADMIN.api) LOOKS = (await window.ADMIN.api('/admin/ugc')).ugc || [];
-        else LOOKS = (await (await fetch('/api/admin/ugc', { credentials: 'same-origin' })).json()).ugc || [];
+        LOOKS = getLocalLooks();
       } catch (e) { LOOKS = []; }
       const body = document.getElementById('looksBody');
       if (!body) return;
@@ -1461,13 +1423,14 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
     }
     window.toggleLook = async function(id) {
       const u = LOOKS.find(x => x.id === id); if (!u) return;
-      const r = await fetch('/api/admin/ugc/' + id, { method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: !u.active }) });
-      if (r.ok) loadLooks();
+      const all = getLocalLooks(); const row = all.find(x => x.id === id);
+      if (row) { row.active = !row.active; saveLocalLooks(all); }
+      loadLooks();
     };
     window.deleteLook = async function(id) {
       if (!confirm('Ye look permanently delete karein?')) return;
-      const r = await fetch('/api/admin/ugc/' + id, { method: 'DELETE', credentials: 'same-origin' });
-      if (r.ok) loadLooks();
+      saveLocalLooks(getLocalLooks().filter(x => x.id !== id));
+      loadLooks();
     };
     document.getElementById('lookUploadBtn').addEventListener('click', () => document.getElementById('lookFile').click());
     document.getElementById('lookFile').addEventListener('change', async e => {
@@ -1477,12 +1440,9 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
         info.textContent = 'Uploading…';
         const dataUrl = await fileToDataURL(f, 1100);
         const file = dataUrl.replace(/^data:image\/(png|jpe?g|webp|gif);base64,/, '');
-        const r = await fetch('/api/img/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file }) });
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok || !j.url) throw new Error(j.error || 'upload failed');
-        document.getElementById('lookUrl').value = j.url;
+        document.getElementById('lookUrl').value = dataUrl;
         document.getElementById('lookPreview').style.display = 'block';
-        document.getElementById('lookPreviewImg').src = j.url;
+        document.getElementById('lookPreviewImg').src = dataUrl;
         info.textContent = 'Photo uploaded ab "Add to Gallery" dabao';
       } catch (err) { info.textContent = 'Upload failed: ' + err.message; }
       e.target.value = '';
@@ -1490,15 +1450,12 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
     document.getElementById('lookSave').addEventListener('click', async () => {
       const btn = document.getElementById('lookSave');
       const media = document.getElementById('lookUrl').value.trim();
-      if (!/^https:\/\//i.test(media)) { alert('Photo upload karo ya video/YouTube link paste karo.'); return; }
+      if (!/^(https:\/\/|data:image\/)/i.test(media)) { alert('Photo upload karo ya video/YouTube link paste karo.'); return; }
       btn.textContent = 'Saving…';
       try {
-        const r = await fetch('/api/admin/ugc', {
-          method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: document.getElementById('lookName').value, city: document.getElementById('lookCity').value, caption: document.getElementById('lookCaption').value, media })
-        });
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(j.error || 'save failed');
+        const all = getLocalLooks();
+        all.unshift({ id: Date.now(), name: document.getElementById('lookName').value, city: document.getElementById('lookCity').value, caption: document.getElementById('lookCaption').value, media, kind: /^data:image\//i.test(media) ? 'image' : (/\.(mp4|webm|mov)(\?|$)/i.test(media) || /youtu/i.test(media) ? 'video' : 'image'), active: true });
+        saveLocalLooks(all);
         ['lookName', 'lookCity', 'lookCaption', 'lookUrl'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('lookPreview').style.display = 'none';
         document.getElementById('lookUpInfo').textContent = 'Added to gallery';
@@ -1512,10 +1469,8 @@ products[idx] = { ...products[idx], name, category, price, discount, stock, img,
       const btn = document.getElementById('lookDemo');
       btn.textContent = 'Adding…';
       try {
-        const r = await fetch('/api/admin/ugc/demo', { method: 'POST', credentials: 'same-origin' });
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(j.error || 'failed');
-        document.getElementById('lookUpInfo').textContent = j.added + ' demo looks added';
+        localStorage.setItem(LOOKS_KEY, JSON.stringify(DEFAULT_LOOKS.map(x => Object.assign({}, x))));
+        document.getElementById('lookUpInfo').textContent = '7 demo looks added';
         loadLooks();
       } catch (err) { alert(err.message); }
       btn.textContent = 'Load 7 Demo Looks';
@@ -1587,20 +1542,7 @@ document.getElementById('pName').value = '';
       const confP = document.getElementById('setConfirmPass').value;
 const err = document.getElementById('passError');
 
-      if (window.ADMIN && window.ADMIN.server) {
-        if (newP.length < 4) { err.textContent = 'New password must be at least 4 characters'; return; }
-        if (newP !== confP) { err.textContent = 'Passwords do not match'; return; }
-        ADMIN.changePass(oldP, newP).then(ok => {
-          err.style.color = ok ? '#4CAF50' : '#e74c3c';
-          err.textContent = ok ? 'Password updated successfully!' : 'Current password is incorrect';
-          if (ok) {
-            document.getElementById('setOldPass').value = '';
-            document.getElementById('setNewPass').value = '';
-            document.getElementById('setConfirmPass').value = '';
-          }
-        });
-        return;
-      }
+      
 
       if (oldP !== getPass()) { err.textContent = 'Current password is incorrect'; return; }
       if (newP.length < 4) { err.textContent = 'New password must be at least 4 characters'; return; }
@@ -1616,8 +1558,18 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
     });
 
     // AI CHAT config
-    // ponytail: keys live in server.js — the browser talks to /api/ai, never Gemini directly.
-    const AI_PROXY = (function(){ try { return (window.location.protocol === 'file:' ? 'http://localhost:3010' : '') + '/api/ai'; } catch (e) { return '/api/ai'; } })();
+    // Static build: Gemini key (if set) stays in this browser; no server proxy.
+    async function gemini(cfg, system, text) {
+      if (!cfg || !cfg.enabled || !cfg.key) return null;
+      try {
+        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' + encodeURIComponent(cfg.key), {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: system + '\n\nUser: ' + text }] }] })
+        });
+        const j = await r.json();
+        return (j && j.candidates && j.candidates[0] && j.candidates[0].content.parts[0].text) || null;
+      } catch (e) { return null; }
+    }
     const DEFAULT_AI = { provider: 'gemini', enabled: true };
     function loadAiSettings() {
       try {
@@ -1880,15 +1832,10 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       aiChatIntro();
     };
 
-    // Self-OTP relay: jab Supabase email down ho to ye codes owner ko dikhate hain
+    // OTP relay slot: OTPs are generated in the browser; nothing to display here.
     window.loadOtps = function() {
       const el = document.getElementById('otpRelay');
-      if (!el) return;
-      fetch('/api/admin/otpcodes').then(r => r.ok ? r.json() : null).then(d => {
-        if (!d || !d.codes || !d.codes.length) { el.innerHTML = ''; return; }
-        el.innerHTML = '<div style="margin-bottom:6px;color:var(--gold);font-weight:600;">OTP Relay — email slow hai, ye codes customer ko WhatsApp/Phone se batao:</div>' +
-          d.codes.map(c => '<div style="padding:6px 10px;background:var(--black);border:1px solid rgba(201,169,110,0.15);border-radius:8px;margin-bottom:4px;"><strong style="color:var(--gold);letter-spacing:2px;font-family:var(--display);">' + c.code + '</strong> <span style="color:var(--text);">→ ' + c.email + '</span> <span style="color:var(--text-muted);font-size:0.7rem;">(' + c.exp + ' tak)</span></div>').join('');
-      }).catch(() => {});
+      if (el) el.innerHTML = '';
     };
 
     function askAdminAI(msg) {
@@ -1908,10 +1855,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
         '. Last order: ' + (lastO ? '#' + lastO.id + ' ' + lastO.name + ', ' + lastO.item + ' → ' + (lastO.city || 'n/a') + ', ₹' + lastO.total + ', ' + lastO.status : 'none') +
         '. Customers: ' + users.length + ' total, ' + users.filter(u => u.blocked).length + ' blocked.';
       const system = 'You are Styla, a friendly, smart assistant inside a rental store admin panel. Answer like ChatGPT: natural, normal, helpful. Reply in the language the owner used (English, Hindi or Hinglish), casual, 1-3 short lines, plain text — no emojis, no markdown, no exclamation marks, no bullet lists. General questions (fashion, styling, business, pricing, marketing tips for a small rental store, how to use this panel) get a real helpful answer. When the owner clearly wants an ACTION done (change price/stock, add/delete product, confirm/cancel booking, discount, broadcast), give exactly the short command to type, like "Change price of <item> to <number>" or "Confirm bookings". Panel capabilities you can mention: confirm/cancel bookings; change <item> price/stock; discount n% (all/category/item); sell <item> for ₹n (place on sale, "sale hatao" to remove); add <name> ₹<price> <category>; edit <item> (name/price/discount/stock/category/occasion/style/budget/gender/image/active); delete or hide <item>, show <item> again; reviews delete/approve; inbox replies; broadcast to customers; customer list and block/unblock; availability check; change password; auto-optimize prices; generate report; suggest new products; clean inactive items; clear chat. Store context you can rely on: ' + ctx;
-      return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: msg }) })
-        .then(r => r.json())
-        .then(j => j.text || null)
-        .catch(() => null);
+      return gemini(cfg, system, msg);
     }
 
     // ----- real execution: Gemini picks a JSON action, we DO it -----
@@ -1921,15 +1865,10 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       if (!cfg || !cfg.enabled) return Promise.resolve(null);
       const P = getProducts();
       const system = 'You control a rental store admin panel. The owner gives an instruction in English/Hindi/Hinglish. Reply with ONLY one JSON object, no other text. Schema: {"action":"set_price|set_discount|set_discount_all|set_discount_category|set_stock|set_for_sale|rename|hide|show|delete|add_product|none","product":"product name, id, or category","value": number or string or {"name":"...","price":5000,"category":"..."}}. set_discount = one product (product=name), set_discount_all = every active product (set product to "all"), set_discount_category = all products in a category (product=evening|formal|cocktail|outerwear|accessories). Discount value = percent 0-90 (0 removes). set_price = rupees/day. set_for_sale = make one product buyable as well as rentable; value = one-time sale price in rupees (0 or "off" removes it from sale). hide = hide from store, show = show it. delete = soft-delete (hide). Bulk phrases like "sabhi products pe 20% discount" or "evening category pe 15% off" MUST map to set_discount_all / set_discount_category, never to "none". If the message is advice/a question, return {"action":"none"}. Products: ' + JSON.stringify(P.map(function (p) { return { id: p.id, name: p.name, category: p.category }; }));
-      return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: msg }) })
-        .then(r => r.json())
-        .then(j => {
-          try {
-            const a = JSON.parse((j.text || '').replace(/```json|```/g, '').trim());
-            return a && a.action ? a : null;
-          } catch (e) { return null; }
-        })
-        .catch(() => null);
+      return gemini(cfg, system, msg).then(t => {
+        try { const a = JSON.parse((t || '').replace(/```json|```/g, '').trim()); return a && a.action ? a : null; }
+        catch (e) { return null; }
+      });
     }
 
     function applyAdminAction(a) {
@@ -2427,15 +2366,7 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
           return;
         }
         if (chatState.step === 2) {
-          if (window.ADMIN && window.ADMIN.server) {
-            // Server mode: Supabase holds the password, so change it there (admin skips old-password check).
-            ADMIN.changePass('', chatState.data.np).then(ok => {
-              if (ok) aiChatReply('Password badal diya. Purana password ab valid nahi hai.', ['Back to menu']);
-              else aiChatReply('Password change nahi hua — Supabase ne reject kar diya.', ['Try again', 'Back to menu']);
-            });
-            chatState.flow = null; chatState.step = 0; chatState.data = {};
-            return;
-          }
+          
           if (input.trim() === getPass()) {
             setPass(chatState.data.np);
             aiChatReply('Password changed. Remember it — this unlocks the admin panel.', ['Back to menu']);
@@ -2686,7 +2617,6 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
       });
       // seeing = read: mark on the server so they don't show up again
       const unreadIds = new Set(msgs.map(m => m.id));
-      msgs.forEach(m => { if (m.id !== undefined && m.id !== null) ADMIN.api('/messages/' + m.id + '/read', { method: 'POST' }).catch(() => {}); });
       const all = getMessages();
       all.forEach(m => { if (unreadIds.has(m.id)) m.readBy = (m.readBy || []).concat(Date.now()); });
       saveMessages(all);
@@ -2726,17 +2656,18 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
     };
 
     function toggleBlock(u) {
-      if (!window.ADMIN || !ADMIN.api) { aiChatReply('Block sirf live (server) panel me chalta hai.'); return; }
-      ADMIN.api('/admin/users/' + encodeURIComponent(u.id) + '/block', { method: 'POST', body: {} })
-        .then(r => {
-          ADMIN.logAct((r.blocked ? 'Blocked' : 'Unblocked') + ' user ' + (u.name || u.email));
-          if (ADMIN.loadUsers) ADMIN.loadUsers();
-          aiChatReply(r.blocked
-            ? '<strong>' + esc(u.name || u.email) + '</strong> blocked — ab ye login, naya order aur message nahi kar payega. Purane orders dikhe rehte hain (chaaho to cancel kar do).'
-            : '<strong>' + esc(u.name || u.email) + '</strong> unblocked — wapas normal chalega.',
-            ['Show customers', 'Store summary', 'Back to menu']);
-        })
-        .catch(e => aiChatReply('Block nahi hua: ' + esc(e.message || 'error')));
+      const all = getUsers();
+      const row = all.find(x => String(x.id) === String(u.id));
+      if (!row) { aiChatReply('User nahi mila.'); return; }
+      row.blocked = !row.blocked;
+      saveUsers ? saveUsers(all) : localStorage.setItem('luxe_users', JSON.stringify(all));
+      const act = JSON.parse(localStorage.getItem('luxe_activity') || '[]');
+      act.unshift({ t: Date.now(), by: 'owner', what: (row.blocked ? 'Blocked' : 'Unblocked') + ' user ' + (row.name || row.email) });
+      localStorage.setItem('luxe_activity', JSON.stringify(act.slice(0, 40)));
+      aiChatReply(row.blocked
+        ? '<strong>' + esc(row.name || row.email) + '</strong> blocked — ab ye login, naya order aur message nahi kar payega.'
+        : '<strong>' + esc(row.name || row.email) + '</strong> unblocked — wapas normal chalega.',
+        ['Show customers', 'Store summary', 'Back to menu']);
     }
 
     function startInboxFlow() {
@@ -2846,7 +2777,6 @@ setTimeout(() => { err.textContent = ''; err.style.color = '#e74c3c'; }, 3000);
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-    // server-mode bridges: admin-backend.js unlocks the panel and refreshes data through these
     if (typeof window.addEventListener === 'function') {
       window.addEventListener('admin-auth', e => {
         if (e.detail && e.detail.ok) {

@@ -1,49 +1,64 @@
-# Rent-RO-Vastra — live deploy
+# Rent-RO-Vastra — static frontend + incremental backend
 
-Vibe-coded static shop, now with a real backend: Node + Express + Postgres,
-real email/password accounts, COD / bank-transfer bookings, and a hidden
-Gemini key (the browser talks to `/api/ai`, never Google directly).
+The site is a plain HTML/CSS/JS frontend with a backend being added one piece at
+a time. **Piece 1 (done): authentication.** Everything else (cart, orders,
+messages, admin, AI) is still browser-local and will get its own piece later.
 
-## Run locally
+## Run it
+
+No dependencies, no build step, no `npm install` needed — Node.js built-ins only.
+
 ```
-node server.js        # → http://localhost:3010
+npm start          # → http://localhost:3010
 ```
-- No `DATABASE_URL` set → uses an in-memory Postgres (pg-mem), data resets on restart.
-- Static pages also work from `file://` with their old localStorage fallback (offline demo).
 
-Tests: `node test-api.mjs` (API), `node test-chat-logic.js` , `node test-admin-ai.js`.
+The server also serves the static pages, so clean URLs like `/login`,
+`/collection` and `/account` work. Open it at **http://localhost:3010** (use
+`localhost`, not `127.0.0.1` — Firebase authorizes `localhost` by default).
 
-## Deploy to Render (one-time)
-1. Push this folder to a GitHub repo.
-2. Render dashboard → **New Blueprint** → pick the repo → *render.yaml* auto-creates:
-   - Web service `rent-rovastra` (Node, `node server.js`)
-   - Postgres database `rent-rovastra-db` and wires `DATABASE_URL` automatically
-3. First deploy will warn that 3 env vars are unset. Set **each once** (Render → service → Environment):
-   - `ADMIN_EMAIL` — your admin login email (e.g. `owner@rentro-vastra.in`)
-   - `ADMIN_PASS` — a strong admin password (min 4 chars)
-   - `GEMINI_KEY` — the Google Gemini API key (AI chat / admin assistant)
-4. Redeploy (or the blueprint run restarts the service). Done.
+Tests: `npm test` (starts the server on a throwaway port and data file).
 
-## After deploy — the one manual step (must be you)
-Your existing customers, orders, reviews and messages still live in **your
-browser's localStorage** — the server cannot read them. Do this once, from the
-browser you used to run the shop:
+## Piece 1 — authentication (Firebase)
 
-1. Open `<your-site-url>/admin.html`
-2. Sign in with `ADMIN_EMAIL` / `ADMIN_PASS`
-3. Sidebar → **Migrate Data** (or go directly to `<your-site-url>/migrate.html`)
-4. Login → **Migrate this browser's data**
+`auth.html` uses the Firebase Auth client SDK (loaded from CDN, no npm install)
+for **Google sign-in** and **email/password**:
 
-That copies accounts, products, orders, reviews and messages into Postgres.
-From then on everything reads from the database; new customers are saved
-server-side automatically.
+- signup creates a Firebase user and sends a **real verification email**
+- forgot password sends a **real reset link** via Google
+- login accepts email (or your username / phone / first name, mapped locally)
 
-## Notes
-- Bookings require a logged-in account (email/password). Guest carts stay in
-  the browser and are merged into the account on first login.
-- Payments are Cash-on-delivery / bank transfer only — no gateway.
-- The old static password lock on `admin.html` still works if the backend is
-  unreachable (`file://` demo); on the live site admin login is the server
-  account with `ADMIN_EMAIL`.
-- The Google API key was once exposed in the site's source. If that bothers
-  you, mint a new key in Google AI Studio and set it as `GEMINI_KEY`.
+After a Firebase sign-in, the browser sends the Firebase ID token to
+`POST /api/auth/firebase`. The server verifies it with Google's
+`accounts:lookup` endpoint, finds or creates the matching local user, and sets
+this site's session cookie (`HttpOnly`, `SameSite=Lax`). No password is ever
+stored or sent to our server. Local users/sessions persist in `data/auth.json`
+(gitignored).
+
+`firebase-config.json` holds the public Firebase web config — shared by the
+browser and the server (the server needs only `apiKey` for token verification).
+To deploy, add your production domain in Firebase Console → Authentication →
+Settings → Authorized domains.
+
+`store.js` keeps a `localStorage` copy of the user list so the pages'
+synchronous `currentUser()` / `getUsers()` keep working. Cart/wishlist/orders
+remain in the browser for now. The old `/api/auth/*` password + OTP endpoints
+still exist for the tests but are no longer used by the UI.
+
+## Still to add (one piece at a time)
+
+- Products / catalog API
+- Orders + checkout (stock, server-side pricing)
+- Messages, reviews, client looks
+- Admin API
+- AI proxy (keeps the Gemini key on the server)
+
+## File map
+
+- `server.js` — static serving + auth API (incl. Firebase token exchange)
+- `firebase-config.json` — public Firebase web config
+- `test-auth.js` — auth API tests
+- `store.js` — client data layer + Firebase Auth calls
+- `chat.js` — Styla chat widget (still rule-based / direct Gemini)
+- `app.js`, `modern.js` — UI behaviour
+- `*.html` — pages; `styles.css` — styles
+- `data/auth.json` — local user/session store (created on first run)

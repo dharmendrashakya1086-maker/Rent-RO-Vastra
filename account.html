@@ -131,6 +131,8 @@
     </div>
   </section>
 
+  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth-compat.js"></script>
   <script src="app.js"></script>
   <script src="store.js"></script>
   <script>
@@ -159,10 +161,10 @@
         if (v.length < 3) { profUnMsg.style.color = '#ff8a80'; profUnMsg.textContent = '3-20 letters, numbers, dot or underscore'; return; }
         profUnTimer = setTimeout(async () => {
           try {
-            const r = await fetch('/api/auth/username?u=' + encodeURIComponent(v));
-            const d = await r.json();
-            if (d.available) { profUnMsg.style.color = '#4CAF50'; profUnMsg.textContent = 'Username "' + v + '" is available'; }
-            else { profUnMsg.style.color = '#ff8a80'; profUnMsg.textContent = 'Username "' + v + '" is already taken'; }
+          const r = await fetch('/api/auth/username?u=' + encodeURIComponent(v));
+          const d = await r.json();
+          if (d.available) { profUnMsg.style.color = '#4CAF50'; profUnMsg.textContent = 'Username "' + v + '" is available'; }
+          else { profUnMsg.style.color = '#ff8a80'; profUnMsg.textContent = 'Username "' + v + '" is already taken'; }
           } catch (e) { profUnMsg.style.color = 'var(--text-muted)'; profUnMsg.textContent = ''; }
         }, 400);
       });
@@ -223,37 +225,33 @@
     });
 
     // Change pass
-    document.getElementById('changePassBtn').addEventListener('click', () => {
+    document.getElementById('changePassBtn').addEventListener('click', async () => {
       const msg = document.getElementById('passMsg');
       const oldP = document.getElementById('settOldPass').value;
       const newP = document.getElementById('settNewPass').value;
       const conf = document.getElementById('settConfirm').value;
-const u = currentUser();
-      hashPass(oldP).then(h => {
-        if (h !== u.pass && oldP !== u.pass) { msg.style.color = '#ff8a80'; msg.textContent = 'Current password incorrect'; return; }
-        if (newP.length < 6) { msg.style.color = '#ff8a80'; msg.textContent = 'Min 6 characters'; return; }
-        if (newP !== conf) { msg.style.color = '#ff8a80'; msg.textContent = 'Passwords do not match'; return; }
-        hashPass(newP).then(nh => { u.pass = nh; saveUser(u); });
+      if (newP.length < 6) { msg.style.color = '#ff8a80'; msg.textContent = 'Min 6 characters'; return; }
+      if (newP !== conf) { msg.style.color = '#ff8a80'; msg.textContent = 'Passwords do not match'; return; }
+      try {
+        await changePass(oldP, newP);
         msg.style.color = '#4CAF50'; msg.textContent = 'Password updated!';
         document.getElementById('settOldPass').value = '';
         document.getElementById('settNewPass').value = '';
         document.getElementById('settConfirm').value = '';
-      });
+      } catch (e) { msg.style.color = '#ff8a80'; msg.textContent = e.message || 'Could not change password'; }
     });
 
     // Delete account
     document.getElementById('deleteAccBtn').addEventListener('click', () => {
       if (confirm('Delete your account? This cannot be undone.')) {
-        deleteUser();
-        window.location.href = '/';
+        deleteUser().then(() => { window.location.href = '/'; }).catch(e => { alert(e.message || 'Could not delete account'); });
       }
     });
 
     // Logout
     document.getElementById('logoutBtn').addEventListener('click', e => {
       e.preventDefault();
-      logout();
-      window.location.href = '/';
+      logout().then(() => { window.location.href = '/'; });
     });
   });
   </script>

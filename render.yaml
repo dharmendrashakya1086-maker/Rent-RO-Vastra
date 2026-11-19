@@ -5,24 +5,3 @@ services:
     plan: free
     buildCommand: npm install
     startCommand: node server.js
-    envVars:
-      - key: GEMINI_KEY
-        sync: false
-      - key: ADMIN_EMAIL
-        sync: false
-      - key: ADMIN_PASS
-        sync: false
-      - key: RESEND_KEY
-        sync: false
-      - key: RESEND_FROM
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-
-databases:
-  - name: rent-rovastra-db
-    plan: free
-    databaseName: rentro
-    user: rentro

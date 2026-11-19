@@ -632,10 +632,9 @@
     if (!text) return;
     addUserMsg(text);
     el.input.value = '';
-    // ponytail: server mode keeps products in the API (luxe_products is never written), so refresh
-    // from the live catalog on every send — otherwise Styla answers from stale defaults.
+    // refresh from the local catalog on every send, so admin edits show up immediately
     try {
-      if (typeof getProducts === 'function' && typeof SERVER !== 'undefined' && SERVER && SERVER.on) {
+      if (typeof getProducts === 'function') {
         const live = getProducts().filter(p => p.active !== false);
         if (live.length) products = live;
       }
@@ -647,7 +646,7 @@
   // ===================================================================
   // PERSONALISATION — Styla remembers this shopper and answers for them.
   // Taste is derived from real data (past orders + wishlist + what they
-  // type), so there is nothing extra to store per user on the server.
+  // type), so there is nothing extra to store per user.
   // ===================================================================
   const TASTE_KEY = 'luxe_taste';
   function getTaste() { try { return JSON.parse(localStorage.getItem(TASTE_KEY) || '{}') || {}; } catch (e) { return {}; } }
@@ -667,8 +666,8 @@
     if (Object.keys(patch).length) rememberTaste(patch);
   }
   function topCategories() {
-    const wish = (typeof SERVER !== 'undefined' && SERVER.wishlist) || [];
-    const orders = (typeof SERVER !== 'undefined' && SERVER.orders) || [];
+    const wish = getWishlist();
+    const orders = getOrders();
     const seen = [];
     orders.forEach(o => (o.items || []).forEach(it => seen.push(String(it.name || '').toLowerCase())));
     const tally = {};
@@ -682,8 +681,8 @@
     const u = currentUser();
     const t = getTaste();
     const cats = topCategories().filter(Boolean);
-    const orders = (typeof SERVER !== 'undefined' && SERVER.orders) || [];
-    const wish = (typeof SERVER !== 'undefined' && SERVER.wishlist) || [];
+    const orders = getOrders();
+    const wish = getWishlist();
     const bits = [];
     bits.push(u ? 'name=' + (u.name || u.first) : 'guest (not logged in)');
     if (orders.length) bits.push('previous rentals=' + orders.length);
@@ -725,24 +724,22 @@
     return null;
   }
 
-  // ---------- real AI fallback ----------
-  // ponytail: keys live only in server.js — the browser talks to /api/ai, never Gemini directly.
-  const AI_PROXY = (function(){ try { return (window.location.protocol === 'file:' ? 'http://localhost:3010' : '') + '/api/ai'; } catch (e) { return '/api/ai'; } })();
+  // ---------- real AI fallback (static build: direct Gemini, key stays in this browser) ----------
   const DEFAULT_AI = { provider: 'gemini', enabled: true };
   function getAI() {
     try { const c = JSON.parse(localStorage.getItem(AI_KEY) || 'null'); return c || DEFAULT_AI; } catch (e) { return DEFAULT_AI; }
   }
   function askLLM(text) {
     const cfg = getAI();
-    if (!cfg || !cfg.enabled) return Promise.resolve(null);
+    if (!cfg || !cfg.enabled || !cfg.key) return Promise.resolve(null);
     const cats = topCategories().filter(Boolean);
     const pool = (cats.length ? products.filter(p => cats.indexOf(p.category) >= 0) : products).slice(0, 20);
     const catalog = (pool.length ? pool : products.slice(0, 20)).map(p => ({ name: p.name, category: p.category, price: eff(p), gender: p.gender, occasion: prop(p, 'occasion'), style: prop(p, 'style') }));
     const system = 'You are Styla, a shopping helper for Rent-RO-Vastra, an Indian designer rental brand. Reply in Roman-script Hinglish (Latin letters), casual and normal — like a helpful friend on WhatsApp. Plain text only: no emojis, no markdown, no asterisks, no bold. Keep it to 1-3 short lines, under 60 words, prices with ₹ per day. If the user wants products, name up to 3. Never invent delivery, refund or discount policies: if you do not know, say the team will confirm. THIS CUSTOMER: ' + customerCard() + '. Catalog: ' + JSON.stringify(catalog);
-    return fetch(AI_PROXY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cfg: { provider: cfg.provider || 'gemini', key: cfg.key || '' }, system: system, text: text }) })
-      .then(r => r.json())
-      .then(j => j.text || null)
-      .catch(() => null);
+    return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' + encodeURIComponent(cfg.key), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: system + '\n\nUser: ' + text }] }] })
+    }).then(r => r.json()).then(j => (j && j.candidates && j.candidates[0] && j.candidates[0].content.parts[0].text) || null).catch(() => null);
   }
 
   function processFreeText(text) {

@@ -95,20 +95,9 @@
           <button type="button" id="forgotLink" style="color:var(--gold);font-size:0.75rem;text-decoration:underline;background:none;border:none;cursor:pointer;">Forgot password?</button>
         </div>
         <button type="submit" class="btn-primary" style="width:100%;text-align:center;">Login</button>
-        <div class="auth-divider">or login with code</div>
-        <div id="otpBox">
-          <div class="form-group">
-            <label for="otpEmail">Email</label>
-            <input type="email" id="otpEmail" placeholder="you@example.com">
-          </div>
-          <button type="button" class="btn-outline" id="otpSend" style="width:100%;text-align:center;">Send login code</button>
-          <div class="form-group" id="otpCodeWrap" style="display:none;">
-            <label for="otpCode">6-digit code</label>
-            <input type="text" id="otpCode" inputmode="numeric" maxlength="6" placeholder="000000">
-          </div>
-          <button type="button" class="btn-primary" id="otpVerify" style="width:100%;text-align:center;display:none;">Verify &amp; Login</button>
-          <p id="otpMsg" style="margin-top:10px;font-size:0.72rem;color:var(--text-muted);text-align:center;min-height:1em;"></p>
-        </div>
+        <div class="auth-divider">or continue with</div>
+        <button type="button" class="btn-outline" id="googleBtn" style="width:100%;text-align:center;">Continue with Google</button>
+        <p id="googleMsg" style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);text-align:center;min-height:1em;"></p>
       </form>
 
 <form class="auth-form" id="forgotForm" style="display:none;">
@@ -117,17 +106,8 @@
           <label for="forgotEmail">Email</label>
           <input type="email" id="forgotEmail" placeholder="you@example.com" required autocomplete="email">
         </div>
-        <button type="button" class="btn-outline" id="forgotSend" style="width:100%;text-align:center;">Send code</button>
-        <p id="forgotHint" style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);text-align:center;min-height:1em;">Check your Gmail for the OTP</p>
-        <div class="form-group">
-          <label for="forgotCode">6-digit code</label>
-          <input type="text" id="forgotCode" inputmode="numeric" maxlength="6" placeholder="000000" required>
-        </div>
-        <div class="form-group">
-          <label for="forgotPass">New password</label>
-          <input type="password" id="forgotPass" placeholder="Min 8 characters" minlength="8" required autocomplete="new-password">
-        </div>
-        <button type="submit" class="btn-primary" style="width:100%;text-align:center;">Reset password</button>
+        <button type="button" class="btn-outline" id="forgotSend" style="width:100%;text-align:center;">Send reset link</button>
+        <p id="forgotHint" style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);text-align:center;min-height:1em;">Google will email you a secure reset link — open it to set a new password.</p>
         <button type="button" class="btn-text" id="forgotBack" style="width:100%;text-align:center;border:none;background:none;color:var(--text-muted);font-size:0.75rem;text-decoration:underline;cursor:pointer;margin-top:10px;">Back to login</button>
       </form>
 
@@ -151,14 +131,7 @@
           <label for="regEmail">Email</label>
           <input type="email" id="regEmail" placeholder="you@example.com" required>
         </div>
-        <div class="form-group">
-          <label for="regCode">Email code <span style="color:var(--text-muted);font-weight:400;">(required)</span></label>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="regCode" inputmode="numeric" maxlength="6" placeholder="000000" required style="flex:1;min-width:0;">
-            <button type="button" class="btn-outline" id="regOtpSend" style="padding:0 14px;white-space:nowrap;">Send code</button>
-          </div>
-          <p id="regOtpHint" style="margin-top:6px;font-size:0.72rem;color:var(--text-muted);min-height:1em;">Check your Gmail for the OTP</p>
-        </div>
+        <p style="margin:0 0 14px;font-size:0.72rem;color:var(--text-muted);">Google will send a verification email to this address after signup.</p>
         <div class="form-group">
           <label for="regPhone">Phone</label>
           <input type="tel" id="regPhone" placeholder="+91 00000 00000">
@@ -181,6 +154,8 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth-compat.js"></script>
   <script src="app.js"></script>
   <script src="store.js"></script>
   <script>
@@ -201,20 +176,6 @@
         } catch (err) { setUn('', 'Could not check right now'); }
       }, 400);
     });
-
-    const lockSendBtn = (btn, secs = 60) => {
-      const orig = btn.dataset.label || btn.textContent;
-      btn.dataset.label = orig;
-      btn.disabled = true;
-      btn.classList.add('disabled');
-      let n = secs;
-      btn.textContent = 'Resend in ' + n + 's';
-      const tick = setInterval(() => {
-        n -= 1;
-        if (n <= 0) { clearInterval(tick); btn.disabled = false; btn.classList.remove('disabled'); btn.textContent = orig; }
-        else btn.textContent = 'Resend in ' + n + 's';
-      }, 1000);
-    };
 
     // Tab switching
     document.querySelectorAll('.auth-tab').forEach(tab => {
@@ -251,6 +212,19 @@
       });
     });
 
+    // Google sign-in
+    document.getElementById('googleBtn').addEventListener('click', () => {
+      const gmsg = document.getElementById('googleMsg');
+      const err = document.getElementById('authError');
+      gmsg.style.color = 'var(--text-muted)'; gmsg.textContent = 'Opening Google...'; err.textContent = '';
+      googleLogin().then(() => {
+        gmsg.textContent = 'Signed in! Redirecting...';
+        setTimeout(() => { window.location.href = '/account'; }, 800);
+      }).catch(e => {
+        gmsg.style.color = '#ff8a80'; gmsg.textContent = e.message || 'Google sign-in failed';
+      });
+    });
+
     // Forgot password view
     const showView = (showLogin) => {
       document.getElementById('loginForm').style.display = showLogin ? '' : 'none';
@@ -264,46 +238,15 @@
       const em = document.getElementById('forgotEmail').value.trim();
       if (!em) { hint.style.color = '#ff8a80'; hint.textContent = 'Enter your email first.'; return; }
       hint.style.color = 'var(--text-muted)';
-      hint.textContent = 'Sending code...';
+      hint.textContent = 'Sending reset link...';
       try {
-        const r = await forgot(em);
-        if (!r) throw new Error('Could not send code');
+        await forgot(em);
         hint.style.color = '#4CAF50';
-        hint.textContent = r.delivery === 'manual' ? 'Code ready — email service slow hai, shop owner (WhatsApp/Phone) se code le lo. 10 min valid.' : 'Check your Gmail for the OTP';
-        lockSendBtn(document.getElementById('forgotSend'));
-      } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send code'; }
-    });
-    document.getElementById('forgotForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const err = document.getElementById('authError');
-      const em = document.getElementById('forgotEmail').value.trim();
-      const code = document.getElementById('forgotCode').value.trim();
-      const pass = document.getElementById('forgotPass').value;
-      if (!code) { err.style.color = '#ff8a80'; err.textContent = 'Enter the 6-digit code from your email'; return; }
-      if (pass.length < 8) { err.style.color = '#ff8a80'; err.textContent = 'Password must be at least 8 characters'; return; }
-      try {
-        await resetPass(em, code, pass);
-        err.style.color = '#4CAF50';
-        err.textContent = 'Password reset! Logging you in...';
-        setTimeout(() => { window.location.href = '/account'; }, 800);
-      } catch (e) { err.style.color = '#ff8a80'; err.textContent = e.message || 'Could not reset password. Try again.'; }
+        hint.textContent = 'Reset link sent to ' + em + '. Check your inbox (and spam).';
+      } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send reset link'; }
     });
 
     // Register
-    document.getElementById('regOtpSend').addEventListener('click', async () => {
-      const hint = document.getElementById('regOtpHint');
-      const em = document.getElementById('regEmail').value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { hint.style.color = '#ff8a80'; hint.textContent = 'Enter a valid email first.'; return; }
-      hint.style.color = 'var(--text-muted)';
-      hint.textContent = 'Sending code...';
-      try {
-        const r = await sendOtp(em);
-        if (!r) throw new Error('Could not send code');
-        hint.style.color = '#4CAF50';
-        hint.textContent = r.delivery === 'manual' ? 'Code ready — email service slow hai, shop owner (WhatsApp/Phone) se code le lo. 10 min valid.' : 'Check your Gmail for the OTP';
-        lockSendBtn(document.getElementById('regOtpSend'));
-      } catch (e) { hint.style.color = '#ff8a80'; hint.textContent = e.message || 'Could not send code'; }
-    });
     document.getElementById('registerForm').addEventListener('submit', e => {
       e.preventDefault();
       const err = document.getElementById('authError');
@@ -311,63 +254,24 @@
       const last = document.getElementById('regLast').value.trim();
       const username = document.getElementById('regUsername').value.trim().toLowerCase();
       const email = document.getElementById('regEmail').value.trim();
-      const code = document.getElementById('regCode').value.trim();
       const phone = document.getElementById('regPhone').value.trim();
       const pass = document.getElementById('regPass').value;
       const confirm = document.getElementById('regPassConfirm').value;
 
       if (pass !== confirm) { err.style.color = '#ff8a80'; err.textContent = 'Passwords do not match'; return; }
       if (pass.length < 8) { err.style.color = '#ff8a80'; err.textContent = 'Password must be at least 8 characters'; return; }
-      if (!code) { err.style.color = '#ff8a80'; err.textContent = 'Enter the 6-digit code sent to your email'; return; }
       if (!username) { err.style.color = '#ff8a80'; err.textContent = 'Pick a username first'; return; }
       if (unState !== 'ok') { err.style.color = '#ff8a80'; err.textContent = 'Username available hona chahiye — upar dekho'; return; }
       if (!document.getElementById('regConsent').checked) { err.style.color = '#ff8a80'; err.textContent = 'Please accept the Terms & Conditions and Privacy Policy.'; return; }
 
-      register({ first, last, username, email, phone, pass, code }).then(user => {
-        if (user) {
-          err.style.color = '#4CAF50';
-          err.textContent = 'Account created! Redirecting...';
-          setTimeout(() => { window.location.href = '/account'; }, 800);
-        } else {
-          err.style.color = '#ff8a80';
-          err.textContent = 'Email already registered';
-        }
+      register({ first, last, username, email, phone, pass }).then(() => {
+        err.style.color = '#4CAF50';
+        err.textContent = 'Account created! Check your email for the verification link. Redirecting...';
+        setTimeout(() => { window.location.href = '/account'; }, 800);
       }).catch(e => {
         err.style.color = '#ff8a80';
         err.textContent = e.message || 'Could not create account. Please try again.';
       });
-    });
-
-    // Email OTP login (Supabase)
-    const otpMsg = document.getElementById('otpMsg');
-    document.getElementById('otpSend').addEventListener('click', async () => {
-      const em = document.getElementById('otpEmail').value.trim();
-      if (!em) { otpMsg.textContent = 'Enter your email first.'; return; }
-      otpMsg.textContent = 'Sending code...';
-      try {
-        const r = await sendOtp(em);
-        if (!r) throw new Error('Could not send code');
-        otpMsg.style.color = '#4CAF50';
-        otpMsg.textContent = r.delivery === 'manual' ? 'Code ready — email service slow hai, shop owner (WhatsApp/Phone) se code le lo. 10 min valid.' : 'Code sent to ' + em + '. Check your inbox.';
-        document.getElementById('otpCodeWrap').style.display = '';
-        document.getElementById('otpVerify').style.display = '';
-        document.getElementById('otpSend').textContent = 'Resend code';
-        lockSendBtn(document.getElementById('otpSend'));
-      } catch (e) { otpMsg.style.color = '#ff8a80'; otpMsg.textContent = e.message; }
-    });
-    document.getElementById('otpVerify').addEventListener('click', async () => {
-      const em = document.getElementById('otpEmail').value.trim();
-      const code = document.getElementById('otpCode').value.trim();
-      if (!code) { otpMsg.textContent = 'Enter the 6-digit code.'; return; }
-      otpMsg.textContent = 'Verifying...';
-      try {
-        const r = await fetch('/api/auth/otp/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: em, code }) });
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error || 'Could not verify code');
-        otpMsg.style.color = '#4CAF50';
-        otpMsg.textContent = 'Logged in! Redirecting...';
-        setTimeout(() => { window.location.href = '/account'; }, 800);
-      } catch (e) { otpMsg.style.color = '#ff8a80'; otpMsg.textContent = e.message; }
     });
   </script>
 <script src="modern.js"></script>
